@@ -1,10 +1,22 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import AdminPage from "./pages/AdminPage/AdminPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-/**
- * App.jsx — Root component.
- * Add routing here when you're ready (e.g. react-router-dom <Routes>).
- * For now it renders the landing page directly.
- */
 export default function App() {
-  return <LandingPage />;
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </Router>
+  );
 }

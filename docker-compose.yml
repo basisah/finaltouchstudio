@@ -1,7 +1,4 @@
 services:
-  # ──────────────────────────────────────────────
-  # MySQL Database
-  # ──────────────────────────────────────────────
   db:
     image: mysql:8.0
     container_name: fts_db
@@ -12,7 +9,7 @@ services:
       MYSQL_USER: appuser
       MYSQL_PASSWORD: apppassword
     ports:
-      - "3307:3306"   # host:3307 → container:3306 (local MySQL owns 3306)
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -21,10 +18,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # ──────────────────────────────────────────────
-  # Node.js Backend (Express + nodemon live reload)
-  # ──────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -33,25 +26,21 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      PORT: 4000             # internal container port
+      PORT: 4000
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: finaltouchstudio
       DB_USER: appuser
       DB_PASSWORD: apppassword
     ports:
-      - "4000:4000"          # host:4000 → container:4000
+      - "4000:4000"
     volumes:
-      - ./backend:/app          # live code sync
-      - /app/node_modules       # prevent host node_modules from overriding
+      - ./backend:/app
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy
     command: npm run dev
-
-  # ──────────────────────────────────────────────
-  # React Frontend (Vite HMR live reload)
-  # ──────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -61,13 +50,12 @@ services:
     environment:
       VITE_API_URL: http://localhost:4000
     ports:
-      - "8080:3000"          # host:8080 → container:3000
+      - "8080:3000"
     volumes:
-      - ./frontend:/app         # live code sync
-      - /app/node_modules       # prevent host node_modules from overriding
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     command: npm run dev
-
 volumes:
   db_data:

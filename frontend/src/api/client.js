@@ -1,16 +1,13 @@
-/**
- * api/client.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Base HTTP client.  All API modules import `get` / `post` / `put` / `del`
- * from here.  To switch from fetch → axios later, change only this file.
- */
-
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 async function request(method, path, body) {
+  const token = localStorage.getItem("admin_token");
   const options = {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
   };
   if (body) options.body = JSON.stringify(body);
 
@@ -21,7 +18,6 @@ async function request(method, path, body) {
     throw new Error(err.message || `HTTP ${res.status}`);
   }
 
-  // 204 No Content — nothing to parse
   if (res.status === 204) return null;
   return res.json();
 }

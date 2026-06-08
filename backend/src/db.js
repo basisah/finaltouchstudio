@@ -1,18 +1,16 @@
 const mysql = require("mysql2/promise");
 
-// Create a connection pool for efficient DB access
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3306,
-  database: process.env.DB_NAME || "finaltouchstudio",
-  user: process.env.DB_USER || "appuser",
-  password: process.env.DB_PASSWORD || "apppassword",
+  host: process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
+  port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || "finaltouchstudio",
+  user: process.env.DB_USER || process.env.MYSQLUSER || "appuser",
+  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "apppassword",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
 
-// Test connection on startup with retries
 (async () => {
   let retries = 10;
   while (retries > 0) {

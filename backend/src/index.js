@@ -1,20 +1,44 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const db = require("./db");
+const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+
 app.use(cors());
 app.use(express.json());
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+
 
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Admin Login
+app.post("/api/auth/login", (req, res) => {
+  const { username, password } = req.body;
+  
+  const adminUsername = process.env.ADMIN_USERNAME || "admin";
+  const adminPassword = process.env.ADMIN_PASSWORD || "password";
+
+  if (username === adminUsername && password === adminPassword) {
+    const token = jwt.sign({ username }, process.env.JWT_SECRET || "default_dev_secret", {
+      expiresIn: "24h"
+    });
+    return res.json({ token });
+  }
+
+  res.status(401).json({ error: "Invalid credentials" });
+});
+
+// Verify token
+app.get("/api/auth/verify", auth, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
 // Get all items
@@ -40,8 +64,8 @@ app.get("/api/items/:id", async (req, res) => {
   }
 });
 
-// Create item
-app.post("/api/items", async (req, res) => {
+// Create item (Protected)
+app.post("/api/items", auth, async (req, res) => {
   const { name, description } = req.body;
   if (!name) return res.status(400).json({ error: "Name is required" });
   try {
@@ -57,8 +81,8 @@ app.post("/api/items", async (req, res) => {
   }
 });
 
-// Update item
-app.put("/api/items/:id", async (req, res) => {
+// Update item (Protected)
+app.put("/api/items/:id", auth, async (req, res) => {
   const { name, description } = req.body;
   try {
     await db.query(
@@ -74,8 +98,8 @@ app.put("/api/items/:id", async (req, res) => {
   }
 });
 
-// Delete item
-app.delete("/api/items/:id", async (req, res) => {
+// Delete item (Protected)
+app.delete("/api/items/:id", auth, async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM items WHERE id = ?", [req.params.id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: "Item not found" });
@@ -86,7 +110,7 @@ app.delete("/api/items/:id", async (req, res) => {
   }
 });
 
-// ── Start Server ──────────────────────────────────────────────────────────────
+
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);

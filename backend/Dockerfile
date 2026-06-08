@@ -12,7 +12,7 @@ RUN npm install
 COPY . .
 
 # Expose API port
-EXPOSE 5000
+EXPOSE 4000
 
-# nodemon for live reload (started via docker-compose command)
-CMD ["npm", "run", "dev"]
+# Start server (overridden by docker-compose for dev)
+CMD ["npm", "start"]
