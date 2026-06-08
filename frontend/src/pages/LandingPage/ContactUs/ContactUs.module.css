@@ -1,0 +1,54 @@
+.section { background:#fff; padding:88px 40px; }
+.inner {
+  max-width:1100px; margin:0 auto;
+  display:grid; grid-template-columns:1fr 1.3fr; gap:64px; align-items:flex-start;
+}
+.eyebrow { font-family:var(--font-display); font-size:28px; color:var(--clr-mauve); margin-bottom:8px; }
+.heading { font-family:var(--font-serif); font-size:clamp(26px,3.5vw,40px); font-weight:700; color:var(--txt-primary); line-height:1.2; margin-bottom:16px; letter-spacing:-0.5px; }
+.sub { font-size:15px; color:var(--txt-muted); line-height:1.75; margin-bottom:32px; }
+
+.contactList { list-style:none; display:flex; flex-direction:column; gap:20px; }
+.contactItem { display:flex; align-items:flex-start; gap:14px; }
+.contactIcon { font-size:22px; line-height:1; margin-top:2px; flex-shrink:0; }
+.contactLabel { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--txt-muted); margin-bottom:2px; }
+.contactValue { font-size:14px; font-weight:500; color:var(--txt-primary); }
+
+/* ── Glass form card ──────────────────────────────────────────────────────────── */
+.form {
+  display:flex; flex-direction:column; gap:18px;
+  background: linear-gradient(145deg, rgba(159,80,124,0.06), rgba(84,33,65,0.04));
+  border:1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding:36px;
+  box-shadow: var(--shadow-sm);
+}
+.row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.field { display:flex; flex-direction:column; gap:7px; }
+.field label { font-size:12px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--txt-secondary); }
+.field input, .field textarea {
+  padding:12px 16px; border:1.5px solid var(--border);
+  border-radius:var(--radius-sm); background:#fff;
+  font-family:var(--font-sans); font-size:14px; color:var(--txt-primary);
+  outline:none; resize:vertical;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.field input:focus, .field textarea:focus {
+  border-color:var(--clr-mauve);
+  box-shadow:0 0 0 3px rgba(159,80,124,0.12);
+}
+.field input::placeholder, .field textarea::placeholder { color:var(--txt-muted); }
+
+.submit {
+  padding:15px 28px; border-radius:99px; border:none;
+  background:var(--grad-mauve); color:#fff;
+  font-size:15px; font-weight:700; letter-spacing:0.3px;
+  box-shadow:0 4px 24px rgba(159,80,124,0.40);
+  transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.submit:hover:not(:disabled) { opacity:0.9; transform:translateY(-2px); box-shadow:0 8px 32px rgba(159,80,124,0.50); }
+.submit:disabled { opacity:0.6; cursor:not-allowed; }
+
+.msgSuccess { font-size:14px; color:var(--clr-mauve); font-weight:600; }
+.msgError   { font-size:14px; color:#dc2626; font-weight:500; }
+
+@media (max-width:900px) { .inner{grid-template-columns:1fr; gap:40px;} .row{grid-template-columns:1fr;} .section{padding:56px 16px;} }

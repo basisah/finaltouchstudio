@@ -1,0 +1,233 @@
+.section {
+  background: var(--clr-deep-plum);
+  padding: 250px 20px 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80px;
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: #F5D0FE;
+  font-weight: 400;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  margin-bottom: 8px;
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 4.5vw, 48px);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  letter-spacing: -0.5px;
+  text-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* ── Timeline Rows ───────────────────────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: -40px; /* Provides 40px of vertical separation between 340px tall images */
+  z-index: 1;
+}
+/* Ensure the last item doesn't overlap whatever is below the section */
+.row:last-child {
+  margin-bottom: 0;
+}
+
+/* Hovering adjusts z-index nicely */
+.row:hover { z-index: 10; }
+
+.rowEven { flex-direction: row; }
+.rowOdd { flex-direction: row-reverse; }
+
+/* ── Columns ─────────────────────────────────────────────────────────────────── */
+.imageCol {
+  width: 48%;
+  display: flex;
+  padding: 40px 0;
+}
+.rowEven .imageCol { justify-content: flex-start; }
+.rowOdd .imageCol { justify-content: flex-end; }
+
+.textCol {
+  width: 48%;
+  display: flex;
+  align-items: center;
+}
+.rowEven .textCol { justify-content: flex-start; padding-left: 20px; }
+.rowOdd .textCol { justify-content: flex-end; padding-right: 20px; text-align: right; }
+
+/* ── Image Styling ───────────────────────────────────────────────────────────── */
+.imageWrapper {
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  
+  /* Intricate multi-layered circular borders */
+  box-shadow: 
+    0 0 0 12px rgba(52, 22, 42, 0.95),
+    0 0 0 14px rgba(255, 255, 255, 0.2),
+    0 0 0 28px rgba(52, 22, 42, 0.7),
+    0 0 0 29px rgba(255, 255, 255, 0.1);
+  transition: transform 0.5s var(--ease);
+}
+.row:hover .imageWrapper {
+  transform: scale(1.03);
+}
+
+.circleImage {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+}
+
+/* ── Text Content ────────────────────────────────────────────────────────────── */
+.textContent {
+  max-width: 320px;
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 8px rgba(20, 8, 16, 0.8);
+}
+
+.subtitle {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: #D8BCC4;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* ── Catalog Link ────────────────────────────────────────────────────────────── */
+.linkWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+.rowOdd .linkWrapper {
+  justify-content: flex-end;
+}
+
+.linkText {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.linkText:hover { color: #fff; }
+
+.linkLine {
+  height: 1px;
+  width: 48px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.linkCircle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.linkCircle::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Continuous Wavery Timeline S-Curves (SVG) ───────────────────────────── */
+.rowSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 150%; /* 100% of row height + sufficient overlap to reach next row */
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .section { padding: 180px 20px 80px; }
+  .imageWrapper { width: 260px; height: 260px; }
+  .row { margin-bottom: -60px; }
+  .title { font-size: 32px; }
+  .desc { font-size: 13px; }
+}
+
+@media (max-width: 768px) {
+  .section { padding: 80px 20px; }
+  .timeline { gap: 64px; }
+  .row {
+    flex-direction: column !important;
+    margin-bottom: 0;
+    gap: 32px;
+  }
+  .imageCol, .textCol {
+    width: 100%;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0;
+  }
+  .textContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .linkWrapper {
+    justify-content: center !important;
+  }
+  .rowSvg {
+    display: none; /* Hide S-curves on mobile stack */
+  }
+}

@@ -1,0 +1,151 @@
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+/* ── Transparent over hero — text ALWAYS white + strong shadow for contrast ── */
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px 48px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  transition: padding var(--transition);
+}
+
+/* Scrolled: glass dark bar */
+.navbar.scrolled {
+  background: rgba(52, 22, 42, 0.88);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 2px 32px rgba(52,22,42,0.40);
+  border-bottom: 1px solid var(--glass-border-lt);
+}
+.navbar.scrolled .inner { padding: 14px 48px; }
+
+/* ── Logo ──────────────────────────────────────────────────────────────────── */
+.logo { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+
+.logoMark {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--grad-mauve);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(159,80,124,0.45);
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 700;
+  /* Always white for contrast on hero */
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(52,22,42,0.50);
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+.logoAccent { color: var(--clr-dusty-lilac); font-style: italic; }
+
+/* ── Nav links — always white, text-shadow for contrast on any bg ─────────── */
+.nav { display:flex; align-items:center; gap:2px; margin-left: auto; }
+
+.navLink {
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 600;
+  /* Bright white with strong text shadow — legible on ANY background */
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(52,22,42,0.70), 0 1px 3px rgba(0,0,0,0.50);
+  letter-spacing: 0.2px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.navLink:hover {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  color: var(--clr-dusty-lilac);
+  text-shadow: none;
+}
+.navLink.active {
+  color: var(--clr-dusty-lilac);
+  text-shadow: none;
+  background: rgba(255,255,255,0.10);
+}
+
+/* ── CTA button ─────────────────────────────────────────────────────────────── */
+.cta {
+  flex-shrink: 0;
+  padding: 10px 24px;
+  border-radius: 99px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1.5px solid var(--glass-border);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all var(--transition);
+}
+.cta:hover {
+  background: var(--clr-mauve);
+  border-color: var(--clr-mauve);
+  box-shadow: 0 4px 20px rgba(159,80,124,0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Hamburger ──────────────────────────────────────────────────────────────── */
+.hamburger {
+  display: none; flex-direction: column; gap: 5px;
+  background: transparent; border: none; padding: 6px; margin-left: auto;
+}
+.hamburger span {
+  display: block; width: 24px; height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(52,22,42,0.50);
+  transition: transform var(--transition), opacity var(--transition);
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Mobile drawer ──────────────────────────────────────────────────────────── */
+.drawer {
+  display: none; flex-direction: column;
+  background: rgba(52,22,42,0.96);
+  backdrop-filter: var(--glass-blur);
+  padding: 16px 24px 28px; gap: 4px;
+  border-top: 1px solid var(--glass-border-lt);
+}
+.drawer.drawerOpen { display: flex; }
+
+.drawerLink {
+  padding: 13px 16px; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600;
+  color: var(--txt-on-dark); letter-spacing: 0.2px;
+  transition: background var(--transition), color var(--transition);
+}
+.drawerLink:hover { background: var(--glass-bg); color: var(--clr-dusty-lilac); }
+
+.drawerCta {
+  margin-top: 12px; padding: 14px; border-radius: 99px;
+  background: var(--grad-mauve); color: #fff;
+  font-weight: 600; text-align: center; font-size: 15px;
+  box-shadow: 0 4px 16px rgba(159,80,124,0.40);
+}
+
+@media (max-width: 768px) {
+  .nav, .cta { display: none; }
+  .hamburger  { display: flex; }
+  .inner      { padding: 16px 20px !important; }
+}
