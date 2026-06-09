@@ -10,23 +10,24 @@ docker compose up --build
 
 That's it. All three services start together.
 
-| Service  | URL                          | Description               |
-|----------|------------------------------|---------------------------|
-| Frontend | http://localhost:3000        | React app (Vite HMR)      |
-| Backend  | http://localhost:5000/api    | Express REST API          |
-| Database | localhost:3306               | MySQL 8                   |
+| Service  | URL                     | Description          |
+| -------- | ----------------------- | -------------------- |
+| Frontend | http://localhost:3000   | React app (Vite HMR) |
+| Backend  | http://localhost:5000/API | Express REST API     |
+| Database | localhost:3306          | MySQL 8              |
 
 ---
 
 ## 🔄 Live Reload — How It Works
 
 | Service  | Mechanism                         | What triggers a reload             |
-|----------|-----------------------------------|------------------------------------|
+| -------- | --------------------------------- | ---------------------------------- |
 | Frontend | **Vite HMR** (Hot Module Replace) | Any edit to `frontend/src/**`      |
 | Backend  | **nodemon**                       | Any edit to `backend/src/**`       |
 | Database | Persistent volume                 | Data survives container restarts   |
 
-> **Windows/Mac users**: Vite uses `usePolling: true` so file changes inside the container are always detected regardless of the OS filesystem event limitations.
+> **Windows/Mac users**: Vite uses `usePolling: true` so file changes inside the
+> container are always detected regardless of the OS filesystem event limitations.
 
 ---
 
@@ -84,32 +85,35 @@ docker compose down -v
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint         | Description      |
-|--------|------------------|------------------|
-| GET    | /api/health      | Health check     |
-| GET    | /api/items       | List all items   |
-| GET    | /api/items/:id   | Get single item  |
-| POST   | /api/items       | Create item      |
-| PUT    | /api/items/:id   | Update item      |
-| DELETE | /api/items/:id   | Delete item      |
+| Method | Endpoint          | Description      |
+| ------ | ----------------- | ---------------- |
+| GET    | /API/health       | Health check     |
+| GET    | /API/items        | List all items   |
+| GET    | /API/items/:ID    | Get single item  |
+| POST   | /API/items        | Create item      |
+| PUT    | /API/items/:ID    | Update item      |
+| DELETE | /API/items/:ID    | Delete item      |
 
 ---
 
 ## 🗄 Database Credentials
 
-| Setting  | Value              |
-|----------|--------------------|
+| Setting  | Value                           |
+| -------- | ------------------------------- |
 | Host     | localhost (or `db` inside Docker) |
-| Port     | 3306               |
-| Database | finaltouchstudio   |
-| User     | appuser            |
-| Password | apppassword        |
-| Root PW  | rootpassword       |
+| Port     | 3306                            |
+| Database | finaltouchstudio                |
+| User     | appuser                         |
+| Password | apppassword                     |
+| Root PW  | rootpassword                    |
 
 ---
 
 ## ⚡ Making Live Changes
 
-- **Frontend**: Edit any file in `frontend/src/` → browser updates instantly (no refresh needed)
-- **Backend**: Edit any file in `backend/src/` → nodemon restarts the server in ~1 second
-- **Database schema**: Edit `db/init.sql` → only takes effect on a fresh volume (`docker compose down -v && docker compose up --build`)
+- **Frontend**: Edit any file in `frontend/src/` → browser updates instantly (no refresh
+  needed)
+- **Backend**: Edit any file in `backend/src/` → nodemon restarts the server in ~1
+  second
+- **Database schema**: Edit `db/init.sql` → only takes effect on a fresh volume
+  (`docker compose down -v && docker compose up --build`)

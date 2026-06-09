@@ -1,12 +1,12 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function request(method, path, body) {
-  const token = localStorage.getItem("admin_token");
+  const token = localStorage.getItem('admin_token');
   const options = {
     method,
-    headers: { 
-      "Content-Type": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   };
   if (body) options.body = JSON.stringify(body);
@@ -22,7 +22,7 @@ async function request(method, path, body) {
   return res.json();
 }
 
-export const get  = (path)        => request("GET",    path);
-export const post = (path, body)  => request("POST",   path, body);
-export const put  = (path, body)  => request("PUT",    path, body);
-export const del  = (path)        => request("DELETE", path);
+export const get = (path) => request('GET', path);
+export const post = (path, body) => request('POST', path, body);
+export const put = (path, body) => request('PUT', path, body);
+export const del = (path) => request('DELETE', path);
