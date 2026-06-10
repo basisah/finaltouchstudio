@@ -1,22 +1,13 @@
 const request = require("supertest");
-
+const db = require("./db");
 const app = require("./index");
-
-async function waitForDatabase(maxAttempts = 30) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await request(app).get("/api/items");
-    if (res.status === 200) return;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-  throw new Error("Database not ready for tests");
-}
 
 describe("API", () => {
   let authToken;
   let createdItemId;
 
   beforeAll(async () => {
-    await waitForDatabase();
+    await db.waitForConnection();
   });
 
   describe("GET /api/health", () => {

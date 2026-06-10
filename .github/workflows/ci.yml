@@ -54,9 +54,9 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h localhost -u root -ptestrootpassword"
-          --health-interval=10s
+          --health-interval=5s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
     env:
       DB_HOST: 127.0.0.1
@@ -72,12 +72,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install MySQL client
-        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
-
-      - name: Initialize database
-        run: mysql -h 127.0.0.1 -u root -ptestrootpassword finaltouchstudio < ../db/init.sql
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -87,6 +81,21 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
+
+      - name: Wait for MySQL and initialize database
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -u root -ptestrootpassword --silent; then
+              mysql -h 127.0.0.1 -u root -ptestrootpassword finaltouchstudio < ../db/init.sql
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "MySQL did not become ready in time"
+          exit 1
 
       - name: Run tests
         run: npm test
