@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { CATEGORIES } from "../../../constants/categories";
 import HeroImage from "./HeroImage";
 import HeroTitle from "./HeroTitle";
@@ -64,7 +64,7 @@ export default function HeroSection() {
       <div className={styles.categoryStrip}>
         {heroCategories.map((cat) => {
           const imgUrl = categoryImages[cat.id];
-          
+
           let description = "Bespoke balloon walls, kids themes & stage setups.";
           if (cat.id === "proposal") {
             description = "Fairy lights, romantic floral arches & signs.";
