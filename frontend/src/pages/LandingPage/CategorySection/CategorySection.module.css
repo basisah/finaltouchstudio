@@ -256,110 +256,81 @@
 /* Mobile — stack each row vertically, circle above text */
 @media (max-width: 640px) {
   .section {
-    padding: 160px 16px 60px;
+    padding: 120px 12px 40px;
     overflow-x: hidden;
   }
 
   .header {
-    margin-bottom: 48px;
+    margin-bottom: 6vw;
   }
 
   .eyebrow {
-    font-size: 24px;
+    font-size: clamp(14px, 4vw, 20px);
   }
 
   .heading {
-    font-size: 28px;
+    font-size: clamp(18px, 5.5vw, 26px);
   }
 
-  /* Each row stacks: image on top, text below */
-  .row,
-  .rowEven,
-  .rowOdd {
-    flex-direction: column !important;
-    align-items: center;
-    margin-bottom: 48px;
-    width: 100%;
-  }
-
-  .row:last-child {
-    margin-bottom: 0;
-  }
-
-  /* Both columns full width, centered */
-  .imageCol,
-  .textCol {
-    width: 100% !important;
-    display: flex;
-    justify-content: center !important;
-    padding: 0 !important;
-    text-align: center;
+  .row {
+    margin-bottom: -4vw;
   }
 
   .imageCol {
-    padding-bottom: 24px !important;
+    padding: 4vw 0;
   }
 
-  /* Smaller circle */
+  .textCol {
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+
+  /* Smaller relative circle image */
   .imageWrapper {
-    width: 200px;
-    height: 200px;
-    /* Reduce the ring shadows so they don't overflow */
+    width: 30vw;
+    height: 30vw;
+    max-width: 200px;
+    min-width: 90px;
+    /* Proportional borders scaling with viewport */
     box-shadow:
-      0 0 0 8px rgba(52, 22, 42, 0.95),
-      0 0 0 10px rgba(255, 255, 255, 0.15),
-      0 0 0 20px rgba(52, 22, 42, 0.6),
-      0 0 0 21px rgba(255, 255, 255, 0.07);
+      0 0 0 1vw rgba(52, 22, 42, 0.95),
+      0 0 0 1.2vw rgba(255, 255, 255, 0.2),
+      0 0 0 2.4vw rgba(52, 22, 42, 0.7),
+      0 0 0 2.5vw rgba(255, 255, 255, 0.1);
   }
 
   /* Text column centered */
   .textContent {
     max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
-  .titleWrapper,
-  .rowEven .titleWrapper,
-  .rowOdd .titleWrapper {
-    flex-direction: row !important;
-    justify-content: center !important;
+  .titleWrapper {
+    gap: 3vw;
+    margin-bottom: 1.5vw;
   }
 
   .title {
-    font-size: 28px;
+    font-size: clamp(16px, 4.8vw, 26px);
   }
 
   .occIcon {
-    width: 36px;
-    height: 36px;
+    width: clamp(18px, 5.5vw, 30px);
+    height: clamp(18px, 5.5vw, 30px);
   }
 
   .desc {
-    font-size: 13px;
-    text-align: center;
+    font-size: clamp(10px, 3vw, 13px);
+    line-height: 1.4;
+    margin-bottom: 2vw;
   }
 
-  .linkWrapper,
-  .rowOdd .linkWrapper {
-    justify-content: center;
+  .linkCircle {
+    width: clamp(10px, 3vw, 14px);
+    height: clamp(10px, 3vw, 14px);
   }
-
-  /* Hide the complex SVG curves on mobile — they don't work in stacked layout */
-  .rowSvg {
-    display: none;
-  }
-}
-
-/* Extra small */
-@media (max-width: 375px) {
-  .imageWrapper {
-    width: 170px;
-    height: 170px;
-  }
-  .title {
-    font-size: 24px;
+  .linkCircle::after {
+    width: clamp(2.5px, 0.8vw, 4px);
+    height: clamp(2.5px, 0.8vw, 4px);
   }
 }
 

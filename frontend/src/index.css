@@ -57,14 +57,19 @@
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────────── */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden; /* prevent any element from causing horizontal scroll */
+}
 
 body {
   font-family: var(--font-sans);
-  background: var(--clr-portrait-pink);
+  background: var(--clr-weathervane); /* dark base — sections paint over this */
   color: var(--txt-primary);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* belt-and-suspenders: no horizontal scroll on mobile */
+  width: 100%;
 }
 
 img { display: block; max-width: 100%; }

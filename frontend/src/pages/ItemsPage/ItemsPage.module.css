@@ -734,3 +734,88 @@
   opacity: 0;
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
 }
+
+/* ── Responsive Mobile ── */
+@media (max-width: 640px) {
+  .hero {
+    padding: 120px 16px 48px;
+  }
+
+  .heroTitle {
+    font-size: clamp(32px, 8vw, 64px);
+  }
+
+  .heroSub {
+    font-size: clamp(12px, 3.5vw, 14px);
+    max-width: 90%;
+  }
+
+  .container {
+    gap: 48px;
+    padding: 0 12px;
+  }
+
+  .categoryBlock {
+    padding: 24px 16px;
+  }
+
+  .categoryHeader {
+    margin-bottom: 24px;
+  }
+
+  .categoryHeaderIcon {
+    width: clamp(32px, 10vw, 48px);
+    height: clamp(32px, 10vw, 48px);
+    margin-bottom: 8px;
+  }
+
+  .categoryTitle {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  /* Items Grid Container */
+  .gridContainer {
+    gap: 6vw 4vw;
+  }
+
+  /* Grid Item */
+  .gridItem {
+    width: 25vw;
+    max-width: 120px;
+    min-width: 80px;
+  }
+
+  /* Circle Card */
+  .circleCard {
+    width: 20vw;
+    height: 20vw;
+    max-width: 95px;
+    min-width: 64px;
+    margin-bottom: 8px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .iconWrapper {
+    width: 10vw;
+    height: 10vw;
+    max-width: 44px;
+    min-width: 30px;
+  }
+
+  .cardLabelWrapper {
+    gap: 4px;
+  }
+
+  .cardLabel {
+    font-size: clamp(8px, 2.5vw, 10px);
+    letter-spacing: 0.8px;
+    min-height: clamp(20px, 8vw, 28px);
+  }
+
+  .quickAddBtn,
+  .quickRemoveBtn {
+    padding: clamp(2px, 1vw, 4px) clamp(6px, 2vw, 10px);
+    font-size: clamp(7px, 2vw, 9px);
+    letter-spacing: 0.2px;
+  }
+}
