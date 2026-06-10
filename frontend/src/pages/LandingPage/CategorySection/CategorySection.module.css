@@ -1,8 +1,8 @@
 .section {
   background: linear-gradient(180deg, 
-    var(--clr-weathervane) 0%, 
-    #3c1931 50%, 
-    #2c0f22 100%
+    #4c1d3f 0%,    /* Rich purple blend */
+    #3c1931 50%,   /* Smooth intermediate dark purple */
+    #4a0e17 100%   /* Deep Burgundy */
   );
   padding: 250px 20px 60px;
   position: relative;

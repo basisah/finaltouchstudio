@@ -356,14 +356,16 @@ export default function ItemsPage() {
               <div className={styles.categoryBackdropOrb} />
 
               <div className={styles.categoryHeader}>
-                {categoryIcons[category.id] && (
-                  <img 
-                    src={categoryIcons[category.id]} 
-                    alt="" 
-                    className={styles.categoryHeaderIcon} 
-                  />
-                )}
-                <h2 className={styles.categoryTitle}>{category.label}</h2>
+                <div className={styles.categoryTitleRow}>
+                  {categoryIcons[category.id] && (
+                    <img 
+                      src={categoryIcons[category.id]} 
+                      alt="" 
+                      className={styles.categoryHeaderIcon} 
+                    />
+                  )}
+                  <h2 className={styles.categoryTitle}>{category.label}</h2>
+                </div>
                 <div className={styles.categoryTitleDivider} />
               </div>
 
@@ -460,20 +462,24 @@ export default function ItemsPage() {
                   {/* Bottom: Inactive other 7 subcategories */}
                   <div className={styles.otherSubcatsWrapper}>
                     <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
-                    <div className={styles.otherSubcatsRow}>
+                    <div className={styles.gridContainer}>
                       {category.subcategories
                         ?.filter((subcat) => subcat.id !== activeSubcatId)
                         .map((subcat) => (
                           <div
                             key={subcat.id}
-                            className={styles.otherSubcatCard}
+                            className={styles.gridItem}
                             onClick={() => {
                               setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
                               document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                             }}
                           >
-                            <span className={styles.otherSubcatEmoji}>{subcat.emoji}</span>
-                            <span className={styles.otherSubcatLabel}>{subcat.label}</span>
+                            <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                              <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                            </div>
+                            <div className={styles.cardLabelWrapper}>
+                              <span className={styles.cardLabel}>{subcat.label}</span>
+                            </div>
                           </div>
                         ))}
                     </div>

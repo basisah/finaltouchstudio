@@ -34,7 +34,7 @@
   position: absolute; inset: 0;
   background:
     radial-gradient(ellipse at center, transparent 30%, rgba(20,10,18,0.30) 100%),
-    linear-gradient(to top, rgba(52, 22, 42, 1) 0%, rgba(52, 22, 42, 0) 25%),
+    linear-gradient(to top, rgba(76, 29, 63, 1) 0%, rgba(76, 29, 63, 0) 25%),
     linear-gradient(to bottom, rgba(20,10,18,0.30) 0%, transparent 18%);
 }
 

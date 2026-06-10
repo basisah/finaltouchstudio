@@ -138,59 +138,61 @@ export default function OccasionsCarousel() {
 
   return (
     <section className={styles.section} id="catalog">
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Our Catalog</h2>
-        <p className={styles.sectionSub}>Browse items by category — click any item to book</p>
-      </div>
+      <div className={styles.container}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Our Catalog</h2>
+          <p className={styles.sectionSub}>Browse items by category — click any item to book</p>
+        </div>
 
-      {INVENTORY_CATEGORIES.map((category) => {
-        const colors = categoryColors[category.id] || categoryColors.global;
-        const icon = categoryIcons[category.id];
+        {INVENTORY_CATEGORIES.map((category) => {
+          const colors = categoryColors[category.id] || categoryColors.global;
+          const icon = categoryIcons[category.id];
 
-        return (
-          <div 
-            key={category.id} 
-            className={styles.categoryBlock}
-            style={{ "--category-color": colors.accent }}
-          >
-            {/* Category Header */}
-            <div className={styles.categoryHeader}>
-              {icon && <img src={icon} alt="" className={styles.catIcon} />}
-              <h3
-                className={styles.categoryTitle}
-                style={{ color: colors.accent }}
-              >
-                {category.label}
-              </h3>
-              <button
-                className={styles.viewAllBtn}
-                style={{ color: colors.accent, borderColor: colors.border }}
-                onClick={() => navigate(`/items?category=${category.id}`)}
-              >
-                View All →
-              </button>
-            </div>
-
-            {/* Items Grid Layout - matches ItemsPage */}
-            <div className={styles.gridContainer}>
-              {category.subcategories?.map((subcat) => (
-                <div
-                  key={subcat.id}
-                  className={styles.gridItem}
-                  onClick={() => navigate(`/items?category=${category.id}&subcategory=${subcat.id}`)}
+          return (
+            <div 
+              key={category.id} 
+              className={styles.categoryBlock}
+              style={{ "--category-color": colors.accent }}
+            >
+              {/* Category Header */}
+              <div className={styles.categoryHeader}>
+                {icon && <img src={icon} alt="" className={styles.catIcon} />}
+                <h3
+                  className={styles.categoryTitle}
+                  style={{ color: colors.accent }}
                 >
-                  <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
-                    <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                  {category.label}
+                </h3>
+                <button
+                  className={styles.viewAllBtn}
+                  style={{ color: colors.accent, borderColor: colors.border }}
+                  onClick={() => navigate(`/items?category=${category.id}`)}
+                >
+                  View All →
+                </button>
+              </div>
+
+              {/* Items Grid Layout - matches ItemsPage */}
+              <div className={styles.gridContainer}>
+                {category.subcategories?.map((subcat) => (
+                  <div
+                    key={subcat.id}
+                    className={styles.gridItem}
+                    onClick={() => navigate(`/items?category=${category.id}&subcategory=${subcat.id}`)}
+                  >
+                    <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                      <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                    </div>
+                    <div className={styles.cardLabelWrapper}>
+                      <span className={styles.cardLabel}>{subcat.label}</span>
+                    </div>
                   </div>
-                  <div className={styles.cardLabelWrapper}>
-                    <span className={styles.cardLabel}>{subcat.label}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </section>
   );
 }

@@ -87,11 +87,17 @@
   z-index: 1;
 }
 
+.categoryTitleRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
 .categoryHeaderIcon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
-  margin-bottom: 12px;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
   transition: transform 0.3s ease;
 }
@@ -107,14 +113,14 @@
   color: #fff;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  text-align: center;
+  margin: 0;
 }
 
 .categoryTitleDivider {
-  width: 48px;
+  width: 120px;
   height: 2px;
   background: var(--category-color);
-  margin-top: 8px;
+  margin-top: 12px;
   opacity: 0.7;
 }
 
@@ -776,9 +782,9 @@
   }
 
   .categoryHeaderIcon {
-    width: clamp(32px, 10vw, 48px);
-    height: clamp(32px, 10vw, 48px);
-    margin-bottom: 8px;
+    width: clamp(28px, 8vw, 40px);
+    height: clamp(28px, 8vw, 40px);
+    margin-bottom: 0;
   }
 
   .categoryTitle {
@@ -787,32 +793,37 @@
 
   /* Items Grid Container */
   .gridContainer {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px 8px;
   }
 
   /* Grid Item */
   .gridItem {
     width: 100%;
-    max-width: 120px;
+    max-width: 80px;
     min-width: 0;
   }
 
   /* Circle Card */
   .circleCard {
-    width: 20vw;
-    height: 20vw;
-    max-width: 95px;
-    min-width: 64px;
+    width: 14vw;
+    height: 14vw;
+    max-width: 68px;
+    min-width: 48px;
     margin-bottom: 8px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-width: 1.5px;
   }
 
   .iconWrapper {
-    width: 10vw;
-    height: 10vw;
-    max-width: 44px;
-    min-width: 30px;
+    width: 7vw;
+    height: 7vw;
+    max-width: 32px;
+    min-width: 22px;
+  }
+
+  .subcatEmoji {
+    font-size: clamp(16px, 4.5vw, 24px);
   }
 
   .cardLabelWrapper {
@@ -820,16 +831,16 @@
   }
 
   .cardLabel {
-    font-size: clamp(8px, 2.5vw, 10px);
-    letter-spacing: 0.8px;
-    min-height: clamp(20px, 8vw, 28px);
+    font-size: clamp(7px, 2.2vw, 9px);
+    letter-spacing: 0.5px;
+    min-height: clamp(16px, 6vw, 24px);
   }
 
   .quickAddBtn,
   .quickRemoveBtn {
-    padding: clamp(2px, 1vw, 4px) clamp(6px, 2vw, 10px);
-    font-size: clamp(7px, 2vw, 9px);
-    letter-spacing: 0.2px;
+    padding: 2px 6px;
+    font-size: 8px;
+    letter-spacing: 0.1px;
   }
 }
 

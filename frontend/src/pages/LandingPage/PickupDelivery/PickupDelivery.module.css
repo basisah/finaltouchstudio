@@ -1,5 +1,8 @@
 .section {
-  background: linear-gradient(160deg, var(--clr-weathervane) 0%, var(--clr-purple-kite) 100%);
+  background: linear-gradient(180deg, 
+    #562132 0%,                 /* Chinarose */
+    var(--clr-weathervane) 100% /* Dark theme base */
+  );
   padding: 88px 40px;
 }
 .inner {
