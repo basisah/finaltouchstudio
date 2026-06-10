@@ -46,5 +46,10 @@ if (process.env.JEST_WORKER_ID === undefined) {
     .catch(() => console.error("❌ Could not connect to database after multiple attempts"));
 }
 
+async function closePool() {
+  await pool.end();
+}
+
 module.exports = pool;
 module.exports.waitForConnection = waitForConnection;
+module.exports.closePool = closePool;

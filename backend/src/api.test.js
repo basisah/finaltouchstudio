@@ -10,6 +10,10 @@ describe("API", () => {
     await db.waitForConnection();
   });
 
+  afterAll(async () => {
+    await db.closePool();
+  });
+
   describe("GET /api/health", () => {
     it("returns ok status", async () => {
       const res = await request(app).get("/api/health");
