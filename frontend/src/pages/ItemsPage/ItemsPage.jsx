@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { INVENTORY_CATEGORIES } from "../../constants/inventory";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
@@ -197,9 +198,51 @@ const getBookedDatesForItem = (itemId) => {
 export default function ItemsPage() {
   const { cart, addToCart, removeFromCart } = useCart();
   const [selectedItem, setSelectedItem] = useState(null);
+  const location = useLocation();
+  const [activeSubcats, setActiveSubcats] = useState({});
 
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const catId = params.get("category");
+    const itemId = params.get("item");
+    const subcatId = params.get("subcategory");
+
+    if (catId) {
+      // 1. Immediately set the active subcategory so the DOM is rendered in its expanded state
+      if (subcatId) {
+        setActiveSubcats(prev => ({
+          ...prev,
+          [catId]: subcatId
+        }));
+      } else if (itemId) {
+        for (const category of INVENTORY_CATEGORIES) {
+          if (category.id === catId) {
+            const item = category.items.find((i) => i.id === itemId);
+            if (item) {
+              setActiveSubcats(prev => ({
+                ...prev,
+                [catId]: item.subCategoryId
+              }));
+              setSelectedItem(item);
+            }
+            break;
+          }
+        }
+      }
+
+      // 2. Perform smooth scroll in a timeout to allow layout shifts to settle
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`category-section-${catId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [location.search]);
 
   const fallingElements = useMemo(() => {
     const emojis = ["🎈", "🪑", "🌸", "✨", "🎉", "🎀", "🎈", "🌸", "🪑", "🎈", "🎈", "🌸", "🫧"];
@@ -298,79 +341,150 @@ export default function ItemsPage() {
       </header>
 
       <main className={styles.container}>
-        {INVENTORY_CATEGORIES.map((category) => (
-          <section key={category.id} className={styles.categoryBlock} style={{ "--category-color": category.color }}>
-            
-            {/* Glowing background orb for this category */}
-            <div className={styles.categoryBackdropOrb} />
+        {INVENTORY_CATEGORIES.map((category) => {
+          const activeSubcatId = activeSubcats[category.id];
+          const activeSubcatObj = category.subcategories?.find(s => s.id === activeSubcatId);
 
-            <div className={styles.categoryHeader}>
-              {categoryIcons[category.id] && (
-                <img 
-                  src={categoryIcons[category.id]} 
-                  alt="" 
-                  className={styles.categoryHeaderIcon} 
-                />
-              )}
-              <h2 className={styles.categoryTitle}>{category.label}</h2>
-              <div className={styles.categoryTitleDivider} />
-            </div>
+          return (
+            <section
+              key={category.id}
+              id={`category-section-${category.id}`}
+              className={styles.categoryBlock}
+              style={{ "--category-color": category.color }}
+            >
+              {/* Glowing background orb for this category */}
+              <div className={styles.categoryBackdropOrb} />
 
-            <div className={styles.gridContainer}>
-              {category.items.map((item) => {
-                const cartItem = getCartItem(item.id);
-                return (
-                  <div
-                    key={item.id}
-                    className={`${styles.gridItem} ${cartItem ? styles.itemInCart : ""}`}
-                    onClick={() => handleOpenItem(item)}
-                  >
-                    <div className={styles.circleCard}>
-                      <div className={styles.iconWrapper}>
-                        {getSvgIcon(item.title)}
+              <div className={styles.categoryHeader}>
+                {categoryIcons[category.id] && (
+                  <img 
+                    src={categoryIcons[category.id]} 
+                    alt="" 
+                    className={styles.categoryHeaderIcon} 
+                  />
+                )}
+                <h2 className={styles.categoryTitle}>{category.label}</h2>
+                <div className={styles.categoryTitleDivider} />
+              </div>
+
+              {!activeSubcatId ? (
+                /* 1. Show the 8 Subcategory circles */
+                <div className={styles.gridContainer}>
+                  {category.subcategories?.map((subcat) => (
+                    <div
+                      key={subcat.id}
+                      className={styles.gridItem}
+                      onClick={() => setActiveSubcats(prev => ({ ...prev, [category.id]: subcat.id }))}
+                    >
+                      <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                        <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                      </div>
+                      <div className={styles.cardLabelWrapper}>
+                        <span className={styles.cardLabel}>{subcat.label}</span>
                       </div>
                     </div>
-                    
-                    <div className={styles.cardLabelWrapper}>
-                      <span className={styles.cardLabel}>{item.title}</span>
-                      
-                      {/* Direct Cart Add / Remove Actions */}
-                      {cartItem ? (
-                        <button
-                          type="button"
-                          className={styles.quickRemoveBtn}
-                          onClick={(e) => handleQuickRemove(item.id, e)}
-                          title="Remove from cart"
-                        >
-                          Remove
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.quickAddBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenItem(item);
-                          }}
-                          title="Add to cart"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="9" cy="21" r="1"></circle>
-                            <circle cx="20" cy="21" r="1"></circle>
-                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                          </svg>
-                        </button>
-                      )}
+                  ))}
+                </div>
+              ) : (
+                /* 2. Expanded view: show active subcategory items, and other 7 at bottom */
+                <div className={styles.expandedSection}>
+                  <div className={styles.expandedSubcatHeader}>
+                    <button 
+                      type="button" 
+                      className={styles.backToSubcatsBtn}
+                      onClick={() => setActiveSubcats(prev => {
+                        const next = { ...prev };
+                        delete next[category.id];
+                        return next;
+                      })}
+                    >
+                      ← All Categories
+                    </button>
+                    <h3 className={styles.activeSubcatTitle}>
+                      {activeSubcatObj?.emoji} {activeSubcatObj?.label}
+                    </h3>
+                  </div>
+
+                  {/* Items Grid */}
+                  <div className={styles.gridContainer}>
+                    {category.items
+                      .filter((item) => item.subCategoryId === activeSubcatId)
+                      .map((item) => {
+                        const cartItem = getCartItem(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className={`${styles.gridItem} ${cartItem ? styles.itemInCart : ""}`}
+                            onClick={() => handleOpenItem(item)}
+                          >
+                            <div className={styles.circleCard}>
+                              <div className={styles.iconWrapper}>
+                                {getSvgIcon(item.title)}
+                              </div>
+                            </div>
+                            
+                            <div className={styles.cardLabelWrapper}>
+                              <span className={styles.cardLabel}>{item.title}</span>
+                              {cartItem ? (
+                                <button
+                                  type="button"
+                                  className={styles.quickRemoveBtn}
+                                  onClick={(e) => handleQuickRemove(item.id, e)}
+                                  title="Remove from cart"
+                                >
+                                  Remove
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className={styles.quickAddBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenItem(item);
+                                  }}
+                                  title="Add to cart"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Bottom: Inactive other 7 subcategories */}
+                  <div className={styles.otherSubcatsWrapper}>
+                    <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
+                    <div className={styles.otherSubcatsRow}>
+                      {category.subcategories
+                        ?.filter((subcat) => subcat.id !== activeSubcatId)
+                        .map((subcat) => (
+                          <div
+                            key={subcat.id}
+                            className={styles.otherSubcatCard}
+                            onClick={() => {
+                              setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
+                              document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                          >
+                            <span className={styles.otherSubcatEmoji}>{subcat.emoji}</span>
+                            <span className={styles.otherSubcatLabel}>{subcat.label}</span>
+                          </div>
+                        ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </main>
 
-      {/* Booking Popup Modal */}
       {/* Booking Popup Modal */}
       {selectedItem && (
         <DateRangePickerModal 

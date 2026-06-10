@@ -14,10 +14,10 @@ const OPTIONS = [
   {
     icon: "🚚",
     title: "Home Delivery",
-    subtitle: "From ৳500 — Dhaka & Nearby",
+    subtitle: "From $25 — Saskatoon & Nearby",
     description:
       "We deliver directly to your venue or home. Our team handles the transport carefully so your items arrive in perfect condition, right when you need them.",
-    highlights: ["Real-time tracking", "Covers Dhaka, Narayanganj & more", "Optional setup assistance"],
+    highlights: ["Real-time tracking", "Covers Saskatoon & surrounding areas", "Optional setup assistance"],
     cta: "Get Delivery Quote",
     color: "var(--clr-gold)",
     featured: true,

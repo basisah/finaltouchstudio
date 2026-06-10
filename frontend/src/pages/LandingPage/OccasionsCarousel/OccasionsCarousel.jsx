@@ -148,7 +148,11 @@ export default function OccasionsCarousel() {
         const icon = categoryIcons[category.id];
 
         return (
-          <div key={category.id} className={styles.categoryBlock}>
+          <div 
+            key={category.id} 
+            className={styles.categoryBlock}
+            style={{ "--category-color": colors.accent }}
+          >
             {/* Category Header */}
             <div className={styles.categoryHeader}>
               {icon && <img src={icon} alt="" className={styles.catIcon} />}
@@ -161,29 +165,26 @@ export default function OccasionsCarousel() {
               <button
                 className={styles.viewAllBtn}
                 style={{ color: colors.accent, borderColor: colors.border }}
-                onClick={() => navigate("/items")}
+                onClick={() => navigate(`/items?category=${category.id}`)}
               >
                 View All →
               </button>
             </div>
 
-            {/* Items Row */}
-            <div className={styles.itemsRow}>
-              {category.items.map((item) => (
+            {/* Items Grid Layout - matches ItemsPage */}
+            <div className={styles.gridContainer}>
+              {category.subcategories?.map((subcat) => (
                 <div
-                  key={item.id}
-                  className={styles.itemCard}
-                  style={{
-                    "--accent": colors.accent,
-                    "--bg": colors.bg,
-                    "--border": colors.border,
-                  }}
-                  onClick={() => navigate("/items")}
+                  key={subcat.id}
+                  className={styles.gridItem}
+                  onClick={() => navigate(`/items?category=${category.id}&subcategory=${subcat.id}`)}
                 >
-                  <div className={styles.iconWrap}>
-                    {getSvgIcon(item.title)}
+                  <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                    <span className={styles.subcatEmoji}>{subcat.emoji}</span>
                   </div>
-                  <span className={styles.itemName}>{item.title}</span>
+                  <div className={styles.cardLabelWrapper}>
+                    <span className={styles.cardLabel}>{subcat.label}</span>
+                  </div>
                 </div>
               ))}
             </div>

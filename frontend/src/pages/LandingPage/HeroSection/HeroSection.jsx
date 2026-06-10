@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { CATEGORIES } from "../../../constants/categories";
 import HeroImage from "./HeroImage";
 import HeroTitle from "./HeroTitle";
@@ -73,7 +74,7 @@ export default function HeroSection() {
           }
 
           return (
-            <a key={cat.id} href="#occasions" className={styles.catCard}>
+            <Link key={cat.id} to={`/package/${cat.id}`} className={styles.catCard}>
               {imgUrl && (
                 <>
                   {/* Clear image in background */}
@@ -100,7 +101,7 @@ export default function HeroSection() {
                 <h3 className={styles.catCardTitle}>{cat.label}</h3>
                 <p className={styles.catCardDesc}>{description}</p>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>

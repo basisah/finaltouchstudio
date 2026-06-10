@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "../AdminPage.module.css";
+import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 
 export default function InventoryTab({
   activeCategory,
@@ -15,7 +16,11 @@ export default function InventoryTab({
   setNewItemName,
   newItemDesc,
   setNewItemDesc,
+  newItemSubCategory,
+  setNewItemSubCategory,
 }) {
+  const currentInventoryCatObj = INVENTORY_CATEGORIES.find(c => c.id === activeCategory.id);
+  const subcategories = currentInventoryCatObj?.subcategories || [];
   return (
     <div className={styles.categoryGrid}>
       {/* Task Controls: Inventory List */}
@@ -39,6 +44,7 @@ export default function InventoryTab({
                   <th>Serial No.</th>
                   <th>Image</th>
                   <th>Item Name & Info</th>
+                  <th>Subcategory</th>
                   <th>Availability Switch</th>
                   <th>Action</th>
                 </tr>
@@ -55,8 +61,13 @@ export default function InventoryTab({
                       </span>
                     </td>
                     <td>
-                      <strong>{item.name}</strong>
+                      <strong>{item.name || item.title}</strong>
                       <p className={styles.tableSmallDesc}>{item.description}</p>
+                    </td>
+                    <td>
+                      <span className={styles.btnCount} style={{ background: "rgba(255, 255, 255, 0.08)", color: "rgba(255, 255, 255, 0.8)", textTransform: "uppercase", fontSize: "10px", fontWeight: "700", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+                        {subcategories.find(s => s.id === item.subCategoryId)?.label || item.subCategoryId || "General"}
+                      </span>
                     </td>
                     <td>
                       <div className={styles.availabilityToggle}>
@@ -128,6 +139,22 @@ export default function InventoryTab({
               <option value="🎈">🎈 balloon</option>
               <option value="💡">💡 neon</option>
               <option value="🌹">🌹 rose</option>
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemSubCategory">Subcategory Grouping</label>
+            <select
+              id="itemSubCategory"
+              value={newItemSubCategory}
+              onChange={(e) => setNewItemSubCategory(e.target.value)}
+              className={styles.picSelect}
+              required
+            >
+              <option value="">-- Select Subcategory --</option>
+              {subcategories.map(sub => (
+                <option key={sub.id} value={sub.id}>{sub.emoji} {sub.label}</option>
+              ))}
             </select>
           </div>
 

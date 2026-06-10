@@ -99,11 +99,11 @@ export default function PaymentsTab({
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="payAmount">Payment Amount (BDT)</label>
+            <label htmlFor="payAmount">Payment Amount (CAD)</label>
             <input
               id="payAmount"
               type="number"
-              placeholder="e.g. 15000"
+              placeholder="e.g. 150"
               value={newPayAmount}
               onChange={(e) => setNewPayAmount(e.target.value)}
               required
@@ -118,9 +118,8 @@ export default function PaymentsTab({
               onChange={(e) => setNewPayMethod(e.target.value)}
               className={styles.picSelect}
             >
-              <option value="bKash">bKash</option>
-              <option value="Nagad">Nagad</option>
-              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Interac e-Transfer">Interac e-Transfer</option>
+              <option value="PayPal">PayPal</option>
               <option value="Credit Card">Credit Card</option>
               <option value="Cash">Cash</option>
             </select>

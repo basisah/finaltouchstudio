@@ -156,6 +156,19 @@ export default function Sidebar({
               <span className={styles.btnCount}>{payments.length}</span>
             </button>
           </li>
+          <li>
+            <button
+              className={`${styles.navBtn} ${activeTab === "packages" ? styles.active : ""}`}
+              onClick={() => {
+                setActiveTab("packages");
+                setShowAddCatForm(false);
+                setSearchQuery("");
+              }}
+            >
+              <span className={styles.btnEmoji}>📦</span>
+              <span className={styles.btnLabel}>Decor Packages</span>
+            </button>
+          </li>
         </ul>
       </nav>
 

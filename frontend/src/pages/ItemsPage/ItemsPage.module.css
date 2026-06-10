@@ -120,21 +120,33 @@
 
 /* ── Grid ── */
 .gridContainer {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 48px 32px;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 48px 16px;
   width: 100%;
-  flex-wrap: wrap;
   position: relative;
   z-index: 1;
+  justify-items: center;
+}
+
+@media (max-width: 1200px) {
+  .gridContainer {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .gridContainer {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .gridItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 125px;
+  width: 100%;
+  max-width: 125px;
   cursor: pointer;
 }
 
@@ -775,14 +787,15 @@
 
   /* Items Grid Container */
   .gridContainer {
-    gap: 6vw 4vw;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 12px;
   }
 
   /* Grid Item */
   .gridItem {
-    width: 25vw;
+    width: 100%;
     max-width: 120px;
-    min-width: 80px;
+    min-width: 0;
   }
 
   /* Circle Card */
@@ -818,4 +831,131 @@
     font-size: clamp(7px, 2vw, 9px);
     letter-spacing: 0.2px;
   }
+}
+
+/* ── Subcategory Expanding UI ── */
+.subcatEmoji {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.gridItem:hover .subcatEmoji {
+  transform: scale(1.15) rotate(4deg);
+}
+
+.expandedSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.expandedSubcatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.activeSubcatTitle {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.backToSubcatsBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px 18px;
+  border-radius: 99px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.backToSubcatsBtn:hover {
+  background: var(--clr-mulberry-mix);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(159, 80, 124, 0.3);
+}
+
+.otherSubcatsWrapper {
+  margin-top: 56px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.otherSubcatsHeading {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.otherSubcatsRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.otherSubcatCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.otherSubcatCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--category-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.otherSubcatEmoji {
+  font-size: 16px;
+}
+
+.otherSubcatLabel {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.80);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.otherSubcatCard:hover .otherSubcatLabel {
+  color: #fff;
 }

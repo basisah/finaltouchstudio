@@ -3,10 +3,10 @@ import { submitContact } from "../../../api/bookings.api";
 import styles from "./ContactUs.module.css";
 
 const CONTACT_INFO = [
-  { icon: "📍", label: "Address",   value: "House 12, Road 5, Dhanmondi, Dhaka 1205" },
-  { icon: "📞", label: "Phone",     value: "+880 1700-000000" },
-  { icon: "✉️", label: "Email",     value: "hello@finaltouchstudio.com" },
-  { icon: "🕐", label: "Hours",     value: "Sat–Thu, 10am – 8pm" },
+  { icon: "📍", label: "Address",   value: "Saskatoon, SK, Canada" },
+  { icon: "📞", label: "Phone",     value: "+1 (306) 555-0199" },
+  { icon: "✉️", label: "Email",     value: "finaltouchstudiosask@gmail.com" },
+  { icon: "🕐", label: "Hours",     value: "Mon–Fri, 9am – 6pm" },
 ];
 
 export default function ContactUs() {

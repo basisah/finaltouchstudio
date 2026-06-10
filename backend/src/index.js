@@ -4,15 +4,20 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const db = require("./db");
 const auth = require("./middleware/auth");
+const initializeDatabase = require("./initDb");
+const packageRoutes = require("./routes/packageRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-
 app.use(cors());
 app.use(express.json());
 
+// Initialize database tables and seed data
+initializeDatabase();
 
+// Mount routers
+app.use("/api/packages", packageRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -44,7 +49,7 @@ app.get("/api/auth/verify", auth, (req, res) => {
 // Get all items
 app.get("/api/items", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM items ORDER BY created_at DESC");
+    const [rows] = await db.query("SELECT * FROM items ORDER BY categoryId, id");
     res.json(rows);
   } catch (err) {
     console.error("Error fetching items:", err);
@@ -66,14 +71,16 @@ app.get("/api/items/:id", async (req, res) => {
 
 // Create item (Protected)
 app.post("/api/items", auth, async (req, res) => {
-  const { name, description } = req.body;
-  if (!name) return res.status(400).json({ error: "Name is required" });
+  const { id, title, categoryId, subCategoryId, description, isAvailable, image } = req.body;
+  if (!id || !title || !categoryId) {
+    return res.status(400).json({ error: "id, title, and categoryId are required" });
+  }
   try {
-    const [result] = await db.query(
-      "INSERT INTO items (name, description) VALUES (?, ?)",
-      [name, description || null]
+    await db.query(
+      "INSERT INTO items (id, title, categoryId, subCategoryId, description, isAvailable, image) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, title, categoryId, subCategoryId || null, description || null, isAvailable !== false, image || "✨"]
     );
-    const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [result.insertId]);
+    const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [id]);
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Error creating item:", err);
@@ -83,13 +90,14 @@ app.post("/api/items", auth, async (req, res) => {
 
 // Update item (Protected)
 app.put("/api/items/:id", auth, async (req, res) => {
-  const { name, description } = req.body;
+  const { title, categoryId, subCategoryId, description, isAvailable, image } = req.body;
+  const itemId = req.params.id;
   try {
     await db.query(
-      "UPDATE items SET name = ?, description = ? WHERE id = ?",
-      [name, description, req.params.id]
+      "UPDATE items SET title = ?, categoryId = ?, subCategoryId = ?, description = ?, isAvailable = ?, image = ? WHERE id = ?",
+      [title, categoryId, subCategoryId || null, description, isAvailable, image, itemId]
     );
-    const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [req.params.id]);
+    const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [itemId]);
     if (rows.length === 0) return res.status(404).json({ error: "Item not found" });
     res.json(rows[0]);
   } catch (err) {

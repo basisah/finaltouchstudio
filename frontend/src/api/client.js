@@ -1,4 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+let BASE_URL = import.meta.env.VITE_API_URL || '/api';
+if (BASE_URL.startsWith('http') && !BASE_URL.endsWith('/api')) {
+  BASE_URL = `${BASE_URL}/api`;
+}
 
 async function request(method, path, body) {
   const token = localStorage.getItem('admin_token');

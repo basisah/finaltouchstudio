@@ -18,6 +18,7 @@ import MembersTab from "./components/MembersTab";
 import PaymentsTab from "./components/PaymentsTab";
 import EnquiriesTab from "./components/EnquiriesTab";
 import GlobalSearchTab from "./components/GlobalSearchTab";
+import PackagesTab from "./components/PackagesTab";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export default function AdminPage() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemDesc, setNewItemDesc] = useState("");
   const [newItemPic, setNewItemPic] = useState("✨");
+  const [newItemSubCategory, setNewItemSubCategory] = useState("");
 
   // Member additions
   const [newMemName, setNewMemName] = useState("");
@@ -110,6 +112,7 @@ export default function AdminPage() {
       name: newItemName,
       description: newItemDesc,
       categoryId: activeTab,
+      subCategoryId: newItemSubCategory,
       isAvailable: true,
       image: newItemPic || "✨",
     };
@@ -119,6 +122,7 @@ export default function AdminPage() {
     setNewItemDesc("");
     setNewItemSN("");
     setNewItemPic("✨");
+    setNewItemSubCategory("");
   };
 
   // Delete Item
@@ -279,6 +283,8 @@ export default function AdminPage() {
               setNewItemName={setNewItemName}
               newItemDesc={newItemDesc}
               setNewItemDesc={setNewItemDesc}
+              newItemSubCategory={newItemSubCategory}
+              setNewItemSubCategory={setNewItemSubCategory}
             />
           )}
 
@@ -316,6 +322,11 @@ export default function AdminPage() {
           {/* E. Default Tab Route: Leads Enquiries Inbox */}
           {activeTab === "enquiries" && searchQuery.trim() === "" && (
             <EnquiriesTab enquiries={enquiries} />
+          )}
+
+          {/* G. Packages Management Tab */}
+          {activeTab === "packages" && searchQuery.trim() === "" && (
+            <PackagesTab />
           )}
 
           {/* F. Category Setup Guide (when clicking add new category button) */}

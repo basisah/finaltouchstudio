@@ -34,7 +34,7 @@ export default function Footer() {
           <p className={styles.story}>
             We turn your most treasured moments into unforgettable experiences.
             From intimate proposals to grand wedding stages, every detail is
-            crafted with love and artistry — right here in Dhaka.
+            crafted with love and artistry — right here in Saskatoon.
           </p>
           <p className={styles.tagline}>✦ Where moments become memories.</p>
         </div>
@@ -100,15 +100,6 @@ export default function Footer() {
               </svg>
               TikTok
             </a>
-          </div>
-
-          <div className={styles.otherLinks}>
-            <h4 className={styles.colTitle} style={{ marginTop: "28px" }}>Other</h4>
-            <nav className={styles.linkList}>
-              <a href="mailto:hello@finaltouchstudio.com">hello@finaltouchstudio.com</a>
-              <a href="tel:+8801700000000">+880 1700 000 000</a>
-              <span>Dhaka, Bangladesh</span>
-            </nav>
           </div>
         </div>
       </div>
