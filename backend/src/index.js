@@ -111,7 +111,11 @@ app.delete("/api/items/:id", auth, async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend running on http://localhost:${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-});
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Backend running on http://localhost:${PORT}`);
+    console.log(`📡 API available at http://localhost:${PORT}/api`);
+  });
+}
