@@ -14,6 +14,7 @@ import PickupDelivery     from "./PickupDelivery/PickupDelivery";
 import Gallery            from "./Gallery/Gallery";
 import ContactUs          from "./ContactUs/ContactUs";
 import SocialProof        from "./SocialProof/SocialProof";
+import Footer             from "../../components/Footer/Footer";
 
 import styles from "./LandingPage.module.css";
 
@@ -29,22 +30,7 @@ export default function LandingPage() {
       <Gallery />
       <SocialProof />
       <ContactUs />
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div className={styles.footerBrand}>
-            <span className={styles.footerLogo}>FT</span>
-            <span className={styles.footerName}>FinalTouch Studio</span>
-          </div>
-          <p className={styles.footerCopy}>
-            © {new Date().getFullYear()} FinalTouch Studio. All rights reserved. Made with ❤️ in Dhaka.
-          </p>
-          <div className={styles.footerLinks}>
-            <a href="#home">Home</a>
-            <a href="#gallery">Gallery</a>
-            <a href="#contact">Contact</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 .section {
-  background: var(--clr-light);
+  background: var(--clr-portrait-pink);
   padding: 0 40px 64px;
   position: relative;
   z-index: 10;
@@ -26,7 +26,7 @@
 
 .fieldLabel {
   font-size: 10px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--clr-dusty-lilac);
+  text-transform: uppercase; color: var(--clr-gizmo);
   opacity: 0.75;
 }
 
@@ -37,7 +37,7 @@
   appearance: none; -webkit-appearance: none;
 }
 .input::placeholder { color: rgba(216,188,196,0.45); font-weight: 400; }
-.select option { background: var(--clr-deep-plum); color: #fff; }
+.select option { background: var(--clr-weathervane); color: #fff; }
 
 .divider { width:1px; background:rgba(255,255,255,0.08); margin:12px 0; flex-shrink:0; }
 
@@ -54,11 +54,3 @@
 }
 .btn:hover { opacity:0.92; box-shadow:inset 0 0 0 999px rgba(0,0,0,0.08); }
 .btnIcon { font-size:18px; }
-
-@media (max-width:768px) {
-  .section { padding: 0 16px 48px; }
-  .bar { flex-direction:column; border-radius:16px; }
-  .field { border-bottom:1px solid rgba(255,255,255,0.08); min-width:unset; }
-  .divider { display:none; }
-  .btn { border-radius:0 0 16px 16px; padding:16px; justify-content:center; }
-}

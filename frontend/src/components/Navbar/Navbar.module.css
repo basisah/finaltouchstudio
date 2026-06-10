@@ -52,7 +52,7 @@
   line-height: 1;
   letter-spacing: 0.3px;
 }
-.logoAccent { color: var(--clr-dusty-lilac); font-style: italic; }
+.logoAccent { color: var(--clr-gizmo); font-style: italic; }
 
 /* ── Nav links — always white, text-shadow for contrast on any bg ─────────── */
 .nav { display:flex; align-items:center; gap:2px; margin-left: auto; }
@@ -72,11 +72,11 @@
 .navLink:hover {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-sm);
-  color: var(--clr-dusty-lilac);
+  color: var(--clr-gizmo);
   text-shadow: none;
 }
 .navLink.active {
-  color: var(--clr-dusty-lilac);
+  color: var(--clr-gizmo);
   text-shadow: none;
   background: rgba(255,255,255,0.10);
 }
@@ -97,8 +97,8 @@
   transition: all var(--transition);
 }
 .cta:hover {
-  background: var(--clr-mauve);
-  border-color: var(--clr-mauve);
+  background: var(--clr-mulberry-mix);
+  border-color: var(--clr-mulberry-mix);
   box-shadow: 0 4px 20px rgba(159,80,124,0.45);
   transform: translateY(-1px);
 }
@@ -135,7 +135,7 @@
   color: var(--txt-on-dark); letter-spacing: 0.2px;
   transition: background var(--transition), color var(--transition);
 }
-.drawerLink:hover { background: var(--glass-bg); color: var(--clr-dusty-lilac); }
+.drawerLink:hover { background: var(--glass-bg); color: var(--clr-gizmo); }
 
 .drawerCta {
   margin-top: 12px; padding: 14px; border-radius: 99px;
@@ -144,8 +144,52 @@
   box-shadow: 0 4px 16px rgba(159,80,124,0.40);
 }
 
-@media (max-width: 768px) {
-  .nav, .cta { display: none; }
-  .hamburger  { display: flex; }
-  .inner      { padding: 16px 20px !important; }
+.desktopActions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: 20px;
+}
+
+.mobileActions {
+  display: none;
+}
+
+.iconBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: transform var(--transition), color var(--transition);
+  filter: drop-shadow(0 2px 8px rgba(52,22,42,0.40));
+}
+
+.iconBtn:hover {
+  transform: scale(1.08);
+  color: var(--clr-gizmo);
+}
+
+.navIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(236,72,153,0.4);
+  border: 1.5px solid #34162A;
 }

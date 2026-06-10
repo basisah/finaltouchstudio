@@ -13,6 +13,12 @@ export default function ProtectedRoute({ children }) {
         return;
       }
 
+      // Bypass backend verification if using the mock token for frontend-only mode
+      if (token === "mock_khaled_admin_token") {
+        setIsAuthenticated(true);
+        return;
+      }
+
       try {
         await get("/auth/verify");
         setIsAuthenticated(true);

@@ -414,63 +414,123 @@
   );
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+/* Tablet */
 @media (max-width: 900px) {
-  .hero { padding-bottom: 180px; }
-  .categoryStrip { gap: 16px; padding: 0 20px; }
-  .catCard { min-width: 0; height: 380px; border-radius: 28px; }
-  .catCardTitle { font-size: 22px; }
-  .catCardDesc { font-size: 12px; }
+  .hero {
+    padding-bottom: 300px;
+  }
+  .categoryStrip {
+    gap: 16px;
+    padding: 0 20px;
+  }
+  .catCard {
+    height: 340px;
+    min-width: 180px;
+    border-radius: 24px;
+  }
+  .catCardTitle {
+    font-size: 20px;
+  }
+  .catCardDesc {
+    font-size: 12px;
+  }
+  .catCardContent {
+    padding: 20px 14px 18px;
+  }
 }
 
-@media (max-width: 768px) {
-  .hero { min-height: auto; padding-bottom: 60px; }
+/* Mobile — switch from absolute strip to horizontal scroll row */
+@media (max-width: 600px) {
+  .hero {
+    min-height: 70vh;
+    padding-bottom: 0;
+  }
+
+  .content {
+    padding: 100px 20px 32px;
+  }
+
+  /* On mobile the strip becomes a normal inline scrollable row
+     instead of the absolute half-over-half-under layout */
   .categoryStrip {
     position: relative;
     bottom: auto;
     left: auto;
     transform: none;
-    margin: 48px auto 0;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-    padding: 0 20px;
-  }
-  .catCard {
     width: 100%;
-    max-width: 340px;
-    height: 400px;
+    max-width: 100%;
+    padding: 0 0 0 16px;     /* left pad only — bleed right */
+    gap: 12px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-top: 20px;
+    padding-bottom: 16px;
+  }
+  .categoryStrip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .catCard {
+    flex: 0 0 auto;          /* don't grow/shrink — fixed size for swipe */
+    width: 160px;
+    min-width: unset;
+    max-width: unset;
+    height: 220px;
+    border-radius: 20px;
+  }
+
+  /* Last card needs trailing space */
+  .catCard:last-child {
+    margin-right: 16px;
+  }
+
+  .catCardTitle {
+    font-size: 16px;
+  }
+
+  .catCardDesc {
+    font-size: 11px;
+    white-space: normal;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .catCardContent {
+    padding: 16px 12px 14px;
+    gap: 4px;
+  }
+
+  .searchRow {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .searchBar {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .btnRoundBook {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 24px;
   }
 }
 
-@media (max-width: 640px) {
-  .content { padding: 100px 20px 0; }
-  .searchRow {
-    flex-direction: column;
-    width: 100%;
-    gap: 12px;
-    margin-top: 24px;
+/* Extra small phones */
+@media (max-width: 375px) {
+  .catCard {
+    width: 140px;
+    height: 200px;
   }
-  .searchBar {
-    width: 100%;
-    max-width: 100%;
-    padding: 4px 4px 4px 16px;
-    border-radius: 99px;
-  }
-  .sInputSimple {
+  .catCardTitle {
     font-size: 14px;
-    padding: 8px 0;
   }
-  .sBtnSimple {
-    padding: 8px 20px;
-    font-size: 13px;
-  }
-  .btnRoundBook {
-    width: 100%;
-    max-width: 320px;
-    padding: 12px 24px;
-    font-size: 13px;
-  }
-  .subheadline { white-space: normal; }
-  .headline { letter-spacing: -0.5px; }
 }

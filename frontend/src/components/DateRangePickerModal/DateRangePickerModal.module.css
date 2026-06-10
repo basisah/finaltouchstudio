@@ -1,0 +1,342 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+}
+
+.topBar {
+  background: #f8fafc;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.helperText {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+.content {
+  padding: 32px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Date Inputs Top Bar */
+.dateInputs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding: 0 16px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputGroup label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.inputBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dateText {
+  color: #1f2937;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
+}
+
+.placeholder {
+  color: #9ca3af;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
+}
+
+.timeText {
+  color: #6b7280;
+}
+
+.activeInput .placeholder,
+.activeInput .dateText {
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border-bottom: 2px solid #2563eb;
+}
+
+.arrowIcon {
+  font-size: 24px;
+  color: #4b5563;
+  margin-top: 16px;
+}
+
+/* Calendars Container */
+.calendarsContainer {
+  display: flex;
+  position: relative;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.navBtnLeft,
+.navBtnRight {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #4b5563;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  padding: 4px;
+}
+
+.navBtnLeft {
+  left: 0;
+}
+
+.navBtnRight {
+  right: 0;
+}
+
+.monthCalendar {
+  width: 300px;
+}
+
+.monthHeader {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.weekdaysRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 8px;
+}
+
+.day,
+.dayEmpty {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.dayContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.day:hover .dayContent {
+  border: 1px solid #111827;
+}
+
+.dayToday .dayContent {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.dayClosed .dayContent {
+  color: #d1d5db;
+  background: repeating-linear-gradient(
+    45deg,
+    #f8fafc,
+    #f8fafc 3px,
+    #ffffff 3px,
+    #ffffff 6px
+  );
+  border: 1px solid #f1f5f9;
+}
+
+.dayClosed:hover .dayContent {
+  border: 1px solid #f1f5f9;
+  cursor: not-allowed;
+}
+
+.dayStart .dayContent,
+.dayEnd .dayContent {
+  background: #22c55e;
+  color: #fff;
+}
+
+.dayStart:hover .dayContent,
+.dayEnd:hover .dayContent {
+  border-color: #22c55e;
+}
+
+/* Range background connection */
+.dayInRange {
+  background: #dcfce7; /* light green */
+  border-radius: 0;
+  width: 100%; /* span full width of grid cell */
+}
+
+.dayStart {
+  background: linear-gradient(to right, transparent 50%, #dcfce7 50%);
+  border-radius: 0;
+  width: 100%;
+}
+
+.dayEnd {
+  background: linear-gradient(to left, transparent 50%, #dcfce7 50%);
+  border-radius: 0;
+  width: 100%;
+}
+
+.dayStart.dayEnd {
+  background: none;
+}
+
+/* Item Footer */
+.itemFooter {
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.itemInfo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.itemName {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.quantityControl button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.quantityControl button:hover {
+  border-color: #111827;
+}
+
+.qtyVal {
+  width: 20px;
+  text-align: center;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #6b7280;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.footer {
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: flex-end;
+  background: #f8fafc;
+}
+
+.confirmBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

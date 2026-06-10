@@ -3,19 +3,20 @@
 
 /* ── Design Tokens — Purple Luxury Palette ────────────────────────────────────── */
 :root {
-  /* ── Brand colours ──────────────────────────────────────────── */
-  --clr-deep-plum:   #34162A;   /* darkest — bg, text on light */
-  --clr-aubergine:   #542141;   /* mid dark — section backgrounds */
-  --clr-mauve:       #9F507C;   /* primary accent */
-  --clr-mauve-lt:    #B8729A;   /* lighter mauve for hover */
-  --clr-dusty-lilac: #D8BCC4;   /* light accent / borders */
-  --clr-light:       #F5ECF0;   /* page background */
+  /* ── Brand colours (Spring Blossom Palette) ───────────────── */
+  --clr-weathervane: #2F1B1A;
+  --clr-purple-kite: #522E30;
+  --clr-berry-bush:  #7A404D;
+  --clr-mulberry-mix:#9D5A6F;
+  --clr-benifuji:    #BD7893;
+  --clr-gizmo:       #D89FB6;
+  --clr-portrait-pink:#F0D2DE;
   --clr-white:       #FFFFFF;
 
   /* ── Gradient shorthands ─────────────────────────────────────── */
-  --grad-brand:      linear-gradient(135deg, #34162A 0%, #9F507C 100%);
-  --grad-mauve:      linear-gradient(135deg, #542141 0%, #9F507C 100%);
-  --grad-hero:       linear-gradient(160deg, rgba(52,22,42,0.82) 0%, rgba(84,33,65,0.55) 60%, rgba(159,80,124,0.18) 100%);
+  --grad-brand:      linear-gradient(135deg, var(--clr-weathervane) 0%, var(--clr-mulberry-mix) 100%);
+  --grad-mauve:      linear-gradient(135deg, var(--clr-purple-kite) 0%, var(--clr-mulberry-mix) 100%);
+  --grad-hero:       linear-gradient(160deg, rgba(47,27,26,0.82) 0%, rgba(82,46,48,0.55) 60%, rgba(157,90,111,0.18) 100%);
   --grad-card:       linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
 
   /* ── Glassmorphism ───────────────────────────────────────────── */
@@ -27,23 +28,23 @@
   --glass-blur-sm:   blur(12px);
 
   /* ── Text ────────────────────────────────────────────────────── */
-  --txt-primary:    #34162A;
-  --txt-secondary:  #6B3E5A;
-  --txt-muted:      #9F7A8D;
-  --txt-on-dark:    #F5ECF0;
-  --txt-on-dark-dim:rgba(245,236,240,0.70);
-  --txt-gold:       #D8BCC4;
+  --txt-primary:    var(--clr-weathervane);
+  --txt-secondary:  var(--clr-berry-bush);
+  --txt-muted:      var(--clr-benifuji);
+  --txt-on-dark:    var(--clr-portrait-pink);
+  --txt-on-dark-dim:rgba(240,210,222,0.70);
+  --txt-gold:       var(--clr-gizmo);
 
   /* ── UI ──────────────────────────────────────────────────────── */
-  --border:         rgba(159,80,124,0.18);
+  --border:         rgba(157,90,111,0.18);
   --border-dark:    rgba(255,255,255,0.10);
   --radius:         16px;
   --radius-sm:      10px;
   --radius-lg:      24px;
-  --shadow-sm:      0 2px 16px rgba(52,22,42,0.12);
-  --shadow-md:      0 8px 40px rgba(52,22,42,0.20);
-  --shadow-lg:      0 24px 80px rgba(52,22,42,0.35);
-  --shadow-glow:    0 0 40px rgba(159,80,124,0.30);
+  --shadow-sm:      0 2px 16px rgba(47,27,26,0.12);
+  --shadow-md:      0 8px 40px rgba(47,27,26,0.20);
+  --shadow-lg:      0 24px 80px rgba(47,27,26,0.35);
+  --shadow-glow:    0 0 40px rgba(157,90,111,0.30);
 
   /* ── Motion ──────────────────────────────────────────────────── */
   --ease:       cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,7 +61,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--clr-light);
+  background: var(--clr-portrait-pink);
   color: var(--txt-primary);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -73,7 +74,7 @@ button { cursor: pointer; font-family: inherit; }
 /* ── Scrollbar ───────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--clr-mauve); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--clr-mulberry-mix); border-radius: 99px; }
 
 /* ── Global animations ───────────────────────────────────────────────────────── */
 @keyframes fadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }

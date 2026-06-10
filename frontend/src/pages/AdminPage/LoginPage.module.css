@@ -4,8 +4,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--clr-deep-plum);
-  background-image: radial-gradient(circle at 50% 50%, var(--clr-aubergine) 0%, var(--clr-deep-plum) 100%);
+  background-color: var(--clr-weathervane);
+  background-image: radial-gradient(circle at 50% 50%, var(--clr-purple-kite) 0%, var(--clr-weathervane) 100%);
   overflow: hidden;
   font-family: var(--font-sans);
   padding: 20px;
@@ -23,7 +23,7 @@
 .glowBg1 {
   width: 350px;
   height: 350px;
-  background-color: var(--clr-mauve);
+  background-color: var(--clr-mulberry-mix);
   top: 10%;
   left: 15%;
   animation: float 8s ease-in-out infinite alternate;
@@ -32,7 +32,7 @@
 .glowBg2 {
   width: 400px;
   height: 400px;
-  background-color: var(--clr-mauve-lt);
+  background-color: var(--clr-mulberry-mix-lt);
   bottom: 15%;
   right: 15%;
   animation: float 10s ease-in-out infinite alternate-reverse;
@@ -71,7 +71,7 @@
 .brandSubtitle {
   font-family: var(--font-display);
   font-size: 1.6rem;
-  color: var(--clr-dusty-lilac);
+  color: var(--clr-gizmo);
   margin-bottom: 4px;
 }
 
@@ -131,7 +131,7 @@
 .inputGroup input:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.1);
-  border-color: var(--clr-mauve-lt);
+  border-color: var(--clr-mulberry-mix-lt);
   box-shadow: 0 0 10px rgba(184, 114, 154, 0.25);
 }
 

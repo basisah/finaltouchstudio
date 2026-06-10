@@ -8,6 +8,13 @@ import marriageImg from "../../../assets/Category/Marriage_Stage.jpg";
 import bridalImg from "../../../assets/images/gallery_wedding.png";
 import babyImg from "../../../assets/images/gallery_holud.png";
 
+// Import category icons
+import birthdayIcon from "../../../assets/Icons/birthday-cake.png";
+import proposalIcon from "../../../assets/Icons/ring.png";
+import marriageIcon from "../../../assets/Icons/wedding-couple.png";
+import bridalIcon from "../../../assets/Icons/bridal-shower.png";
+import babyIcon from "../../../assets/Icons/baby.png";
+
 const categoryImages = {
   birthday: birthdayImg,
   proposal: proposalImg,
@@ -16,9 +23,54 @@ const categoryImages = {
   "baby-shower": babyImg,
 };
 
+const categoryIcons = {
+  birthday: birthdayIcon,
+  proposal: proposalIcon,
+  marriage: marriageIcon,
+  "bridal-shower": bridalIcon,
+  "baby-shower": babyIcon,
+};
+
 export default function CategorySection() {
   return (
     <section className={styles.section} aria-label="Event categories">
+      {/* Decorative Floating Elements */}
+      <div className={styles.floatingOrb1} />
+      <div className={styles.floatingOrb2} />
+      <div className={styles.floatingOrb3} />
+      <div className={styles.floatingSparkle1}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 2v20M2 12h20M7 7l10 10M7 17L17 7" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div className={styles.floatingSparkle2}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 3v18M3 12h18" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div className={styles.floatingRing1} />
+      <div className={styles.floatingRing2} />
+      <div className={styles.floatingFlower1}>🌸</div>
+      <div className={styles.floatingFlower2}>✨</div>
+
+      {/* Festive Floating Elements */}
+      <div className={styles.confetti1} />
+      <div className={styles.confetti2} />
+      <div className={styles.confetti3} />
+      <div className={styles.confetti4} />
+      <div className={styles.lantern1}>🏮</div>
+      <div className={styles.lantern2}>🎈</div>
+      <div className={styles.festiveStar1}>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+        </svg>
+      </div>
+      <div className={styles.festiveStar2}>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+        </svg>
+      </div>
+
       <div className={styles.header}>
         <p className={styles.eyebrow}>What are you celebrating?</p>
         <h2 className={styles.heading}>Browse by Occasion</h2>
@@ -37,6 +89,7 @@ export default function CategorySection() {
           
           const isEven = index % 2 === 0;
           const imgUrl = categoryImages[cat.id];
+          const iconUrl = categoryIcons[cat.id];
           const isLast = index === 4;
 
           let description = "Bespoke setups and decorations.";
@@ -57,24 +110,14 @@ export default function CategorySection() {
 
               <div className={styles.textCol}>
                 <div className={styles.textContent}>
-                  <h3 className={styles.title}>{cat.label}</h3>
-                  <p className={styles.subtitle}>Premium Setup</p>
+                  <div className={styles.titleWrapper}>
+                    {iconUrl && <img src={iconUrl} alt="" className={styles.occIcon} />}
+                    <h3 className={styles.title}>{cat.label}</h3>
+                  </div>
                   <p className={styles.desc}>{description}</p>
                   
                   <div className={styles.linkWrapper}>
-                    {isEven ? (
-                      <>
-                        <span className={styles.linkText}>catalog</span>
-                        <span className={styles.linkLine}></span>
-                        <span className={styles.linkCircle}></span>
-                      </>
-                    ) : (
-                      <>
-                        <span className={styles.linkCircle}></span>
-                        <span className={styles.linkLine}></span>
-                        <span className={styles.linkText}>catalog</span>
-                      </>
-                    )}
+                    <span className={styles.linkCircle}></span>
                   </div>
                 </div>
               </div>

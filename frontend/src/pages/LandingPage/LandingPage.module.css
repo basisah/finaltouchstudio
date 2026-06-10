@@ -2,7 +2,7 @@
 
 /* ── Footer ──────────────────────────────────────────────────────────────────── */
 .footer {
-  background: var(--clr-deep-plum);
+  background: var(--clr-weathervane);
   padding: 48px 40px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
@@ -23,9 +23,4 @@
 .footerCopy { font-size:13px; color:rgba(255,255,255,0.28); }
 .footerLinks { display:flex; gap:20px; }
 .footerLinks a { font-size:13px; color:rgba(255,255,255,0.40); transition:color var(--transition); }
-.footerLinks a:hover { color:var(--clr-dusty-lilac); }
-
-@media (max-width:600px) {
-  .footer { padding:32px 16px; }
-  .footerInner { flex-direction:column; align-items:center; text-align:center; }
-}
+.footerLinks a:hover { color:var(--clr-gizmo); }
