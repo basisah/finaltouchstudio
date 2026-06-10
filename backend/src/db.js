@@ -27,23 +27,29 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-(async () => {
-  let retries = 10;
-  while (retries > 0) {
+async function waitForConnection(maxAttempts = 40, delayMs = 250) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const conn = await pool.getConnection();
-      console.log("✅ Database connected successfully");
       conn.release();
-      break;
-    } catch (err) {
-      retries--;
-      console.log(`⏳ Waiting for database... (${retries} retries left)`);
-      await new Promise((r) => setTimeout(r, 3000));
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
-  if (retries === 0) {
-    console.error("❌ Could not connect to database after multiple attempts");
-  }
-})();
+  throw new Error("Could not connect to database");
+}
+
+if (process.env.JEST_WORKER_ID === undefined) {
+  waitForConnection(10, 3000)
+    .then(() => console.log("✅ Database connected successfully"))
+    .catch(() => console.error("❌ Could not connect to database after multiple attempts"));
+}
+
+async function closePool() {
+  await pool.end();
+}
 
 module.exports = pool;
+module.exports.waitForConnection = waitForConnection;
+module.exports.closePool = closePool;
