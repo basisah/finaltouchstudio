@@ -85,11 +85,10 @@ jobs:
       - name: Install MySQL client
         run: sudo apt-get update && sudo apt-get install -y default-mysql-client
 
-      - name: Wait for MySQL and initialize database
+      - name: Wait for MySQL
         run: |
           for i in $(seq 1 30); do
             if mysqladmin ping -h 127.0.0.1 -u root -ptestrootpassword --silent; then
-              mysql -h 127.0.0.1 -u root -ptestrootpassword finaltouchstudio < ../db/init.sql
               exit 0
             fi
             sleep 1

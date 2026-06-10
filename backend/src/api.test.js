@@ -1,6 +1,15 @@
 const request = require("supertest");
 const db = require("./db");
+const initializeDatabase = require("./initDb");
 const app = require("./index");
+
+const testItem = {
+  id: "ci-test-item",
+  title: "CI Test Item",
+  categoryId: "birthday",
+  subCategoryId: "props",
+  description: "Created in tests",
+};
 
 describe("API", () => {
   let authToken;
@@ -8,6 +17,8 @@ describe("API", () => {
 
   beforeAll(async () => {
     await db.waitForConnection();
+    await initializeDatabase();
+    await db.query("DELETE FROM items WHERE id = ?", [testItem.id]);
   });
 
   afterAll(async () => {
@@ -80,7 +91,7 @@ describe("API", () => {
     it("returns 401 without auth", async () => {
       const res = await request(app)
         .post("/api/items")
-        .send({ name: "Unauthorized Item" });
+        .send(testItem);
 
       expect(res.status).toBe(401);
     });
@@ -89,22 +100,23 @@ describe("API", () => {
       const res = await request(app)
         .post("/api/items")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "CI Test Item", description: "Created in tests" });
+        .send(testItem);
 
       expect(res.status).toBe(201);
-      expect(res.body.name).toBe("CI Test Item");
-      expect(res.body.description).toBe("Created in tests");
+      expect(res.body.title).toBe(testItem.title);
+      expect(res.body.categoryId).toBe(testItem.categoryId);
+      expect(res.body.description).toBe(testItem.description);
       createdItemId = res.body.id;
     });
 
-    it("returns 400 when name is missing", async () => {
+    it("returns 400 when required fields are missing", async () => {
       const res = await request(app)
         .post("/api/items")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ description: "No name" });
+        .send({ description: "Missing required fields" });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe("Name is required");
+      expect(res.body.error).toBe("id, title, and categoryId are required");
     });
   });
 
@@ -112,7 +124,7 @@ describe("API", () => {
     it("returns 401 without auth", async () => {
       const res = await request(app)
         .put(`/api/items/${createdItemId}`)
-        .send({ name: "Updated" });
+        .send({ title: "Updated" });
 
       expect(res.status).toBe(401);
     });
@@ -121,18 +133,30 @@ describe("API", () => {
       const res = await request(app)
         .put(`/api/items/${createdItemId}`)
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "Updated CI Item", description: "Updated in tests" });
+        .send({
+          title: "Updated CI Item",
+          categoryId: "birthday",
+          subCategoryId: "props",
+          description: "Updated in tests",
+          isAvailable: true,
+          image: "✨",
+        });
 
       expect(res.status).toBe(200);
-      expect(res.body.name).toBe("Updated CI Item");
+      expect(res.body.title).toBe("Updated CI Item");
       expect(res.body.description).toBe("Updated in tests");
     });
 
     it("returns 404 for a missing item", async () => {
       const res = await request(app)
-        .put("/api/items/999999")
+        .put("/api/items/does-not-exist")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "Missing" });
+        .send({
+          title: "Missing",
+          categoryId: "birthday",
+          isAvailable: true,
+          image: "✨",
+        });
 
       expect(res.status).toBe(404);
     });

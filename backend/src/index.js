@@ -13,8 +13,10 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize database tables and seed data
-initializeDatabase();
+// Initialize database tables and seed data (skipped in tests — tests call this explicitly)
+if (process.env.JEST_WORKER_ID === undefined) {
+  initializeDatabase();
+}
 
 // Mount routers
 app.use("/api/packages", packageRoutes);
