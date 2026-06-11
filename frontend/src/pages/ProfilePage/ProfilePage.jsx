@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer/Footer";
 import styles from "./ProfilePage.module.css";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
@@ -115,10 +116,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <>
+    <div className={styles.page}>
       <Navbar />
-      <main className={styles.page}>
-        <div className={styles.container}>
+      <main className={styles.container}>
 
           {/* ── Profile Header Card ── */}
           <div className={styles.profileCard}>
@@ -249,8 +249,8 @@ export default function ProfilePage() {
             </div>
           </section>
 
-        </div>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
 import { get, post, put, del } from "../../api/client";
+import { compressImage } from "../../utils/imageCompressor";
 
 // Modular Imports
 import {
@@ -150,8 +151,9 @@ export default function AdminPage() {
       let imagePath = newItemPic || "✨";
 
       if (newItemFile) {
+        const compressedFile = await compressImage(newItemFile);
         const formData = new FormData();
-        formData.append("image", newItemFile);
+        formData.append("image", compressedFile);
 
         const token = localStorage.getItem("admin_token");
         const uploadRes = await fetch("/api/upload", {

@@ -1,4 +1,5 @@
 import { post, put, del } from "../client";
+import { compressImage } from "../../utils/imageCompressor";
 
 /** Create new event category */
 export const createCategory = (data) => post("/categories", data);
@@ -11,9 +12,10 @@ export const deleteCategory = (id) => del(`/categories/${id}`);
 
 /** Upload category cover image */
 export const uploadCategoryImage = async (file) => {
+  const compressedFile = await compressImage(file);
   const token = localStorage.getItem("admin_token");
   const fd = new FormData();
-  fd.append("image", file);
+  fd.append("image", compressedFile);
   
   const res = await fetch("/api/categories/upload-image", {
     method: "POST",

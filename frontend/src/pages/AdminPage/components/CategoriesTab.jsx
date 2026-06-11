@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import styles from "../AdminPage.module.css";
+import { compressImage } from "../../../utils/imageCompressor";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
 
@@ -22,8 +23,9 @@ export default function CategoriesTab({ categories, onRefresh }) {
   const authHeaders = { Authorization: `Bearer ${token}` };
 
   const uploadImage = async (file) => {
+    const compressedFile = await compressImage(file);
     const fd = new FormData();
-    fd.append("image", file);
+    fd.append("image", compressedFile);
     const res = await fetch(`${BASE_URL}/api/categories/upload-image`, {
       method: "POST",
       headers: authHeaders,

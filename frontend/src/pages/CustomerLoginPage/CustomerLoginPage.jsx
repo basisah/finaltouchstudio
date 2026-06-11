@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import Footer from "../../components/Footer/Footer";
 import styles from "./CustomerLoginPage.module.css";
 
 export default function CustomerLoginPage() {
@@ -107,7 +108,8 @@ export default function CustomerLoginPage() {
   }, []);
 
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.page}>
+      <div className={styles.wrapper}>
       <div className={styles.glowBg1}></div>
       <div className={styles.glowBg2}></div>
       
@@ -191,6 +193,8 @@ export default function CustomerLoginPage() {
           </div>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }
