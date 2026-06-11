@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children }) {
 
       try {
 
-        await get("/auth/verify");
+        await get("/admin/auth/verify");
         setIsAuthenticated(true);
       } catch (err) {
         localStorage.removeItem("admin_token");

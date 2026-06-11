@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity INT DEFAULT 1,
     price_at_rent DECIMAL(10, 2) NOT NULL,                -- Snapshot of price to preserve audit financial records
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES items(id) ON SET NULL,
-    FOREIGN KEY (package_id) REFERENCES packages(id) ON SET NULL
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL,
+    FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL
 );
 
 -- User Persistent Shopping Carts / Wishlists (Saves cart state between logouts)

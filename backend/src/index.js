@@ -1,20 +1,39 @@
+/**
+ * Backend entry point
+ * 
+ * Purpose:
+ * Initializes ecosystem environment variables, provisions middleware hooks (CORS, JSON Parser), 
+ * guarantees structural system directories (upload item photo stores), boots and patches database schemas, 
+ * and handles modular routing paths for the runtime application state.
+ */
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-const initializeDatabase = require("./initDb");
+const initializeDatabase = require("./initDb");  // Database setup script initDb.js
 
+// Routes
 const packageRoutes = require("./routes/packageRoutes");
-const authRoutes = require("./routes/authRoutes");
-const itemRoutes = require("./routes/itemRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const categoryRoutes = require("./routes/categoryRoutes");
+const userAuthRoutes = require("./routes/userAuthRoutes");  // User registration, login, google OAuth logins
+const itemRoutes = require("./routes/itemRoutes");          // Rental inventory (public GET)
+const bookingRoutes = require("./routes/bookingRoutes");    // checkout, cart, orders (public/user)
+const categoryRoutes = require("./routes/categoryRoutes");    // categories (public GET)
 
+// Admin Routes
+const adminAuth = require("./routes/admin/auth");
+const adminCategories = require("./routes/admin/categories");
+const adminItems = require("./routes/admin/items");
+const adminPackages = require("./routes/admin/packages");
+const adminOrders = require("./routes/admin/orders");
+
+// Server configuration
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Middleware to suport frontend
 app.use(cors());
+// Handle incoming JSON payloads
 app.use(express.json());
 
 // Expose static uploads folder
@@ -27,9 +46,16 @@ app.use("/uploads", express.static(uploadDir));
 // Initialize database tables and seed data
 initializeDatabase();
 
-// Mount routers
+// Mount Admin Routes
+app.use("/api/admin/auth", adminAuth);
+app.use("/api/admin/orders", adminOrders);
+app.use("/api/categories", adminCategories);
+app.use("/api", adminItems); // handles POST /upload, and CRUD on /items
+app.use("/api/packages", adminPackages);
+
+// Mount Public/User Routes
 app.use("/api/packages", packageRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", userAuthRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api", bookingRoutes);
@@ -43,7 +69,7 @@ module.exports = app;
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`🚀 Backend running on http://localhost:${PORT}`);
-    console.log(`📡 API available at http://localhost:${PORT}/api`);
+    console.log(`Backend running on http://localhost:${PORT}`);
+    console.log(`API available at http://localhost:${PORT}/api`);
   });
 }

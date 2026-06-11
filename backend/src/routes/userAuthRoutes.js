@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const db = require("../db");
 const auth = require("../middleware/auth");
 const { sendNotificationEmail } = require("../utils/mailer");
+const getRegistrationUserTemplate = require("../emailservices/registrationUser");
+const getRegistrationAdminTemplate = require("../emailservices/registrationAdmin");
 
 // Register User (Manual)
 router.post("/register", async (req, res) => {
@@ -33,15 +35,21 @@ router.post("/register", async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    // Send Admin Email Notification
+    // Send Welcome Email to Customer
+    const userEmailData = getRegistrationUserTemplate({ name, email });
     await sendNotificationEmail({
-      subject: "✨ New Customer Registered - FinalTouch Studio",
-      text: `A new user has registered manually!\n\nName: ${name}\nEmail: ${email}\nUser ID: ${userId}`,
-      html: `<h3>New User Registration (Manual)</h3>
-             <p><strong>Name:</strong> ${name}</p>
-             <p><strong>Email:</strong> ${email}</p>
-             <p><strong>User ID:</strong> ${userId}</p>
-             <p>Account registered successfully in finaltouchstudio database.</p>`,
+      to: email,
+      subject: userEmailData.subject,
+      text: userEmailData.text,
+      html: userEmailData.html
+    });
+
+    // Send Admin Notification Email
+    const adminEmailData = getRegistrationAdminTemplate({ name, email, userId, type: "Manual Registration" });
+    await sendNotificationEmail({
+      subject: adminEmailData.subject,
+      text: adminEmailData.text,
+      html: adminEmailData.html
     });
 
     res.status(201).json({ token, user: { id: userId, email, name, role: "user" } });
@@ -51,7 +59,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login User (Manual - supports fallback admin and database users)
+// Login User (Manual)
 router.post("/login", async (req, res) => {
   const { username, email, password } = req.body;
   const targetEmail = email || username;
@@ -59,17 +67,6 @@ router.post("/login", async (req, res) => {
   if (!targetEmail || !password) {
     return res.status(400).json({ error: "Email/Username and password are required" });
   }
-
-  // Admin fallback (only active if configured in environment variables)
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (adminUsername && adminPassword && targetEmail === adminUsername && password === adminPassword) {
-    const token = jwt.sign({ username: adminUsername, role: "admin" }, process.env.JWT_SECRET || "default_dev_secret", {
-      expiresIn: "24h"
-    });
-    return res.json({ token, user: { name: "Admin", email: "admin@finaltouch.com", role: "admin" } });
-  }
-
 
   try {
     const [users] = await db.query("SELECT * FROM users WHERE email = ?", [targetEmail]);
@@ -154,16 +151,23 @@ router.post("/google", async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    // If it's a new user registration via Google, notify the admin!
+    // If it's a new user registration via Google, welcome the user and notify the admin!
     if (isNewUser) {
+      // Send Welcome Email to Customer
+      const userEmailData = getRegistrationUserTemplate({ name, email });
       await sendNotificationEmail({
-        subject: "🚀 New Customer Registered (Google) - FinalTouch Studio",
-        text: `A new user has registered using Google Sign-In!\n\nName: ${name}\nEmail: ${email}\nUser ID: ${user.id}`,
-        html: `<h3>New User Registration (Google OAuth)</h3>
-               <p><strong>Name:</strong> ${name}</p>
-               <p><strong>Email:</strong> ${email}</p>
-               <p><strong>User ID:</strong> ${user.id}</p>
-               <p>User account automatically created via Google login.</p>`,
+        to: email,
+        subject: userEmailData.subject,
+        text: userEmailData.text,
+        html: userEmailData.html
+      });
+
+      // Send Admin Notification Email
+      const adminEmailData = getRegistrationAdminTemplate({ name, email, userId: user.id, type: "Google Identity OAuth" });
+      await sendNotificationEmail({
+        subject: adminEmailData.subject,
+        text: adminEmailData.text,
+        html: adminEmailData.html
       });
     }
 
@@ -196,12 +200,46 @@ router.get("/profile", auth, async (req, res) => {
 
     const user = users[0];
 
-    // Fetch bookings linked to user email
-    const [bookings] = await db.query(
-      `SELECT id, customer_name, package_name, pickup_date, return_date, price, payment_method, status, created_at
-       FROM bookings WHERE email = ? ORDER BY created_at DESC`,
-      [user.email]
+    // Fetch bookings/orders linked to user ID in the new schema
+    const [orders] = await db.query(
+      `SELECT id, customer_name, event_date AS return_date, rental_date AS pickup_date, total_amount AS price, status, created_at, fulfillment_type
+       FROM orders WHERE user_id = ? ORDER BY created_at DESC`,
+      [userId]
     );
+
+    const bookings = await Promise.all(orders.map(async (order) => {
+      // Find package name or item names
+      const [items] = await db.query(
+        `SELECT oi.quantity, i.name AS item_name, p.name AS package_name
+         FROM order_items oi
+         LEFT JOIN items i ON oi.item_id = i.id
+         LEFT JOIN packages p ON oi.package_id = p.id
+         WHERE oi.order_id = ?`,
+        [order.id]
+      );
+
+      // Construct a single summary line for package_name
+      let description = "";
+      const packageItem = items.find(it => it.package_name);
+      if (packageItem) {
+        description = packageItem.package_name;
+        const otherItemsCount = items.filter(it => it.item_name).length;
+        if (otherItemsCount > 0) {
+          description += ` + ${otherItemsCount} custom item(s)`;
+        }
+      } else {
+        description = items.map(it => `${it.quantity}x ${it.item_name || 'Item'}`).join(", ");
+        if (!description) {
+          description = "Custom Rental Package";
+        }
+      }
+
+      return {
+        ...order,
+        package_name: description,
+        payment_method: order.fulfillment_type === "delivery" ? "Delivery/Fulfillment" : "Customer Pickup"
+      };
+    }));
 
     res.json({ user, bookings });
   } catch (err) {
