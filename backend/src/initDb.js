@@ -177,6 +177,41 @@ async function initializeDatabase() {
     `);
     console.log("✅ Table 'package_items' created/verified.");
 
+    // Create categories table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id VARCHAR(50) PRIMARY KEY,
+        label VARCHAR(255) NOT NULL,
+        emoji VARCHAR(10) DEFAULT '🎉',
+        color VARCHAR(20) DEFAULT '#B8729A',
+        description TEXT,
+        image_url VARCHAR(255),
+        display_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Table 'categories' created/verified.");
+
+    // Seed categories if empty
+    const [catRows] = await db.query("SELECT COUNT(*) as count FROM categories");
+    if (catRows[0].count === 0) {
+      const defaultCats = [
+        { id: "birthday",     label: "Birthday Collection",               emoji: "🎂", color: "#B8729A", description: "Bespoke balloon walls, kids themes & customized stage setups for your special day.", order: 1 },
+        { id: "marriage",     label: "Marriage (Wedding & Reception)",    emoji: "💒", color: "#9F507C", description: "Exquisite wedding, holud & reception stages blending modern and traditional luxury.", order: 2 },
+        { id: "holud",        label: "Bridal Holud / Gaye Holud / Mehndi", emoji: "🌼", color: "#D97706", description: "Traditional Bangladeshi holud setups with authentic props and vibrant colors.", order: 3 },
+        { id: "baby",         label: "Baby Shower Props",                 emoji: "🍼", color: "#8B5CF6", description: "Cute, colorful & magical themes for celebrating your little one.", order: 4 },
+        { id: "global",       label: "Global Essentials",                 emoji: "✨", color: "#542141", description: "Shared inventory items available across all event categories.", order: 5 },
+      ];
+      for (const cat of defaultCats) {
+        await db.query(
+          "INSERT INTO categories (id, label, emoji, color, description, display_order) VALUES (?, ?, ?, ?, ?, ?)",
+          [cat.id, cat.label, cat.emoji, cat.color, cat.description, cat.order]
+        );
+      }
+      console.log("✅ Seeded 5 default categories.");
+    }
+
     // Create users table
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -205,9 +240,14 @@ async function initializeDatabase() {
         package_name VARCHAR(255) NOT NULL,
         price DECIMAL(10, 2) NOT NULL,
         payment_method VARCHAR(50) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Add status column to existing bookings tables that don't have it yet
+    try {
+      await db.query(`ALTER TABLE bookings ADD COLUMN status VARCHAR(50) DEFAULT 'pending'`);
+    } catch (_) { /* column already exists — safe to ignore */ }
     console.log("✅ Table 'bookings' created/verified.");
 
     // Create enquiries table

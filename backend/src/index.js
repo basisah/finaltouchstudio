@@ -9,6 +9,7 @@ const packageRoutes = require("./routes/packageRoutes");
 const authRoutes = require("./routes/authRoutes");
 const itemRoutes = require("./routes/itemRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,6 +31,7 @@ initializeDatabase();
 app.use("/api/packages", packageRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api", bookingRoutes);
 
 // Health check
