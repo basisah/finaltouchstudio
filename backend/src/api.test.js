@@ -186,4 +186,46 @@ describe("API", () => {
       expect(res.status).toBe(404);
     });
   });
+
+  describe("POST /api/contact", () => {
+    it("returns 400 when required fields are missing", async () => {
+      const res = await request(app)
+        .post("/api/contact")
+        .send({ email: "test@example.com" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("name, email, and message are required");
+    });
+
+    it("creates an enquiry", async () => {
+      const res = await request(app).post("/api/contact").send({
+        name: "CI Test User",
+        email: "ci-test@example.com",
+        occasion: "Birthday",
+        message: "Test enquiry from CI",
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.id).toBeDefined();
+    });
+  });
+
+  describe("GET /api/contact", () => {
+    it("returns 401 without auth", async () => {
+      const res = await request(app).get("/api/contact");
+      expect(res.status).toBe(401);
+    });
+
+    it("returns enquiries for admin", async () => {
+      const res = await request(app)
+        .get("/api/contact")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+      expect(res.body[0].name).toBeDefined();
+      expect(res.body[0].message).toBeDefined();
+    });
+  });
 });

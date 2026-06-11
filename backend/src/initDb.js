@@ -177,7 +177,21 @@ async function initializeDatabase() {
     `);
     console.log("✅ Table 'package_items' created/verified.");
 
-    // 5. Seed items if empty
+    // 5. Create enquiries table (contact form submissions)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS enquiries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        occasion VARCHAR(255) DEFAULT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Table 'enquiries' created/verified.");
+
+    // 6. Seed items if empty
     const [itemRows] = await db.query("SELECT COUNT(*) as count FROM items");
     if (itemRows[0].count === 0) {
       console.log("🌱 Seeding items table with initial inventory...");
@@ -190,7 +204,7 @@ async function initializeDatabase() {
       console.log(`✅ Successfully seeded ${INVENTORY_ITEMS.length} items.`);
     }
 
-    // 6. Seed packages if empty
+    // 7. Seed packages if empty
     const [packageRows] = await db.query("SELECT COUNT(*) as count FROM packages");
     if (packageRows[0].count === 0) {
       console.log("🌱 Seeding packages table with demo packages...");

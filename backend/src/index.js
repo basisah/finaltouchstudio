@@ -6,6 +6,7 @@ const db = require("./db");
 const auth = require("./middleware/auth");
 const initializeDatabase = require("./initDb");
 const packageRoutes = require("./routes/packageRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,7 @@ if (process.env.JEST_WORKER_ID === undefined) {
 
 // Mount routers
 app.use("/api/packages", packageRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
