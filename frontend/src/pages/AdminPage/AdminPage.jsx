@@ -20,21 +20,41 @@ import PaymentsTab from "./components/PaymentsTab";
 import EnquiriesTab from "./components/EnquiriesTab";
 import GlobalSearchTab from "./components/GlobalSearchTab";
 import PackagesTab from "./components/PackagesTab";
+import CategoriesTab from "./components/CategoriesTab";
 
 export default function AdminPage() {
   const navigate = useNavigate();
 
-  // Core Dashboard State (bootstrapped from mockData file)
-  const [categories, setCategories] = useState(initialCategories);
+  // Core Dashboard State (bootstrapped from DB and mockData file)
+  const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [enquiries, setEnquiries] = useState(initialEnquiries);
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
 
-  useEffect(() => {
+  const refreshData = () => {
+    get("/categories")
+      .then((data) => {
+        setCategories(data);
+        // Default active tab to first category if not set or invalid
+        if (data.length > 0) {
+          setActiveTab((prev) => {
+            const tabsList = ["members", "payments", "packages", "enquiries", "categories"];
+            if (tabsList.includes(prev)) return prev;
+            if (data.some(c => c.id === prev)) return prev;
+            return data[0].id;
+          });
+        }
+      })
+      .catch((err) => console.error("Error loading admin categories:", err));
+
     get("/items")
       .then((data) => setItems(data))
       .catch((err) => console.error("Error loading admin items:", err));
+  };
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
   // Nav Selection
@@ -397,6 +417,11 @@ export default function AdminPage() {
           {/* G. Packages Management Tab */}
           {activeTab === "packages" && searchQuery.trim() === "" && (
             <PackagesTab />
+          )}
+
+          {/* H. Categories Management Tab */}
+          {activeTab === "categories" && searchQuery.trim() === "" && (
+            <CategoriesTab categories={categories} onRefresh={refreshData} />
           )}
 
           {/* F. Category Setup Guide (when clicking add new category button) */}

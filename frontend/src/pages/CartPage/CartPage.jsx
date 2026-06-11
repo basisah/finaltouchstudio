@@ -67,7 +67,7 @@ export default function CartPage() {
     setShowShippingForm(false);
   };
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!hasShippingInfo) {
       alert("Please add your shipping information before placing the order.");
@@ -75,10 +75,66 @@ export default function CartPage() {
       return;
     }
 
-    const randomRef = "FT-" + Math.floor(100000 + Math.random() * 900000);
-    setBookingRef(randomRef);
-    setIsCompleted(true);
-    clearCart();
+    const token = localStorage.getItem("user_token") || localStorage.getItem("admin_token");
+    if (!token) {
+      alert("Please sign in or register to place your reservation order.");
+      navigate("/login?redirect=/cart");
+      return;
+    }
+
+    try {
+      // Get items in the format the backend expects
+      const itemsPayload = cart.map(cartItem => ({
+        item_id: cartItem.item.categoryId ? cartItem.item.id : null,
+        package_id: !cartItem.item.categoryId ? cartItem.item.id : null,
+        quantity: cartItem.quantity || 1,
+        price: MOCK_PRICE_PER_ITEM
+      }));
+
+      // Extract rental dates from the cart items
+      const firstCartItem = cart[0];
+      const rental_date = firstCartItem?.pickupDate ? new Date(firstCartItem.pickupDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+      const event_date = firstCartItem?.returnDate ? new Date(firstCartItem.returnDate).toISOString().split("T")[0] : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+      let customerEmail = `${firstName.toLowerCase()}@example.com`;
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+        if (userInfo.email) customerEmail = userInfo.email;
+      } catch (_) {}
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          customer_name: `${firstName} ${lastName}`,
+          customer_email: customerEmail,
+          customer_phone: phone,
+          event_date: event_date,
+          rental_date: rental_date,
+          fulfillment_type: "delivery",
+          delivery_fee: SHIPPING_FEE,
+          venue_address: `${address}, ${city}, ${postalCode}`,
+          special_notes: `Payment method: ${paymentMethod}`,
+          total_amount: totalAmount,
+          items: itemsPayload
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Checkout failed");
+      }
+
+      const data = await res.json();
+      setBookingRef(`FT-${data.orderId}`);
+      setIsCompleted(true);
+      clearCart();
+    } catch (err) {
+      alert("Failed to place order: " + err.message);
+    }
   };
 
   const formatDate = (dateStr) => {

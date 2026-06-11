@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../AdminPage.module.css";
-import { getPackages, createPackage, updatePackage, deletePackage, getItems } from "../../../api/packages.api";
+import { getPackages, getItems } from "../../../api/packages.api";
+import { createPackage, updatePackage, deletePackage } from "../../../api/admin/packages.api";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 
 export default function PackagesTab() {

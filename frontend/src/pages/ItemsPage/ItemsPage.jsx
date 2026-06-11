@@ -205,11 +205,27 @@ export default function ItemsPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [dbItems, setDbItems] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
+    // Fetch items
     get("/items")
       .then((data) => setDbItems(data))
       .catch((err) => console.error("Error fetching items:", err));
+
+    // Fetch categories
+    get("/categories")
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load categories, falling back to static:", err);
+        setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+      });
   }, []);
 
   useEffect(() => {
@@ -297,28 +313,47 @@ export default function ItemsPage() {
       </header>
 
       <main className={styles.container}>
-        {INVENTORY_CATEGORIES.map((category) => {
+        {categories.map((category) => {
+          // Dynamic subcategories calculation
+          const subcategories = (() => {
+            if (category.subcategories && category.subcategories.length > 0) {
+              return category.subcategories;
+            }
+            const itemsInCat = dbItems.filter(item => item.categoryId === category.id);
+            const uniqueSubcatIds = [...new Set(itemsInCat.map(item => item.subCategoryId).filter(Boolean))];
+            if (uniqueSubcatIds.length === 0) {
+              return [{ id: "general", label: "General Props", emoji: "✨" }];
+            }
+            return uniqueSubcatIds.map(subId => ({
+              id: subId,
+              label: subId.charAt(0).toUpperCase() + subId.slice(1),
+              emoji: "✨"
+            }));
+          })();
+
           const activeSubcatId = activeSubcats[category.id];
-          const activeSubcatObj = category.subcategories?.find(s => s.id === activeSubcatId);
+          const activeSubcatObj = subcategories.find(s => s.id === activeSubcatId);
 
           return (
             <section
               key={category.id}
               id={`category-section-${category.id}`}
               className={styles.categoryBlock}
-              style={{ "--category-color": category.color }}
+              style={{ "--category-color": category.color || "#9F507C" }}
             >
               {/* Glowing background orb for this category */}
               <div className={styles.categoryBackdropOrb} />
 
               <div className={styles.categoryHeader}>
                 <div className={styles.categoryTitleRow}>
-                  {categoryIcons[category.id] && (
+                  {categoryIcons[category.id] ? (
                     <img 
                       src={categoryIcons[category.id]} 
                       alt="" 
                       className={styles.categoryHeaderIcon} 
                     />
+                  ) : (
+                    <span style={{ fontSize: "1.8rem", marginRight: "12px" }}>{category.emoji || "✨"}</span>
                   )}
                   <h2 className={styles.categoryTitle}>{category.label}</h2>
                 </div>
@@ -328,7 +363,7 @@ export default function ItemsPage() {
               {!activeSubcatId ? (
                 /* 1. Show the 8 Subcategory circles */
                 <div className={styles.gridContainer}>
-                  {category.subcategories?.map((subcat) => (
+                  {subcategories.map((subcat) => (
                     <div
                       key={subcat.id}
                       className={styles.gridItem}
@@ -428,12 +463,12 @@ export default function ItemsPage() {
                       })}
                   </div>
 
-                  {/* Bottom: Inactive other 7 subcategories */}
+                  {/* Bottom: Inactive other subcategories */}
                   <div className={styles.otherSubcatsWrapper}>
                     <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
                     <div className={styles.gridContainer}>
-                      {category.subcategories
-                        ?.filter((subcat) => subcat.id !== activeSubcatId)
+                      {subcategories
+                        .filter((subcat) => subcat.id !== activeSubcatId)
                         .map((subcat) => (
                           <div
                             key={subcat.id}

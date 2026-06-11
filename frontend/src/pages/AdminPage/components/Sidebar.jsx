@@ -176,6 +176,20 @@ export default function Sidebar({
               <span className={styles.btnLabel}>Decor Packages</span>
             </button>
           </li>
+          <li>
+            <button
+              className={`${styles.navBtn} ${activeTab === "categories" ? styles.active : ""}`}
+              onClick={() => {
+                setActiveTab("categories");
+                setShowAddCatForm(false);
+                setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
+            >
+              <span className={styles.btnEmoji}>🗂️</span>
+              <span className={styles.btnLabel}>Categories Manager</span>
+            </button>
+          </li>
         </ul>
       </nav>
 

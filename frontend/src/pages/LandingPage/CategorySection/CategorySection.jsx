@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { CATEGORIES } from "../../../constants/categories";
 import styles from "./CategorySection.module.css";
 
@@ -21,6 +22,9 @@ const categoryImages = {
   marriage: marriageImg,
   "bridal-shower": bridalImg,
   "baby-shower": babyImg,
+  "holud": babyImg,
+  "baby": babyImg,
+  "global": marriageImg
 };
 
 const categoryIcons = {
@@ -29,9 +33,36 @@ const categoryIcons = {
   marriage: marriageIcon,
   "bridal-shower": bridalIcon,
   "baby-shower": babyIcon,
+  "holud": babyIcon,
+  "baby": babyIcon,
 };
 
 export default function CategorySection() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load from server");
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+        }
+      })
+      .catch((err) => {
+        console.warn("Category fetch failed, using fallback static data:", err);
+        setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <section className={styles.section} aria-label="Event categories">
       {/* Decorative Floating Elements */}
@@ -77,27 +108,21 @@ export default function CategorySection() {
       </div>
 
       <div className={styles.timeline}>
-        {[
-          "proposal",
-          "bridal-shower",
-          "marriage",
-          "baby-shower",
-          "birthday"
-        ].map((catId, index) => {
-          const cat = CATEGORIES.find(c => c.id === catId);
-          if (!cat) return null;
-          
+        {categories.map((cat, index) => {
           const isEven = index % 2 === 0;
-          const imgUrl = categoryImages[cat.id];
+          const imgUrl = cat.image_url || marriageImg;
           const iconUrl = categoryIcons[cat.id];
-          const isLast = index === 4;
+          const isLast = index === categories.length - 1;
 
-          let description = "Bespoke setups and decorations.";
-          if (cat.id === "birthday") description = "Bespoke balloon walls, kids themes & customized stage setups for your special day.";
-          else if (cat.id === "proposal") description = "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.";
-          else if (cat.id === "marriage") description = "Exquisite wedding, holud & reception stages blending modern and traditional luxury.";
-          else if (cat.id === "bridal-shower") description = "Elegant backdrops & photo-worthy floral arrangements for the bride to be.";
-          else if (cat.id === "baby-shower") description = "Cute, colorful & magical themes for celebrating your little one.";
+          let description = cat.description;
+          if (!description) {
+            if (cat.id === "birthday") description = "Bespoke balloon walls, kids themes & customized stage setups for your special day.";
+            else if (cat.id === "proposal") description = "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.";
+            else if (cat.id === "marriage") description = "Exquisite wedding, holud & reception stages blending modern and traditional luxury.";
+            else if (cat.id === "bridal-shower") description = "Elegant backdrops & photo-worthy floral arrangements for the bride to be.";
+            else if (cat.id === "baby-shower" || cat.id === "baby") description = "Cute, colorful & magical themes for celebrating your little one.";
+            else description = "Bespoke setups and decorations.";
+          }
 
           return (
             <div key={cat.id} className={`${styles.row} ${isEven ? styles.rowEven : styles.rowOdd}`}>
@@ -111,7 +136,11 @@ export default function CategorySection() {
               <div className={styles.textCol}>
                 <div className={styles.textContent}>
                   <div className={styles.titleWrapper}>
-                    {iconUrl && <img src={iconUrl} alt="" className={styles.occIcon} />}
+                    {iconUrl ? (
+                      <img src={iconUrl} alt="" className={styles.occIcon} />
+                    ) : (
+                      <span style={{ marginRight: "10px", fontSize: "1.6rem" }}>{cat.emoji || "🎉"}</span>
+                    )}
                     <h3 className={styles.title}>{cat.label}</h3>
                   </div>
                   <p className={styles.desc}>{description}</p>

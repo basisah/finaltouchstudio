@@ -164,18 +164,29 @@ export default function InventoryTab({
 
           <div className={styles.inputGroup}>
             <label htmlFor="itemSubCategory">Subcategory Grouping</label>
-            <select
-              id="itemSubCategory"
-              value={newItemSubCategory}
-              onChange={(e) => setNewItemSubCategory(e.target.value)}
-              className={styles.picSelect}
-              required
-            >
-              <option value="">-- Select Subcategory --</option>
-              {subcategories.map(sub => (
-                <option key={sub.id} value={sub.id}>{sub.emoji} {sub.label}</option>
-              ))}
-            </select>
+            {subcategories.length > 0 ? (
+              <select
+                id="itemSubCategory"
+                value={newItemSubCategory}
+                onChange={(e) => setNewItemSubCategory(e.target.value)}
+                className={styles.picSelect}
+                required
+              >
+                <option value="">-- Select Subcategory --</option>
+                {subcategories.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.emoji} {sub.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id="itemSubCategory"
+                type="text"
+                placeholder="e.g. backdrops, lights, props..."
+                value={newItemSubCategory}
+                onChange={(e) => setNewItemSubCategory(e.target.value)}
+                required
+              />
+            )}
           </div>
 
           <div className={styles.inputGroup}>

@@ -46,19 +46,19 @@ app.use("/uploads", express.static(uploadDir));
 // Initialize database tables and seed data
 initializeDatabase();
 
-// Mount Admin Routes
-app.use("/api/admin/auth", adminAuth);
-app.use("/api/admin/orders", adminOrders);
-app.use("/api/categories", adminCategories);
-app.use("/api", adminItems); // handles POST /upload, and CRUD on /items
-app.use("/api/packages", adminPackages);
-
 // Mount Public/User Routes
 app.use("/api/packages", packageRoutes);
 app.use("/api/auth", userAuthRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api", bookingRoutes);
+
+// Mount Admin Routes
+app.use("/api/admin/auth", adminAuth);
+app.use("/api/admin/orders", adminOrders);
+app.use("/api/categories", adminCategories);
+app.use("/api", adminItems); // handles POST /upload, and CRUD on /items
+app.use("/api/packages", adminPackages);
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -43,7 +43,7 @@ router.post("/upload", auth, isAdmin, upload.single("image"), (req, res) => {
 });
 
 // Create item
-router.post("/", auth, isAdmin, async (req, res) => {
+router.post("/items", auth, isAdmin, async (req, res) => {
   const { id, name, title, categoryId, subCategoryId, description, isAvailable, unit_count, image } = req.body;
   const finalName = name || title;
   const finalTitle = title || name;
@@ -68,7 +68,7 @@ router.post("/", auth, isAdmin, async (req, res) => {
 });
 
 // Update item
-router.put("/:id", auth, isAdmin, async (req, res) => {
+router.put("/items/:id", auth, isAdmin, async (req, res) => {
   const { name, title, categoryId, subCategoryId, description, isAvailable, unit_count, image } = req.body;
   const finalName = name || title;
   const finalTitle = title || name;
@@ -90,7 +90,7 @@ router.put("/:id", auth, isAdmin, async (req, res) => {
 });
 
 // Delete item
-router.delete("/:id", auth, isAdmin, async (req, res) => {
+router.delete("/items/:id", auth, isAdmin, async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM items WHERE id = ?", [req.params.id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: "Item not found" });
