@@ -5,6 +5,8 @@
   font-family: var(--font-sans);
   overflow-x: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Hero ── */

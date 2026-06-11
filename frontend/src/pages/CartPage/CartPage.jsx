@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import Navbar from "../../components/Navbar/Navbar";
+import Footer from "../../components/Footer/Footer";
 import styles from "./CartPage.module.css";
 
 // SVG Icons
@@ -162,6 +163,7 @@ export default function CartPage() {
             <button onClick={() => navigate("/")} className={styles.placeOrderBtn}>Return to Home</button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -394,6 +396,7 @@ export default function CartPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

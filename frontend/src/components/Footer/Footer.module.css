@@ -4,6 +4,7 @@
   color: rgba(255, 255, 255, 0.75);
   font-family: var(--font-sans);
   position: relative;
+  margin-top: auto;
 }
 
 /* Gradient fade-in from the section above */

@@ -197,7 +197,7 @@ const getBookedDatesForItem = (itemId) => {
 };
 
 export default function ItemsPage() {
-  const { cart, addToCart, removeFromCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
   const [activeSubcats, setActiveSubcats] = useState({});
@@ -206,6 +206,8 @@ export default function ItemsPage() {
   const [toastMsg, setToastMsg] = useState("");
   const [dbItems, setDbItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategoryId, setActiveCategoryId] = useState("");
 
   useEffect(() => {
     // Fetch items
@@ -235,6 +237,7 @@ export default function ItemsPage() {
     const subcatId = params.get("subcategory");
 
     if (catId) {
+      setActiveCategoryId(catId);
       // 1. Immediately set the active subcategory so the DOM is rendered in its expanded state
       if (subcatId) {
         setActiveSubcats(prev => ({
@@ -260,8 +263,36 @@ export default function ItemsPage() {
         }
       }, 300);
       return () => clearTimeout(timer);
+    } else if (categories.length > 0 && !activeCategoryId) {
+      setActiveCategoryId(categories[0].id);
     }
-  }, [location.search, dbItems]);
+  }, [location.search, dbItems, categories, activeCategoryId]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      let currentActive = activeCategoryId;
+      let minDistance = Infinity;
+
+      categories.forEach((cat) => {
+        const element = document.getElementById(`category-section-${cat.id}`);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const distance = Math.abs(rect.top - 150);
+          if (distance < minDistance) {
+            minDistance = distance;
+            currentActive = cat.id;
+          }
+        }
+      });
+
+      if (currentActive && currentActive !== activeCategoryId) {
+        setActiveCategoryId(currentActive);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [categories, activeCategoryId]);
 
 
 
@@ -299,20 +330,67 @@ export default function ItemsPage() {
     handleCloseItem();
   };
 
+  const handleCategoryClick = (catId) => {
+    setActiveCategoryId(catId);
+    const element = document.getElementById(`category-section-${catId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className={styles.page}>
       <Navbar />
 
+      <main className={styles.mainContainer3d}>
+        
+        {/* Top Showcase Banner Card */}
+        <section className={styles.showcaseCard3d}>
+          <div>
+            <span className={styles.showcaseBadge}>Featured Collection</span>
+            <h1 className={styles.showcaseTitle}>FinalTouch Signature Series</h1>
+            <p className={styles.showcaseDesc}>
+              Artisan rentals and staging items designed right here in Saskatoon. 
+              Select your dates, build custom packages, and celebrate with flair.
+            </p>
+            <div className={styles.showcaseMetrics}>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>$25.00</span>
+                <span className={styles.metricLabel}>Daily Rates</span>
+              </div>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>100%</span>
+                <span className={styles.metricLabel}>Customizable</span>
+              </div>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>High</span>
+                <span className={styles.metricLabel}>Prop Demand</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.showcaseVisualCol}>
+            <div className={styles.showcaseOrb}>
+              <div className={styles.showcaseOrbInner}>
+                ✨
+              </div>
+            </div>
+            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf1}`}>🌸</span>
+            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf2}`}>💡</span>
+          </div>
+        </section>
 
-
-      <header className={styles.hero}>
-        <div className={styles.heroInner}>
-          <h1 className={styles.heroTitle}>Bespoke Rental Catalog</h1>
-          <p className={styles.heroSub}>Choose your celebration items, select dates, and book instantly.</p>
+        {/* Centered Search Bar */}
+        <div className={styles.searchBarWrapper}>
+          <input
+            type="text"
+            className={styles.searchInput3d}
+            placeholder="Type to search props..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ maxWidth: "600px" }}
+          />
         </div>
-      </header>
 
-      <main className={styles.container}>
         {categories.map((category) => {
           // Dynamic subcategories calculation
           const subcategories = (() => {
@@ -338,7 +416,7 @@ export default function ItemsPage() {
             <section
               key={category.id}
               id={`category-section-${category.id}`}
-              className={styles.categoryBlock}
+              className={styles.categoryBlock3d}
               style={{ "--category-color": category.color || "#9F507C" }}
             >
               {/* Glowing background orb for this category */}
@@ -361,15 +439,15 @@ export default function ItemsPage() {
               </div>
 
               {!activeSubcatId ? (
-                /* 1. Show the 8 Subcategory circles */
-                <div className={styles.gridContainer}>
+                /* 1. Show the Subcategory circles */
+                <div className={styles.gridContainer3d}>
                   {subcategories.map((subcat) => (
                     <div
                       key={subcat.id}
-                      className={styles.gridItem}
+                      className={styles.gridItem3d}
                       onClick={() => setActiveSubcats(prev => ({ ...prev, [category.id]: subcat.id }))}
                     >
-                      <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                      <div className={styles.circleCard3d}>
                         <span className={styles.subcatEmoji}>{subcat.emoji}</span>
                       </div>
                       <div className={styles.cardLabelWrapper}>
@@ -379,7 +457,7 @@ export default function ItemsPage() {
                   ))}
                 </div>
               ) : (
-                /* 2. Expanded view: show active subcategory items, and other 7 at bottom */
+                /* 2. Expanded view: show active subcategory items, and other at bottom */
                 <div className={styles.expandedSection}>
                   <div className={styles.expandedSubcatHeader}>
                     <button 
@@ -402,43 +480,63 @@ export default function ItemsPage() {
                   <div className={styles.productGrid}>
                     {dbItems
                       .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId)
+                      .filter((item) => {
+                        if (!searchQuery.trim()) return true;
+                        const q = searchQuery.toLowerCase();
+                        return (
+                          item.title.toLowerCase().includes(q) ||
+                          (item.description && item.description.toLowerCase().includes(q))
+                        );
+                      })
                       .map((item) => {
                         const cartItem = getCartItem(item.id);
                         return (
                           <div
                             key={item.id}
-                            className={`${styles.productCard} ${cartItem ? styles.productInCart : ""}`}
+                            className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
                             onClick={() => handleOpenItem(item)}
                           >
-                            <div className={styles.productIconContainer}>
-                              <div className={styles.productIconWrapper}>
-                                {item.image && item.image.startsWith("/uploads") ? (
-                                  <img 
-                                    src={item.image} 
-                                    alt={item.title} 
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }} 
-                                  />
-                                ) : (
-                                  getSvgIcon(item.title)
-                                )}
-                              </div>
-                            </div>
+                             <div className={styles.productIconContainer3d}>
+                               {item.image && item.image.startsWith("/uploads") ? (
+                                 <img 
+                                   src={item.image} 
+                                   alt={item.title} 
+                                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
+                                 />
+                               ) : (
+                                 <div className={styles.productIconWrapper}>
+                                   {getSvgIcon(item.title)}
+                                 </div>
+                               )}
+                             </div>
                             
-                            <div className={styles.productDetails}>
+                            <div className={styles.productDetails3d}>
                               <h4 className={styles.productTitle}>{item.title}</h4>
+                              
                               <div className={styles.productFooter}>
                                 <span className={styles.productPrice}>
                                   $25.00 <span className={styles.priceUnit}>/day</span>
                                 </span>
                                 {cartItem ? (
-                                  <button
-                                    type="button"
-                                    className={styles.productRemoveBtn}
-                                    onClick={(e) => handleQuickRemove(item.id, e)}
-                                    title="Remove from cart"
-                                  >
-                                    Remove
-                                  </button>
+                                  <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      className={styles.qtyControlBtn}
+                                      onClick={() => updateQuantity(cartItem.id, -1)}
+                                      title="Decrease quantity"
+                                    >
+                                      −
+                                    </button>
+                                    <span className={styles.qtyValue}>{cartItem.quantity || 1}</span>
+                                    <button
+                                      type="button"
+                                      className={styles.qtyControlBtn}
+                                      onClick={() => updateQuantity(cartItem.id, 1)}
+                                      title="Increase quantity"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 ) : (
                                   <button
                                     type="button"
@@ -466,19 +564,19 @@ export default function ItemsPage() {
                   {/* Bottom: Inactive other subcategories */}
                   <div className={styles.otherSubcatsWrapper}>
                     <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
-                    <div className={styles.gridContainer}>
+                    <div className={styles.gridContainer3d}>
                       {subcategories
                         .filter((subcat) => subcat.id !== activeSubcatId)
                         .map((subcat) => (
                           <div
                             key={subcat.id}
-                            className={styles.gridItem}
+                            className={styles.gridItem3d}
                             onClick={() => {
                               setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
                               document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                             }}
                           >
-                            <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                            <div className={styles.circleCard3d}>
                               <span className={styles.subcatEmoji}>{subcat.emoji}</span>
                             </div>
                             <div className={styles.cardLabelWrapper}>

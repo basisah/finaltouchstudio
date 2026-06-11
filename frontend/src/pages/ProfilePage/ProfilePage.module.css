@@ -3,16 +3,18 @@
   min-height: 100vh;
   background: var(--bg-main);
   padding-top: 100px;
-  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
   max-width: 860px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 24px 80px;
   display: flex;
   flex-direction: column;
   gap: 28px;
+  width: 100%;
 }
 
 /* ── Loading & Error ── */

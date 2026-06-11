@@ -19,14 +19,21 @@ export function CartProvider({ children }) {
   const addToCart = (item, pickupDate, returnDate, quantity) => {
     // Add item to cart with booking dates and quantity
     setCart((prev) => {
-      // Check if item is already added for these exact dates
-      const exists = prev.some((c) => 
-        c.item.id === item.id && 
-        c.pickupDate?.getTime() === pickupDate?.getTime() && 
-        c.returnDate?.getTime() === returnDate?.getTime()
-      );
-      if (exists) return prev;
-      return [...prev, { id: `${item.id}-${Date.now()}`, item, pickupDate, returnDate, quantity }];
+      const existingIndex = prev.findIndex((c) => c.item.id === item.id);
+      if (existingIndex > -1) {
+        return prev.map((c, i) => {
+          if (i === existingIndex) {
+            return {
+              ...c,
+              quantity: (c.quantity || 0) + quantity,
+              pickupDate: pickupDate || c.pickupDate,
+              returnDate: returnDate || c.returnDate
+            };
+          }
+          return c;
+        });
+      }
+      return [...prev, { id: item.id, item, pickupDate, returnDate, quantity }];
     });
   };
 
@@ -39,13 +46,20 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (cartItemId, delta) => {
-    setCart((prev) => prev.map((c) => {
-      if (c.id === cartItemId) {
-        const newQuantity = Math.max(1, (c.quantity || 1) + delta);
-        return { ...c, quantity: newQuantity };
-      }
-      return c;
-    }));
+    setCart((prev) => 
+      prev
+        .map((c) => {
+          if (c.id === cartItemId) {
+            const newQuantity = (c.quantity || 1) + delta;
+            if (newQuantity <= 0) {
+              return null;
+            }
+            return { ...c, quantity: newQuantity };
+          }
+          return c;
+        })
+        .filter(Boolean)
+    );
   };
 
   return (

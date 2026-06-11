@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
+import { get } from "../../../api/client";
 import styles from "./OccasionsCarousel.module.css";
 
 // Category icons
@@ -135,6 +137,29 @@ const getSvgIcon = (title) => {
 
 export default function OccasionsCarousel() {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [dbItems, setDbItems] = useState([]);
+
+  useEffect(() => {
+    // Fetch categories
+    get("/categories")
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories(INVENTORY_CATEGORIES);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load categories, falling back to static:", err);
+        setCategories(INVENTORY_CATEGORIES);
+      });
+
+    // Fetch items
+    get("/items")
+      .then((data) => setDbItems(data))
+      .catch((err) => console.error("Error fetching items:", err));
+  }, []);
 
   return (
     <section className={styles.section} id="catalog">
@@ -144,28 +169,54 @@ export default function OccasionsCarousel() {
           <p className={styles.sectionSub}>Browse items by category — click any item to book</p>
         </div>
 
-        {INVENTORY_CATEGORIES.map((category) => {
+        {categories.map((category) => {
           const colors = categoryColors[category.id] || categoryColors.global;
           const icon = categoryIcons[category.id];
+
+          // Dynamic subcategories calculation
+          const subcategories = (() => {
+            if (category.subcategories && category.subcategories.length > 0) {
+              return category.subcategories;
+            }
+            const itemsInCat = dbItems.filter(item => item.categoryId === category.id);
+            const uniqueSubcatIds = [...new Set(itemsInCat.map(item => item.subCategoryId).filter(Boolean))];
+            if (uniqueSubcatIds.length === 0) {
+              return [{ id: "general", label: "General Props", emoji: "✨" }];
+            }
+            return uniqueSubcatIds.map(subId => ({
+              id: subId,
+              label: subId.charAt(0).toUpperCase() + subId.slice(1),
+              emoji: "✨"
+            }));
+          })();
 
           return (
             <div 
               key={category.id} 
-              className={styles.categoryBlock}
+              className={styles.categoryBlock3d}
               style={{ "--category-color": colors.accent }}
             >
+              {/* Glowing background orb for this category */}
+              <div className={styles.categoryBackdropOrb} />
+
               {/* Category Header */}
               <div className={styles.categoryHeader}>
-                {icon && <img src={icon} alt="" className={styles.catIcon} />}
-                <h3
-                  className={styles.categoryTitle}
-                  style={{ color: colors.accent }}
-                >
-                  {category.label}
-                </h3>
+                <div className={styles.categoryTitleRow}>
+                  {icon ? (
+                    <img src={icon} alt="" className={styles.categoryHeaderIcon} />
+                  ) : (
+                    <span style={{ fontSize: "1.8rem", marginRight: "12px" }}>✨</span>
+                  )}
+                  <h3
+                    className={styles.categoryTitle}
+                    style={{ color: colors.accent }}
+                  >
+                    {category.label}
+                  </h3>
+                </div>
+                
                 <button
-                  className={styles.viewAllBtn}
-                  style={{ color: colors.accent, borderColor: colors.border }}
+                  className={styles.viewAllBtn3d}
                   onClick={() => navigate(`/items?category=${category.id}`)}
                 >
                   View All →
@@ -173,14 +224,14 @@ export default function OccasionsCarousel() {
               </div>
 
               {/* Items Grid Layout - matches ItemsPage */}
-              <div className={styles.gridContainer}>
-                {category.subcategories?.map((subcat) => (
+              <div className={styles.gridContainer3d}>
+                {subcategories.map((subcat) => (
                   <div
                     key={subcat.id}
-                    className={styles.gridItem}
+                    className={styles.gridItem3d}
                     onClick={() => navigate(`/items?category=${category.id}&subcategory=${subcat.id}`)}
                   >
-                    <div className={styles.circleCard} style={{ background: "rgba(255, 255, 255, 0.04)" }}>
+                    <div className={styles.circleCard3d}>
                       <span className={styles.subcatEmoji}>{subcat.emoji}</span>
                     </div>
                     <div className={styles.cardLabelWrapper}>
