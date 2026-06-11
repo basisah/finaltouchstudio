@@ -19,6 +19,11 @@ export default defineConfig({
         target: "http://backend:4000",
         changeOrigin: true,
       },
+      // Proxy /uploads calls to the backend container
+      "/uploads": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
     },
   },
 });

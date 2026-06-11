@@ -1,0 +1,471 @@
+/* ── Page Shell ── */
+.page {
+  min-height: 100vh;
+  background: var(--bg-main);
+  padding-top: 100px;
+  padding-bottom: 80px;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Loading & Error ── */
+.loadingWrapper,
+.errorWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--border-shadow);
+  border-top-color: var(--btn-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.errorMsg {
+  color: #c0392b;
+  font-size: 0.95rem;
+}
+
+.backBtn {
+  padding: 10px 24px;
+  background: var(--btn-primary);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+
+.backBtn:hover {
+  background: var(--btn-hover);
+}
+
+/* ── Profile Header Card ── */
+.profileCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 20px;
+  padding: 36px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  box-shadow: 0 4px 24px rgba(165, 106, 189, 0.08);
+  animation: fadeUp 0.4s ease forwards;
+}
+
+.avatarWrap {
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border-shadow);
+  box-shadow: 0 4px 16px rgba(165, 106, 189, 0.2);
+}
+
+.avatarFallback {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--btn-primary) 0%, var(--btn-hover) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-serif);
+  box-shadow: 0 4px 20px rgba(165, 106, 189, 0.35);
+  letter-spacing: 1px;
+}
+
+.profileMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profileName {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.profileEmail {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.roleBadge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 12px;
+  background: linear-gradient(135deg, rgba(165, 106, 189, 0.15) 0%, rgba(110, 52, 130, 0.12) 100%);
+  border: 1px solid var(--border-shadow);
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--btn-hover);
+  width: fit-content;
+}
+
+.memberSince {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.signOutBtn {
+  flex-shrink: 0;
+  padding: 10px 22px;
+  background: transparent;
+  border: 1.5px solid var(--border-shadow);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.signOutBtn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* ── Stats Row ── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  animation: fadeUp 0.5s ease 0.05s both;
+}
+
+.statCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(165, 106, 189, 0.06);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(165, 106, 189, 0.12);
+}
+
+.statNumber {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+/* ── Section ── */
+.section {
+  animation: fadeUp 0.5s ease 0.1s both;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+/* ── Empty State ── */
+.emptyState {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-shadow);
+  border-radius: 16px;
+  padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+}
+
+.emptyTitle {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.emptyMsg {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  max-width: 280px;
+}
+
+.browseBtn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: var(--btn-primary);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+
+.browseBtn:hover {
+  background: var(--btn-hover);
+}
+
+/* ── Booking List ── */
+.bookingList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bookingCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 10px rgba(165, 106, 189, 0.05);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.bookingCard:hover {
+  box-shadow: 0 6px 24px rgba(165, 106, 189, 0.1);
+  transform: translateY(-1px);
+}
+
+.bookingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.bookingPackage {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.bookingId {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Status Badges ── */
+.statusBadge {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+}
+
+.statusPending {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+}
+
+.statusConfirmed {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.statusCompleted {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+}
+
+.statusCancelled {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* ── Booking Details Grid ── */
+.bookingDetails {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border-shadow);
+  border-bottom: 1px solid var(--border-shadow);
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detailValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.priceValue {
+  color: var(--btn-hover);
+}
+
+.bookingFooter {
+  padding-top: 12px;
+}
+
+.bookingDate {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ── Quick Actions ── */
+.actionsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.actionCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 14px;
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: all var(--transition);
+  box-shadow: 0 2px 10px rgba(165, 106, 189, 0.05);
+}
+
+.actionCard:hover {
+  background: linear-gradient(135deg, rgba(165, 106, 189, 0.08) 0%, rgba(110, 52, 130, 0.04) 100%);
+  border-color: rgba(165, 106, 189, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(165, 106, 189, 0.14);
+}
+
+.actionIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.actionLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .profileCard {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 20px;
+    gap: 18px;
+  }
+
+  .profileMeta {
+    align-items: center;
+  }
+
+  .signOutBtn {
+    width: 100%;
+  }
+
+  .statsRow {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .statCard {
+    padding: 18px 10px;
+  }
+
+  .statNumber {
+    font-size: 1.2rem;
+  }
+
+  .bookingDetails {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+
+  .actionsRow {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .actionCard {
+    padding: 20px 10px;
+  }
+
+  .actionIcon {
+    font-size: 1.5rem;
+  }
+}

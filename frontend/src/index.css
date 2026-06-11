@@ -1,93 +1,194 @@
 /* ── Reset ───────────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 /* ── Design Tokens — Purple Luxury Palette ────────────────────────────────────── */
 :root {
+  /* ── User Requested Theme Variables ── */
+  --bg-main: #f5ebfa;
+  --bg-card: #ffffff;
+  --border-shadow: #e7dbef;
+
+  --btn-primary: #a56abd;
+  --btn-hover: #6e3482;
+
+  --text-main: #49225b;
+  --text-muted: #6e3482;
+
   /* ── Brand colours (Spring Blossom Palette) ───────────────── */
   --clr-weathervane: #2F1B1A;
   --clr-purple-kite: #522E30;
-  --clr-berry-bush:  #7A404D;
-  --clr-mulberry-mix:#9D5A6F;
-  --clr-benifuji:    #BD7893;
-  --clr-gizmo:       #D89FB6;
-  --clr-portrait-pink:#F0D2DE;
-  --clr-white:       #FFFFFF;
+  --clr-berry-bush: #7A404D;
+  --clr-mulberry-mix: #9D5A6F;
+  --clr-benifuji: #BD7893;
+  --clr-gizmo: #D89FB6;
+  --clr-portrait-pink: #F0D2DE;
+  --clr-white: #FFFFFF;
 
   /* ── Gradient shorthands ─────────────────────────────────────── */
-  --grad-brand:      linear-gradient(135deg, var(--clr-weathervane) 0%, var(--clr-mulberry-mix) 100%);
-  --grad-mauve:      linear-gradient(135deg, var(--clr-purple-kite) 0%, var(--clr-mulberry-mix) 100%);
-  --grad-hero:       linear-gradient(160deg, rgba(47,27,26,0.82) 0%, rgba(82,46,48,0.55) 60%, rgba(157,90,111,0.18) 100%);
-  --grad-card:       linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  --grad-brand: linear-gradient(135deg, var(--clr-weathervane) 0%, var(--clr-mulberry-mix) 100%);
+  --grad-mauve: linear-gradient(135deg, var(--clr-purple-kite) 0%, var(--clr-mulberry-mix) 100%);
+  --grad-hero: linear-gradient(160deg, rgba(47, 27, 26, 0.82) 0%, rgba(82, 46, 48, 0.55) 60%, rgba(157, 90, 111, 0.18) 100%);
+  --grad-card: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
 
   /* ── Glassmorphism ───────────────────────────────────────────── */
-  --glass-bg:        rgba(255,255,255,0.12);
-  --glass-bg-strong: rgba(255,255,255,0.18);
-  --glass-border:    rgba(255,255,255,0.22);
-  --glass-border-lt: rgba(255,255,255,0.12);
-  --glass-blur:      blur(20px);
-  --glass-blur-sm:   blur(12px);
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-strong: rgba(255, 255, 255, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-border-lt: rgba(255, 255, 255, 0.12);
+  --glass-blur: blur(20px);
+  --glass-blur-sm: blur(12px);
 
   /* ── Text ────────────────────────────────────────────────────── */
-  --txt-primary:    var(--clr-weathervane);
-  --txt-secondary:  var(--clr-berry-bush);
-  --txt-muted:      var(--clr-benifuji);
-  --txt-on-dark:    var(--clr-portrait-pink);
-  --txt-on-dark-dim:rgba(240,210,222,0.70);
-  --txt-gold:       var(--clr-gizmo);
+  --txt-primary: var(--clr-weathervane);
+  --txt-secondary: var(--clr-berry-bush);
+  --txt-muted: var(--clr-benifuji);
+  --txt-on-dark: var(--clr-portrait-pink);
+  --txt-on-dark-dim: rgba(240, 210, 222, 0.70);
+  --txt-gold: var(--clr-gizmo);
 
   /* ── UI ──────────────────────────────────────────────────────── */
-  --border:         rgba(157,90,111,0.18);
-  --border-dark:    rgba(255,255,255,0.10);
-  --radius:         16px;
-  --radius-sm:      10px;
-  --radius-lg:      24px;
-  --shadow-sm:      0 2px 16px rgba(47,27,26,0.12);
-  --shadow-md:      0 8px 40px rgba(47,27,26,0.20);
-  --shadow-lg:      0 24px 80px rgba(47,27,26,0.35);
-  --shadow-glow:    0 0 40px rgba(157,90,111,0.30);
+  --border: rgba(157, 90, 111, 0.18);
+  --border-dark: rgba(255, 255, 255, 0.10);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --shadow-sm: 0 2px 16px rgba(47, 27, 26, 0.12);
+  --shadow-md: 0 8px 40px rgba(47, 27, 26, 0.20);
+  --shadow-lg: 0 24px 80px rgba(47, 27, 26, 0.35);
+  --shadow-glow: 0 0 40px rgba(157, 90, 111, 0.30);
 
   /* ── Motion ──────────────────────────────────────────────────── */
-  --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --transition: 0.22s var(--ease);
 
   /* ── Typography ──────────────────────────────────────────────── */
-  --font-display: 'Great Vibes', cursive;           /* eyebrow script accents */
-  --font-serif:   'Cormorant Garamond', Georgia, serif; /* festive headings */
-  --font-sans:    'Inter', -apple-system, sans-serif;   /* body */
+  --font-display: 'Great Vibes', cursive;
+  /* eyebrow script accents */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  /* festive headings */
+  --font-sans: 'Inter', -apple-system, sans-serif;
+  /* body */
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden; /* prevent any element from causing horizontal scroll */
+  overflow-x: hidden;
+  /* prevent any element from causing horizontal scroll */
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--clr-weathervane); /* dark base — sections paint over this */
+  background: var(--clr-weathervane);
+  /* dark base — sections paint over this */
   color: var(--txt-primary);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden; /* belt-and-suspenders: no horizontal scroll on mobile */
+  overflow-x: hidden;
+  /* belt-and-suspenders: no horizontal scroll on mobile */
   width: 100%;
 }
 
-img { display: block; max-width: 100%; }
-a   { color: inherit; text-decoration: none; }
-button { cursor: pointer; font-family: inherit; }
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
 
 /* ── Scrollbar ───────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--clr-mulberry-mix); border-radius: 99px; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--clr-mulberry-mix);
+  border-radius: 99px;
+}
 
 /* ── Global animations ───────────────────────────────────────────────────────── */
-@keyframes fadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-@keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-@keyframes spin     { to { transform: rotate(360deg); } }
-@keyframes float    { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-@keyframes scrollBounce { 0%,100%{transform:translateY(0);opacity:1;} 50%{transform:translateY(8px);opacity:.4;} }
-@keyframes heroZoom { from{transform:scale(1.05);} to{transform:scale(1.00);} }
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes scrollBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(8px);
+    opacity: .4;
+  }
+}
+
+@keyframes heroZoom {
+  from {
+    transform: scale(1.05);
+  }
+
+  to {
+    transform: scale(1.00);
+  }
+}
 
 /* ── Glass utility ───────────────────────────────────────────────────────────── */
 .glass {
@@ -95,4 +196,13 @@ button { cursor: pointer; font-family: inherit; }
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
+}
+
+/* ── Global Card Utility ─────────────────────────────────────────────────────── */
+.inventory-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  box-shadow: 0 4px 12px var(--border-shadow);
+  color: var(--text-main);
+  border-radius: 12px;
 }

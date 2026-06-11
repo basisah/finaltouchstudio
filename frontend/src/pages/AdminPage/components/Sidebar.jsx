@@ -18,11 +18,13 @@ export default function Sidebar({
   handleDeleteCategory,
   setSearchQuery,
   handleLogout,
+  isSidebarOpen,
+  setIsSidebarOpen,
 }) {
   const activeCategory = categories.find((cat) => cat.id === activeTab);
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
       <div className={styles.sidebarHeader}>
         <span className={styles.sidebarIcon}>✨</span>
         <div>
@@ -43,6 +45,7 @@ export default function Sidebar({
                   setActiveTab(cat.id);
                   setShowAddCatForm(false);
                   setSearchQuery(""); // Clear search when navigating
+                  if (setIsSidebarOpen) setIsSidebarOpen(false);
                 }}
               >
                 <span className={styles.btnEmoji}>{cat.emoji}</span>
@@ -64,6 +67,7 @@ export default function Sidebar({
                 setShowAddCatForm(true);
                 setActiveTab("");
                 setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               ➕ Add New Category
@@ -135,6 +139,7 @@ export default function Sidebar({
                 setActiveTab("members");
                 setShowAddCatForm(false);
                 setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               <span className={styles.btnEmoji}>👥</span>
@@ -149,6 +154,7 @@ export default function Sidebar({
                 setActiveTab("payments");
                 setShowAddCatForm(false);
                 setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               <span className={styles.btnEmoji}>💳</span>
@@ -163,6 +169,7 @@ export default function Sidebar({
                 setActiveTab("packages");
                 setShowAddCatForm(false);
                 setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               <span className={styles.btnEmoji}>📦</span>

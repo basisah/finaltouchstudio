@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
+import { get, post, put, del } from "../../api/client";
 
 // Modular Imports
 import {
@@ -25,13 +26,20 @@ export default function AdminPage() {
 
   // Core Dashboard State (bootstrapped from mockData file)
   const [categories, setCategories] = useState(initialCategories);
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState([]);
   const [enquiries, setEnquiries] = useState(initialEnquiries);
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
 
+  useEffect(() => {
+    get("/items")
+      .then((data) => setItems(data))
+      .catch((err) => console.error("Error loading admin items:", err));
+  }, []);
+
   // Nav Selection
   const [activeTab, setActiveTab] = useState("birthday");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Category additions
   const [newCatLabel, setNewCatLabel] = useState("");
@@ -44,6 +52,8 @@ export default function AdminPage() {
   const [newItemDesc, setNewItemDesc] = useState("");
   const [newItemPic, setNewItemPic] = useState("✨");
   const [newItemSubCategory, setNewItemSubCategory] = useState("");
+  const [newItemFile, setNewItemFile] = useState(null);
+  const [newItemUnitCount, setNewItemUnitCount] = useState(1);
 
   // Member additions
   const [newMemName, setNewMemName] = useState("");
@@ -92,43 +102,89 @@ export default function AdminPage() {
   };
 
   // Toggle Item Availability
-  const handleToggleAvailability = (itemId) => {
-    setItems(items.map((item) => (item.id === itemId ? { ...item, isAvailable: !item.isAvailable } : item)));
+  const handleToggleAvailability = async (itemId) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+    try {
+      const updatedItem = await put(`/items/${itemId}`, {
+        ...item,
+        isAvailable: !item.isAvailable
+      });
+      setItems(items.map((i) => (i.id === itemId ? updatedItem : i)));
+    } catch (err) {
+      alert("Failed to toggle availability: " + err.message);
+    }
   };
 
   // Add Item
-  const handleAddItem = (e) => {
+  const handleAddItem = async (e) => {
     e.preventDefault();
     if (!newItemName.trim() || !newItemSN.trim()) return;
 
-    if (items.some((item) => item.serialNumber.toLowerCase() === newItemSN.toLowerCase())) {
+    if (items.some((item) => item.serialNumber && item.serialNumber.toLowerCase() === newItemSN.toLowerCase())) {
       alert("Unique Serial Number required. This one already exists!");
       return;
     }
 
-    const newItem = {
-      id: Date.now(),
-      serialNumber: newItemSN.trim(),
-      name: newItemName,
-      description: newItemDesc,
-      categoryId: activeTab,
-      subCategoryId: newItemSubCategory,
-      isAvailable: true,
-      image: newItemPic || "✨",
-    };
+    try {
+      let imagePath = newItemPic || "✨";
 
-    setItems([...items, newItem]);
-    setNewItemName("");
-    setNewItemDesc("");
-    setNewItemSN("");
-    setNewItemPic("✨");
-    setNewItemSubCategory("");
+      if (newItemFile) {
+        const formData = new FormData();
+        formData.append("image", newItemFile);
+
+        const token = localStorage.getItem("admin_token");
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.path;
+      }
+
+      const createdItem = await post("/items", {
+        id: newItemSN.trim(),
+        serialNumber: newItemSN.trim(),
+        name: newItemName,
+        title: newItemName,
+        description: newItemDesc,
+        categoryId: activeTab,
+        subCategoryId: newItemSubCategory,
+        isAvailable: true,
+        unit_count: newItemUnitCount,
+        image: imagePath
+      });
+
+      setItems([...items, createdItem]);
+      setNewItemName("");
+      setNewItemDesc("");
+      setNewItemSN("");
+      setNewItemPic("✨");
+      setNewItemSubCategory("");
+      setNewItemFile(null);
+      setNewItemUnitCount(1);
+    } catch (err) {
+      alert("Failed to add item: " + err.message);
+    }
   };
 
   // Delete Item
-  const handleDeleteItem = (itemId) => {
+  const handleDeleteItem = async (itemId) => {
     if (window.confirm("Delete this item permanently?")) {
-      setItems(items.filter((item) => item.id !== itemId));
+      try {
+        await del(`/items/${itemId}`);
+        setItems(items.filter((item) => item.id !== itemId));
+      } catch (err) {
+        alert("Failed to delete item: " + err.message);
+      }
     }
   };
 
@@ -239,7 +295,16 @@ export default function AdminPage() {
         handleDeleteCategory={handleDeleteCategory}
         setSearchQuery={setSearchQuery}
         handleLogout={handleLogout}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
       />
+
+      {isSidebarOpen && (
+        <div
+          className={styles.sidebarOverlay}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Panel Content Area */}
       <main className={styles.mainContent}>
@@ -252,6 +317,7 @@ export default function AdminPage() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           handleMarkAllRead={handleMarkAllRead}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
         <section className={styles.contentBody}>
@@ -285,6 +351,10 @@ export default function AdminPage() {
               setNewItemDesc={setNewItemDesc}
               newItemSubCategory={newItemSubCategory}
               setNewItemSubCategory={setNewItemSubCategory}
+              newItemFile={newItemFile}
+              setNewItemFile={setNewItemFile}
+              newItemUnitCount={newItemUnitCount}
+              setNewItemUnitCount={setNewItemUnitCount}
             />
           )}
 

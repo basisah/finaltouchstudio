@@ -189,6 +189,69 @@
   border: 1.5px solid #34162A;
 }
 
+/* ── Light Theme Navbar (for all pages except landing page) ── */
+.navbar.light {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-shadow);
+  box-shadow: 0 2px 10px rgba(73, 34, 91, 0.04);
+}
+
+.navbar.light .logoText {
+  color: var(--text-main);
+  text-shadow: none;
+}
+
+.navbar.light .logoAccent {
+  color: var(--btn-primary);
+}
+
+.navbar.light .logoMark {
+  box-shadow: 0 2px 8px var(--border-shadow);
+}
+
+.navbar.light .navLink {
+  color: var(--text-muted);
+  text-shadow: none;
+}
+
+.navbar.light .navLink:hover,
+.navbar.light .navLink.active {
+  color: var(--text-main);
+  background: var(--bg-main);
+  text-shadow: none;
+}
+
+.navbar.light .mobileNavLink {
+  color: var(--text-muted);
+}
+
+.navbar.light .mobileNavLink:hover,
+.navbar.light .mobileNavLink.active {
+  color: var(--text-main);
+  background: var(--bg-main);
+}
+
+.navbar.light .iconBtn {
+  color: var(--text-main);
+  filter: none;
+}
+
+.navbar.light .iconBtn:hover {
+  color: var(--btn-primary);
+}
+
+.navbar.light .badge {
+  border-color: var(--bg-card);
+}
+
+.navbar.light.scrolled {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(73, 34, 91, 0.08);
+  border-bottom: 1px solid var(--border-shadow);
+}
+
 /* ── Desktop-only helper ──────────────────────────────────────────────────── */
 .desktopOnly {
   /* shown by default — hidden on mobile */
@@ -264,3 +327,132 @@
     gap: 10px;
   }
 }
+
+/* ── Profile Dropdown Menu ── */
+.profileContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  width: 260px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px var(--border-shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeUp 0.25s ease forwards;
+  z-index: 1000;
+}
+
+/* Dark mode fallback if on dark background landing page header */
+.navbar:not(.light) .dropdown {
+  background: rgba(47, 27, 26, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.navbar:not(.light) .userName {
+  color: #fff;
+}
+
+.userEmail {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+  word-break: break-all;
+}
+
+.navbar:not(.light) .userEmail {
+  color: var(--clr-portrait-pink);
+}
+
+.dropDivider {
+  height: 1px;
+  background: var(--border-shadow);
+}
+
+.navbar:not(.light) .dropDivider {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dropLink {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.navbar:not(.light) .dropLink {
+  color: #fff;
+}
+
+.dropLink:hover {
+  color: var(--btn-primary);
+}
+
+.navbar:not(.light) .dropLink:hover {
+  color: var(--clr-gizmo);
+}
+
+.signOutBtn {
+  width: 100%;
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+
+.signOutBtn:hover {
+  background: var(--btn-hover);
+}
+
+.signInBtn {
+  width: 100%;
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.signInBtn:hover {
+  background: var(--btn-hover);
+}
+

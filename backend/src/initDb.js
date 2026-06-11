@@ -119,32 +119,32 @@ const DEMO_PACKAGES = [
 async function initializeDatabase() {
   console.log("🛠️ Initializing database tables and schema...");
   try {
-    // Force recreation of packages & package_items to reset prices to CAD
-    console.log("⚠️ Re-syncing package tables with new CAD prices...");
-    await db.query("DROP TABLE IF EXISTS package_items");
-    await db.query("DROP TABLE IF EXISTS packages");
-
     // 1. Drop existing items table if it has auto-increment ID to prevent issues,
-    // or if the subCategoryId column is missing.
+    // or if the subCategoryId, name, or unit_count columns are missing.
     const [columns] = await db.query("SHOW COLUMNS FROM items").catch(() => [[]]);
     const isOldSchema = columns.some(col => col.Field === "id" && col.Type.includes("int"));
     const hasSubCategoryId = columns.some(col => col.Field === "subCategoryId");
+    const hasName = columns.some(col => col.Field === "name");
+    const hasUnitCount = columns.some(col => col.Field === "unit_count");
 
-    if (isOldSchema || !hasSubCategoryId) {
-      console.log("⚠️ Old items table schema or missing subCategoryId column detected. Dropping and recreating...");
+    if ((isOldSchema || !hasSubCategoryId || !hasName || !hasUnitCount) && process.env.NODE_ENV !== "production") {
+      console.log("⚠️ Old items table schema or missing subCategoryId/name/unit_count column detected. Dropping and recreating...");
       await db.query("DROP TABLE IF EXISTS package_items");
       await db.query("DROP TABLE IF EXISTS items");
     }
+
 
     // 2. Create items table
     await db.query(`
       CREATE TABLE IF NOT EXISTS items (
         id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
         title VARCHAR(255) NOT NULL,
         categoryId VARCHAR(50) NOT NULL,
         subCategoryId VARCHAR(50) DEFAULT NULL,
         description TEXT,
         isAvailable BOOLEAN DEFAULT TRUE,
+        unit_count INT DEFAULT 1,
         image VARCHAR(255) DEFAULT '✨',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -177,14 +177,62 @@ async function initializeDatabase() {
     `);
     console.log("✅ Table 'package_items' created/verified.");
 
+    // Create users table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NULL,
+        name VARCHAR(255) NOT NULL,
+        google_id VARCHAR(255) UNIQUE NULL,
+        avatar_url VARCHAR(255) NULL,
+        role VARCHAR(50) DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Table 'users' created/verified.");
+
+    // Create bookings table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(50) NOT NULL,
+        pickup_date DATE NOT NULL,
+        return_date DATE NOT NULL,
+        package_name VARCHAR(255) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
+        payment_method VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Table 'bookings' created/verified.");
+
+    // Create enquiries table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS enquiries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        occasion VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ Table 'enquiries' created/verified.");
+
+
+
     // 5. Seed items if empty
     const [itemRows] = await db.query("SELECT COUNT(*) as count FROM items");
     if (itemRows[0].count === 0) {
       console.log("🌱 Seeding items table with initial inventory...");
       for (const item of INVENTORY_ITEMS) {
         await db.query(
-          "INSERT INTO items (id, title, categoryId, subCategoryId, description, isAvailable, image) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [item.id, item.title, item.categoryId, item.subCategoryId, item.description || null, true, "✨"]
+          "INSERT INTO items (id, name, title, categoryId, subCategoryId, description, isAvailable, unit_count, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [item.id, item.title, item.title, item.categoryId, item.subCategoryId, item.description || null, true, 10, "✨"]
         );
       }
       console.log(`✅ Successfully seeded ${INVENTORY_ITEMS.length} items.`);

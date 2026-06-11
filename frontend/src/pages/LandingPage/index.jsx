@@ -13,7 +13,6 @@ import OccasionsCarousel  from "./OccasionsCarousel/OccasionsCarousel";
 import PickupDelivery     from "./PickupDelivery/PickupDelivery";
 import Gallery            from "./Gallery/Gallery";
 import ContactUs          from "./ContactUs/ContactUs";
-import SocialProof        from "./SocialProof/SocialProof";
 import Footer             from "../../components/Footer/Footer";
 
 import styles from "./LandingPage.module.css";
@@ -28,9 +27,9 @@ export default function LandingPage() {
       <OccasionsCarousel />
       <PickupDelivery />
       <Gallery />
-      <SocialProof />
       <ContactUs />
       <Footer />
     </div>
   );
 }
+

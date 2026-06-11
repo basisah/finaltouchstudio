@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
-  background-color: var(--clr-portrait-pink);
-  color: var(--txt-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-family: var(--font-sans);
   overflow-x: hidden;
   position: relative;
@@ -10,12 +10,8 @@
 /* ── Hero Section ── */
 .hero {
   position: relative;
-  padding: 100px 20px 60px 20px;
-  background-color: var(--clr-weathervane);
-  background-image: linear-gradient(180deg, var(--clr-weathervane) 0%, var(--clr-purple-kite) 100%);
-  color: var(--clr-white);
+  padding: 100px 20px 40px 20px;
   text-align: center;
-  overflow: hidden;
 }
 
 .heroInner {
@@ -28,9 +24,9 @@
 .categoryBadge {
   display: inline-block;
   padding: 6px 16px;
-  background: rgba(184, 114, 154, 0.18);
-  border: 1px solid var(--clr-portrait-pink);
-  color: #f7d5e6;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 2px;
@@ -42,17 +38,15 @@
 .title {
   font-family: var(--font-serif);
   font-size: 3rem;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.15;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, #ffffff 0%, #ffd6eb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
 }
 
 .subtitle {
   font-size: 1.1rem;
-  color: var(--clr-gizmo);
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
@@ -60,7 +54,7 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 60px 20px;
+  padding: 40px 20px 80px;
   position: relative;
   z-index: 2;
 }
@@ -74,12 +68,11 @@
 
 /* ── Items Section ── */
 .itemsSection {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 12px;
   padding: 30px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px var(--border-shadow);
 }
 
 .sectionHeader {
@@ -89,13 +82,13 @@
 .sectionHeader h2 {
   font-family: var(--font-serif);
   font-size: 1.8rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
   margin-bottom: 6px;
 }
 
 .sectionHeader p {
   font-size: 0.95rem;
-  color: var(--txt-secondary);
+  color: var(--text-muted);
 }
 
 .itemsGrid {
@@ -107,18 +100,18 @@
 .itemCard {
   display: flex;
   align-items: center;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
   padding: 16px 20px;
   gap: 20px;
-  transition: all 0.25s var(--ease);
+  transition: all 0.25s ease;
 }
 
 .itemCard:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--clr-mulberry-mix-lt);
+  box-shadow: 0 4px 12px var(--border-shadow);
+  border-color: var(--text-muted);
 }
 
 .cardVisual {
@@ -133,6 +126,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-main);
 }
 
 .cardInfo {
@@ -141,27 +135,27 @@
 
 .cardInfo h3 {
   font-size: 1.1rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .cardInfo p {
   font-size: 0.85rem;
-  color: var(--txt-muted);
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
 .removeBtn {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #dc2626;
   padding: 8px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s var(--ease);
+  transition: all 0.2s ease;
 }
 
 .removeBtn:hover {
@@ -178,23 +172,23 @@
 }
 
 .summaryCard, .restoreCard {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 12px;
   padding: 30px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px var(--border-shadow);
 }
 
 .summaryCard h3, .restoreCard h3 {
   font-family: var(--font-serif);
   font-size: 1.4rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
   margin-bottom: 16px;
 }
 
 .divider {
   height: 1px;
-  background: var(--border);
+  background: var(--border-shadow);
   margin: 16px 0;
 }
 
@@ -202,13 +196,13 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.95rem;
-  color: var(--txt-secondary);
+  color: var(--text-muted);
   margin-bottom: 12px;
 }
 
 .originalPrice {
   text-decoration: line-through;
-  color: var(--txt-muted);
+  opacity: 0.7;
 }
 
 .customBadge {
@@ -233,32 +227,31 @@
 
 .totalRow span:first-child {
   font-size: 1rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
 }
 
 .totalPrice {
   font-size: 1.6rem;
-  color: var(--clr-mulberry-mix);
+  color: var(--btn-primary);
 }
 
 .checkoutBtn {
   width: 100%;
-  background: var(--clr-mulberry-mix);
-  background-image: linear-gradient(135deg, var(--clr-mulberry-mix) 0%, var(--clr-purple-kite) 100%);
+  background: var(--btn-primary);
   color: white;
   border: none;
   padding: 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(159, 80, 124, 0.3);
-  transition: all 0.25s var(--ease);
+  box-shadow: 0 4px 12px var(--border-shadow);
+  transition: all 0.25s ease;
 }
 
 .checkoutBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(159, 80, 124, 0.45);
+  background: var(--btn-hover);
 }
 
 .checkoutBtn:disabled {
@@ -270,7 +263,7 @@
 /* ── Excluded Items ── */
 .restoreCard p {
   font-size: 0.85rem;
-  color: var(--txt-muted);
+  color: var(--text-muted);
   margin-bottom: 16px;
 }
 
@@ -286,35 +279,35 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--clr-portrait-pink);
+  background: var(--bg-main);
   padding: 8px 14px;
   border-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-shadow);
 }
 
 .restoreName {
   font-size: 0.88rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
   font-weight: 500;
 }
 
 .restoreBtn {
   background: transparent;
   border: none;
-  color: var(--clr-mulberry-mix);
+  color: var(--btn-primary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 .restoreBtn:hover {
-  color: var(--clr-purple-kite);
+  color: var(--btn-hover);
 }
 
 /* ── Loading and Error States ── */
 .loadingPage, .errorPage {
   min-height: 100vh;
-  background-color: var(--clr-portrait-pink);
+  background-color: var(--bg-main);
   display: flex;
   flex-direction: column;
 }
@@ -332,8 +325,8 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid rgba(159, 80, 124, 0.1);
-  border-top-color: var(--clr-mulberry-mix);
+  border: 5px solid var(--border-shadow);
+  border-top-color: var(--btn-primary);
   border-radius: 50%;
   animation: spin 1s infinite linear;
 }
@@ -343,11 +336,11 @@
   max-width: 500px;
   margin: 100px auto;
   text-align: center;
-  background: white;
-  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
   padding: 40px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--border-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -361,13 +354,17 @@
 }
 
 .backBtn {
-  background: var(--clr-weathervane);
+  background: var(--btn-primary);
   color: white;
   border: none;
   padding: 10px 24px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.backBtn:hover {
+  background: var(--btn-hover);
 }
 
 @keyframes spin {

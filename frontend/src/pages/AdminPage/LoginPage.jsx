@@ -15,7 +15,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Try hitting the backend auth API first
+      // Hit backend auth API
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,28 +26,20 @@ export default function LoginPage() {
 
       if (response.ok && data.token) {
         localStorage.setItem("admin_token", data.token);
+        if (data.user) {
+          localStorage.setItem("user_info", JSON.stringify(data.user));
+        }
         navigate("/admin");
       } else {
-        // Fallback for frontend-only demo mode
-        if (username === "admin" && (password === "your_secure_password" || password === "admin" || password === "khaled")) {
-          localStorage.setItem("admin_token", "mock_khaled_admin_token");
-          navigate("/admin");
-        } else {
-          setError(data.error || "Invalid username or password");
-        }
+        setError(data.error || "Invalid username or password");
       }
     } catch (err) {
-      // Network/CORS error or backend down: Fallback to client-side mock credentials so the user can always test the UI
-      if (username === "admin" && (password === "your_secure_password" || password === "admin" || password === "khaled")) {
-        localStorage.setItem("admin_token", "mock_khaled_admin_token");
-        navigate("/admin");
-      } else {
-        setError("Invalid credentials (or server is offline). Hint: admin / khaled");
-      }
+      setError("Failed to connect to authentication server. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className={styles.wrapper}>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
+import { submitBooking } from "../../api/bookings.api";
 import styles from "./CheckoutPage.module.css";
 
 export default function CheckoutPage() {
@@ -29,17 +30,35 @@ export default function CheckoutPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!name || !phone || !email || !pickupDate || !returnDate) {
       alert("Please fill in all requested scheduling and billing fields.");
       return;
     }
 
-    // Mock completing order
-    const randomRef = "FT-" + Math.floor(100000 + Math.random() * 900000);
-    setBookingRef(randomRef);
-    setIsCompleted(true);
+    try {
+      const result = await submitBooking({
+        name,
+        phone,
+        email,
+        pickupDate,
+        returnDate,
+        packageName: checkoutData.pkgName,
+        price: checkoutData.finalPrice,
+        paymentMethod
+      });
+
+      if (result && result.bookingId) {
+        setBookingRef("FT-" + result.bookingId);
+      } else {
+        setBookingRef("FT-" + Math.floor(100000 + Math.random() * 900000));
+      }
+      setIsCompleted(true);
+    } catch (err) {
+      console.error("Booking API error:", err);
+      alert("Failed to confirm reservation. Please check your internet connection and try again.");
+    }
   };
 
   if (isCompleted) {

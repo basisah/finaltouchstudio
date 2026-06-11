@@ -10,9 +10,13 @@ export default function Header({
   activeTab,
   setActiveTab,
   handleMarkAllRead,
+  toggleSidebar,
 }) {
   return (
     <header className={styles.header}>
+      <button className={styles.menuToggle} onClick={toggleSidebar} aria-label="Toggle Sidebar">
+        ☰
+      </button>
       {/* Global Search Tool Container */}
       <div className={styles.searchContainer}>
         <div className={styles.selectWrapper}>

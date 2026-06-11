@@ -1,22 +1,21 @@
 .dashboard {
   display: flex;
   min-height: 100vh;
-  background-color: var(--clr-portrait-pink);
-  color: var(--txt-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-family: var(--font-sans);
 }
 
 /* ── Left Sidebar: Category Controls ────────────────────────────────────────── */
 .sidebar {
   width: 290px;
-  background-color: var(--clr-weathervane);
-  background-image: linear-gradient(180deg, var(--clr-weathervane) 0%, var(--clr-purple-kite) 100%);
-  color: var(--txt-on-dark);
+  background-color: var(--bg-card);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-dark);
+  border-right: 1px solid var(--border-shadow);
   flex-shrink: 0;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px var(--border-shadow);
   z-index: 10;
 }
 
@@ -25,25 +24,24 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-shadow);
 }
 
 .sidebarIcon {
   font-size: 1.8rem;
-  animation: float 4s ease-in-out infinite;
 }
 
 .sidebarHeader h3 {
   font-family: var(--font-serif);
   font-size: 1.35rem;
-  font-weight: 500;
-  color: var(--clr-white);
+  font-weight: 700;
+  color: var(--text-main);
   line-height: 1.2;
 }
 
 .sidebarHeader p {
   font-size: 0.75rem;
-  color: var(--clr-gizmo);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-top: 2px;
@@ -61,7 +59,7 @@
 .navLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--txt-on-dark-dim);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
   padding-left: 12px;
@@ -79,25 +77,25 @@
   width: 100%;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--txt-on-dark-dim);
-  transition: all 0.2s var(--ease);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
   text-align: left;
 }
 
 .navBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--clr-white);
+  background: var(--bg-main);
+  color: var(--text-main);
 }
 
 .navBtn.active {
-  background: var(--clr-mulberry-mix);
-  color: var(--clr-white);
-  box-shadow: 0 4px 12px rgba(159, 80, 124, 0.25);
+  background: var(--btn-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px var(--border-shadow);
 }
 
 .btnEmoji {
@@ -107,7 +105,7 @@
 .btnLabel {
   flex: 1;
   font-size: 0.92rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -115,19 +113,20 @@
 
 .btnCount {
   font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border-shadow);
   padding: 2px 8px;
   border-radius: 99px;
-  color: var(--txt-on-dark);
+  color: var(--text-muted);
 }
 
 .navBtn.active .btnCount {
   background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-shadow);
   margin: 12px 0;
 }
 
@@ -141,46 +140,46 @@
 
 .addCategoryTrigger {
   width: 100%;
-  background: rgba(159, 80, 124, 0.15);
-  border: 1px dashed var(--clr-mulberry-mix);
-  color: var(--clr-gizmo);
+  background: var(--bg-main);
+  border: 1px dashed var(--btn-primary);
+  color: var(--text-muted);
   padding: 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.22s var(--ease);
+  font-weight: 600;
+  transition: all 0.22s ease;
 }
 
 .addCategoryTrigger:hover {
-  background: rgba(159, 80, 124, 0.25);
-  color: var(--clr-white);
+  background: var(--border-shadow);
+  color: var(--text-main);
   border-style: solid;
 }
 
 .deleteCategoryBtn {
   width: 100%;
   background: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  color: #ff8b94;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: #dc2626;
   padding: 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-top: 4px;
-  transition: all 0.22s var(--ease);
+  transition: all 0.22s ease;
 }
 
 .deleteCategoryBtn:hover {
-  background: rgba(220, 53, 69, 0.25);
-  color: var(--clr-white);
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc2626;
 }
 
 /* Add Category Form */
 .addCatForm {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
   padding: 12px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -189,7 +188,7 @@
 .addCatForm h4 {
   font-size: 0.8rem;
   text-transform: uppercase;
-  color: var(--clr-gizmo);
+  color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
@@ -200,32 +199,32 @@
 
 .catInput {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 6px;
   padding: 6px 10px;
-  color: var(--clr-white);
+  color: var(--text-main);
   font-size: 0.85rem;
 }
 
 .catInput:focus {
   outline: none;
-  border-color: var(--clr-mulberry-mix);
+  border-color: var(--btn-primary);
 }
 
 .catEmojiSelect {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 6px;
   padding: 6px;
-  color: var(--clr-white);
+  color: var(--text-main);
   font-size: 0.85rem;
   cursor: pointer;
 }
 
 .catEmojiSelect option {
-  background: var(--clr-weathervane);
-  color: var(--clr-white);
+  background: var(--bg-card);
+  color: var(--text-main);
 }
 
 .catFormActions {
@@ -235,43 +234,43 @@
 }
 
 .saveCatBtn {
-  background: var(--clr-mulberry-mix);
-  color: var(--clr-white);
+  background: var(--btn-primary);
+  color: #fff;
   border: none;
   padding: 4px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
 .saveCatBtn:hover {
-  background: var(--clr-mulberry-mix-lt);
+  background: var(--btn-hover);
 }
 
 .cancelCatBtn {
   background: transparent;
   border: none;
-  color: var(--txt-on-dark-dim);
+  color: var(--text-muted);
   padding: 4px 8px;
   font-size: 0.8rem;
 }
 
 .cancelCatBtn:hover {
-  color: var(--clr-white);
+  color: var(--text-main);
 }
 
 /* Sidebar Footer */
 .sidebarFooter {
   padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border-shadow);
 }
 
 .logoutBtn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--txt-on-dark);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
+  color: var(--text-main);
   padding: 12px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -279,13 +278,13 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s var(--ease);
+  transition: all 0.2s ease;
 }
 
 .logoutBtn:hover {
-  background: rgba(220, 53, 69, 0.15);
-  border-color: rgba(220, 53, 69, 0.3);
-  color: #ff8b94;
+  background: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.2);
+  color: #dc2626;
 }
 
 /* ── Right Main Area: Top Bar Search & Views ───────────────────────────────── */
@@ -298,13 +297,14 @@
 }
 
 .header {
-  background-color: var(--clr-white);
+  background-color: var(--bg-card);
   padding: 20px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 20px rgba(52, 22, 42, 0.02);
+  border-bottom: 1px solid var(--border-shadow);
+  box-shadow: 0 4px 12px var(--border-shadow);
+  gap: 16px;
 }
 
 /* Global Search Container styling */
@@ -312,24 +312,24 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--clr-portrait-pink);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
   max-width: 450px;
   flex: 1;
   padding: 2px;
 }
 
 .selectWrapper {
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border-shadow);
 }
 
 .searchSelect {
   background: transparent;
   border: none;
   font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--txt-secondary);
+  font-weight: 600;
+  color: var(--text-muted);
   padding: 8px 12px;
   cursor: pointer;
   outline: none;
@@ -340,32 +340,32 @@
   background: transparent;
   border: none;
   font-size: 0.88rem;
-  color: var(--clr-weathervane);
+  color: var(--text-main);
   padding: 8px 12px 8px 8px;
   outline: none;
 }
 
 .searchInput::placeholder {
-  color: var(--txt-muted);
+  color: var(--text-muted);
 }
 
 .clearSearchBtn {
   background: transparent;
   border: none;
-  color: var(--txt-muted);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0 10px;
   font-size: 0.85rem;
 }
 
 .clearSearchBtn:hover {
-  color: var(--clr-mulberry-mix);
+  color: var(--btn-primary);
 }
 
 .searchIcon {
   padding: 0 12px;
   font-size: 0.95rem;
-  color: var(--txt-secondary);
+  color: var(--text-muted);
 }
 
 .headerActions {
@@ -377,8 +377,8 @@
 /* Top-Right Enquiries Shortcut Button */
 .enquiriesTrigger {
   position: relative;
-  background: var(--clr-portrait-pink);
-  border: 1px solid var(--border);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -386,20 +386,20 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.22s var(--ease);
+  transition: all 0.22s ease;
 }
 
 .enquiriesTrigger:hover {
-  background-color: var(--clr-white);
-  border-color: var(--clr-mulberry-mix);
-  box-shadow: 0 0 10px rgba(159, 80, 124, 0.15);
+  background-color: var(--bg-card);
+  border-color: var(--btn-primary);
+  box-shadow: 0 4px 12px var(--border-shadow);
   transform: translateY(-1px);
 }
 
 .enquiriesTriggerActive {
-  background-color: var(--clr-mulberry-mix);
-  border-color: var(--clr-mulberry-mix);
-  color: var(--clr-white);
+  background-color: var(--btn-primary);
+  border-color: var(--btn-primary);
+  color: #fff;
 }
 
 .messageIconEmoji {
@@ -429,13 +429,13 @@
 }
 
 .adminBadge {
-  background: var(--clr-portrait-pink);
-  border: 1px solid var(--clr-gizmo);
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
   border-radius: 30px;
   padding: 8px 18px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--txt-secondary);
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -462,7 +462,559 @@
 
 .categoryGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 30px;
   align-items: start;
+}
+
+/* ── Dashboard Cards & Grid Elements ────────────────────────────────────── */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(73, 34, 91, 0.05);
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(73, 34, 91, 0.09);
+}
+
+.fullWidthCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(73, 34, 91, 0.05);
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
+  width: 100%;
+}
+
+.fullWidthCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(73, 34, 91, 0.09);
+}
+
+.cardHeader {
+  margin-bottom: 24px;
+}
+
+.cardHeader h2 {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardHeader p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* ── Premium Tables ──────────────────────────────────────────────────────── */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-shadow);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  padding: 14px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border-shadow);
+  background-color: rgba(245, 235, 250, 0.5);
+}
+
+.table td {
+  padding: 16px;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-shadow);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tr:hover td {
+  background-color: rgba(245, 235, 250, 0.35);
+}
+
+.serialNumCol code {
+  font-family: monospace;
+  background: var(--bg-main);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  border: 1px solid var(--border-shadow);
+  font-weight: 600;
+}
+
+.thumbnailCol {
+  width: 60px;
+}
+
+.dateCol {
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.amountCol strong {
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.tableSmallDesc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.itemEmojiPic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 6px;
+  font-size: 1.15rem;
+}
+
+/* ── Interactive Availability Toggle (iOS Style) ─────────────────────────── */
+.availabilityToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.statusAvailable {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.statusBooked {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-shadow);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .slider {
+  background-color: var(--btn-primary);
+}
+
+.switch input:focus + .slider {
+  box-shadow: 0 0 1px var(--btn-primary);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* ── Form Styling ────────────────────────────────────────────────────────── */
+.itemForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.inputGroup input[type="text"],
+.inputGroup input[type="email"],
+.inputGroup input[type="number"],
+.inputGroup textarea,
+.inputGroup select {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%;
+}
+
+.inputGroup input[type="text"]:focus,
+.inputGroup input[type="email"]:focus,
+.inputGroup input[type="number"]:focus,
+.inputGroup textarea:focus,
+.inputGroup select:focus {
+  outline: none;
+  border-color: var(--btn-primary);
+  box-shadow: 0 0 0 3px rgba(165, 110, 189, 0.15);
+  background-color: var(--bg-card);
+}
+
+.inputGroup textarea {
+  resize: vertical;
+}
+
+.picSelect {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e3482' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px !important;
+}
+
+/* ── Primary Action Buttons ──────────────────────────────────────────────── */
+.addItemBtn {
+  background-color: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(165, 110, 189, 0.25);
+  cursor: pointer;
+}
+
+.addItemBtn:hover {
+  background-color: var(--btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(110, 52, 130, 0.35);
+}
+
+.addItemBtn:active {
+  transform: translateY(1px);
+}
+
+.deleteItemBtn {
+  background-color: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.deleteItemBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+/* ── Inbox (Enquiries) Specifics ────────────────────────────────────────── */
+.userCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userEmail {
+  font-size: 0.8rem;
+  color: var(--btn-primary);
+  transition: color 0.2s ease;
+}
+
+.userEmail:hover {
+  color: var(--btn-hover);
+  text-decoration: underline;
+}
+
+.occasionBadge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-shadow);
+}
+
+.messageCol {
+  max-width: 300px;
+  overflow-wrap: break-word;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.replyBtn {
+  background-color: transparent;
+  border: 1px solid var(--btn-primary);
+  color: var(--btn-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.replyBtn:hover {
+  background-color: var(--btn-primary);
+  color: white;
+}
+
+/* ── Category Setup Guide & Utilities ────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.guideContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.guideStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.stepNum {
+  background-color: var(--btn-primary);
+  color: white;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.88rem;
+}
+
+.guideStep p {
+  font-size: 0.92rem;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+/* ── Sidebar Mobile Toggle ──────────────────────────────────────────────── */
+.menuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  color: var(--text-main);
+  border-radius: 8px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.menuToggle:hover {
+  background: var(--border-shadow);
+}
+
+/* ── Mobile Responsive Overrides ────────────────────────────────────────── */
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    left: -290px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: left 0.3s var(--ease);
+    box-shadow: 0 10px 40px rgba(73, 34, 91, 0.15);
+  }
+
+  .sidebar.sidebarOpen {
+    left: 0;
+  }
+
+  .sidebarOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(34, 12, 27, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+  }
+
+  .menuToggle {
+    display: flex;
+  }
+
+  .header {
+    padding: 16px 20px !important;
+  }
+
+  .contentBody {
+    padding: 20px !important;
+  }
+
+  .categoryGrid {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+
+  /* Force grid column spans to adapt to single column grid */
+  .categoryGrid > [style*="grid-column"],
+  .categoryGrid > div {
+    grid-column: span 1 !important;
+  }
+
+  .searchContainer {
+    max-width: 100%;
+  }
+
+  .headerActions {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .searchContainer {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+  }
+
+  .table th, 
+  .table td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .fullWidthCard {
+    padding: 20px;
+  }
+
+  .availabilityToggle {
+    gap: 8px;
+  }
+
+  .statusLabel {
+    min-width: 65px;
+    font-size: 0.68rem;
+    padding: 3px 6px;
+  }
+
+  .switch {
+    width: 38px;
+    height: 20px;
+  }
+
+  .slider:before {
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+  }
+
+  .switch input:checked + .slider:before {
+    transform: translateX(18px);
+  }
 }

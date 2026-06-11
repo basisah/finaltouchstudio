@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
-  background-color: var(--clr-portrait-pink);
-  color: var(--txt-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-family: var(--font-sans);
   overflow-x: hidden;
   position: relative;
@@ -60,12 +60,12 @@
 
 /* ── Checkout Form ── */
 .checkoutForm {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  box-shadow: 0 4px 12px var(--border-shadow);
   border-radius: var(--radius-lg);
   padding: 40px;
-  box-shadow: var(--shadow-md);
+  color: var(--text-main);
 }
 
 .sectionHeader {
@@ -177,11 +177,12 @@
 }
 
 .summaryCard {
-  background: white;
-  border: 1px solid var(--border);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  box-shadow: 0 4px 12px var(--border-shadow);
   border-radius: var(--radius-lg);
   padding: 30px;
-  box-shadow: var(--shadow-md);
+  color: var(--text-main);
 }
 
 .summaryCard h3 {
@@ -252,8 +253,7 @@
 
 .placeOrderBtn {
   width: 100%;
-  background: var(--clr-mulberry-mix);
-  background-image: linear-gradient(135deg, var(--clr-mulberry-mix) 0%, var(--clr-purple-kite) 100%);
+  background: var(--btn-primary);
   color: white;
   border: none;
   padding: 14px;
@@ -261,7 +261,7 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(159, 80, 124, 0.3);
+  box-shadow: 0 4px 15px var(--border-shadow);
   transition: all 0.25s var(--ease);
 }
 

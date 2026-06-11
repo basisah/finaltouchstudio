@@ -9,13 +9,11 @@ export default function EnquiriesTab({ enquiries }) {
         <p>Visitor inquiries and user-submitted data</p>
       </div>
 
-      <div className={styles.tableWrapper}>
+      <div className={styles.tableWrapper} style={{ overflowX: "hidden" }}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>User Info</th>
-              <th>Requested Occasion</th>
+              <th>Sender & Occasion</th>
               <th>Message & Vision</th>
               <th>Action</th>
             </tr>
@@ -29,15 +27,21 @@ export default function EnquiriesTab({ enquiries }) {
                   backgroundColor: enq.read ? "transparent" : "rgba(159, 80, 124, 0.04)",
                 }}
               >
-                <td className={styles.dateCol}>{enq.date}</td>
-                <td className={styles.userCol}>
-                  <strong>{enq.name}</strong>
-                  <a href={`mailto:${enq.email}`} className={styles.userEmail}>
-                    {enq.email}
-                  </a>
-                </td>
-                <td className={styles.occasionCol}>
-                  <span className={styles.occasionBadge}>{enq.occasion || "General Enquiry"}</span>
+                <td>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>{enq.name}</strong>
+                      <span className={styles.occasionBadge} style={{ fontSize: "10px", padding: "1px 6px" }}>
+                        {enq.occasion || "General"}
+                      </span>
+                    </div>
+                    <a href={`mailto:${enq.email}`} className={styles.userEmail}>
+                      📧 {enq.email}
+                    </a>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", opacity: 0.8 }}>
+                      📅 {enq.date}
+                    </div>
+                  </div>
                 </td>
                 <td className={styles.messageCol}>{enq.message}</td>
                 <td>

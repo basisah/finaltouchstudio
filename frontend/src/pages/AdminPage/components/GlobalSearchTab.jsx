@@ -29,8 +29,6 @@ export default function GlobalSearchTab({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Serial No.</th>
-                  <th>Image</th>
                   <th>Item Details</th>
                   <th>Availability Status</th>
                   <th>Action</th>
@@ -39,15 +37,21 @@ export default function GlobalSearchTab({
               <tbody>
                 {searchResults.map((item) => (
                   <tr key={item.id}>
-                    <td className={styles.serialNumCol}>
-                      <code>{item.serialNumber}</code>
-                    </td>
-                    <td className={styles.thumbnailCol}>
-                      <span className={styles.itemEmojiPic}>{item.image}</span>
-                    </td>
                     <td>
-                      <strong>{item.name}</strong>
-                      <p className={styles.tableSmallDesc}>{item.description}</p>
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                        <div style={{ flexShrink: 0 }}>
+                          <span className={styles.itemEmojiPic}>{item.image}</span>
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <code style={{ fontSize: "0.72rem", background: "var(--bg-main)", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--border-shadow)", color: "var(--text-main)", fontWeight: "600" }}>
+                              {item.serialNumber || item.id}
+                            </code>
+                            <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>{item.name}</strong>
+                          </div>
+                          <p className={styles.tableSmallDesc} style={{ margin: "4px 0 0" }}>{item.description}</p>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <span
@@ -81,9 +85,7 @@ export default function GlobalSearchTab({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Member ID</th>
-                  <th>Full Name</th>
-                  <th>Email Address</th>
+                  <th>Member Details</th>
                   <th>Join Date</th>
                   <th>Status</th>
                 </tr>
@@ -92,12 +94,18 @@ export default function GlobalSearchTab({
                 {searchResults.map((mem) => (
                   <tr key={mem.id}>
                     <td>
-                      <code>{mem.id}</code>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <code style={{ fontSize: "0.72rem", background: "var(--bg-main)", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--border-shadow)", color: "var(--text-main)", fontWeight: "600" }}>
+                            {mem.id}
+                          </code>
+                          <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>{mem.name}</strong>
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", opacity: 0.85 }}>
+                          📧 {mem.email}
+                        </div>
+                      </div>
                     </td>
-                    <td>
-                      <strong>{mem.name}</strong>
-                    </td>
-                    <td>{mem.email}</td>
                     <td>{mem.joinDate}</td>
                     <td>
                       <span

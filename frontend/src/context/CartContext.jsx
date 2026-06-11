@@ -38,8 +38,18 @@ export function CartProvider({ children }) {
     setCart([]);
   };
 
+  const updateQuantity = (cartItemId, delta) => {
+    setCart((prev) => prev.map((c) => {
+      if (c.id === cartItemId) {
+        const newQuantity = Math.max(1, (c.quantity || 1) + delta);
+        return { ...c, quantity: newQuantity };
+      }
+      return c;
+    }));
+  };
+
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}>
       {children}
     </CartContext.Provider>
   );

@@ -7,11 +7,13 @@ USE finaltouchstudio;
 -- Items table matching frontend items structure
 CREATE TABLE IF NOT EXISTS items (
     id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     categoryId VARCHAR(50) NOT NULL,
     subCategoryId VARCHAR(50) DEFAULT NULL,
     description TEXT,
     isAvailable BOOLEAN DEFAULT TRUE,
+    unit_count INT DEFAULT 1,
     image VARCHAR(255) DEFAULT '✨',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -43,3 +45,17 @@ CREATE TABLE IF NOT EXISTS orders (
     total_amount DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Users table supporting manual registration and Google OAuth
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NULL,
+    name VARCHAR(255) NOT NULL,
+    google_id VARCHAR(255) UNIQUE NULL,
+    avatar_url VARCHAR(255) NULL,
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+

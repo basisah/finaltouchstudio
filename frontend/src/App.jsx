@@ -7,6 +7,10 @@ import { CartProvider } from "./context/CartContext";
 import ItemsPage from "./pages/ItemsPage/ItemsPage";
 import PackageDetail from "./pages/PackageDetail/PackageDetail";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
+import CartPage from "./pages/CartPage/CartPage";
+import CustomerLoginPage from "./pages/CustomerLoginPage/CustomerLoginPage";
+import ProfilePage from "./pages/ProfilePage/ProfilePage";
+
 
 export default function App() {
   return (
@@ -17,6 +21,9 @@ export default function App() {
           <Route path="/items" element={<ItemsPage />} />
           <Route path="/package/:id" element={<PackageDetail />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/login" element={<CustomerLoginPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/khaledadmin" element={<LoginPage />} />
           <Route 
             path="/admin" 

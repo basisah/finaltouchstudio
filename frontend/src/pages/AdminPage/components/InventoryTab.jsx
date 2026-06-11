@@ -18,6 +18,10 @@ export default function InventoryTab({
   setNewItemDesc,
   newItemSubCategory,
   setNewItemSubCategory,
+  newItemFile,
+  setNewItemFile,
+  newItemUnitCount,
+  setNewItemUnitCount,
 }) {
   const currentInventoryCatObj = INVENTORY_CATEGORIES.find(c => c.id === activeCategory.id);
   const subcategories = currentInventoryCatObj?.subcategories || [];
@@ -37,14 +41,11 @@ export default function InventoryTab({
             <p>No items configured in this category. Create one below on the right!</p>
           </div>
         ) : (
-          <div className={styles.tableWrapper}>
+          <div className={styles.tableWrapper} style={{ overflowX: "hidden" }}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Serial No.</th>
-                  <th>Image</th>
-                  <th>Item Name & Info</th>
-                  <th>Subcategory</th>
+                  <th>Item Details</th>
                   <th>Availability Switch</th>
                   <th>Action</th>
                 </tr>
@@ -52,22 +53,41 @@ export default function InventoryTab({
               <tbody>
                 {activeCategoryItems.map((item) => (
                   <tr key={item.id}>
-                    <td className={styles.serialNumCol}>
-                      <code>{item.serialNumber}</code>
-                    </td>
-                    <td className={styles.thumbnailCol}>
-                      <span className={styles.itemEmojiPic} title="Item visual thumb">
-                        {item.image}
-                      </span>
-                    </td>
                     <td>
-                      <strong>{item.name || item.title}</strong>
-                      <p className={styles.tableSmallDesc}>{item.description}</p>
-                    </td>
-                    <td>
-                      <span className={styles.btnCount} style={{ background: "rgba(255, 255, 255, 0.08)", color: "rgba(255, 255, 255, 0.8)", textTransform: "uppercase", fontSize: "10px", fontWeight: "700", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-                        {subcategories.find(s => s.id === item.subCategoryId)?.label || item.subCategoryId || "General"}
-                      </span>
+                      <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                        {/* Image / Emoji Thumbnail */}
+                        <div style={{ flexShrink: 0 }}>
+                          {item.image && item.image.startsWith("/uploads") ? (
+                            <img 
+                              src={item.image} 
+                              alt={item.name} 
+                              style={{ width: "44px", height: "44px", objectFit: "cover", borderRadius: "8px", display: "block" }} 
+                            />
+                          ) : (
+                            <span className={styles.itemEmojiPic} style={{ width: "44px", height: "44px", borderRadius: "8px" }} title="Item visual thumb">
+                              {item.image}
+                            </span>
+                          )}
+                        </div>
+                        {/* Text Information Stack */}
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <code style={{ fontSize: "0.72rem", background: "var(--bg-main)", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--border-shadow)", color: "var(--text-main)", fontWeight: "600" }}>
+                              {item.serialNumber || item.id}
+                            </code>
+                            <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>{item.name || item.title}</strong>
+                          </div>
+                          <p className={styles.tableSmallDesc} style={{ margin: "4px 0 6px", lineHeight: "1.4" }}>{item.description}</p>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                            <span className={styles.btnCount} style={{ background: "rgba(165, 110, 189, 0.12)", color: "var(--btn-primary)", fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: "4px" }}>
+                              Stock: {item.unit_count || 1} units
+                            </span>
+                            <span className={styles.btnCount} style={{ background: "rgba(73, 34, 91, 0.05)", color: "var(--text-muted)", fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--border-shadow)" }}>
+                              {subcategories.find(s => s.id === item.subCategoryId)?.label || item.subCategoryId || "General"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <div className={styles.availabilityToggle}>
@@ -156,6 +176,29 @@ export default function InventoryTab({
                 <option key={sub.id} value={sub.id}>{sub.emoji} {sub.label}</option>
               ))}
             </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemPhoto">Upload Item Photo (Optional)</label>
+            <input
+              id="itemPhoto"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewItemFile(e.target.files[0])}
+              style={{ padding: "6px" }}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemUnitCount">Stock Quantity in Inventory</label>
+            <input
+              id="itemUnitCount"
+              type="number"
+              min="1"
+              value={newItemUnitCount}
+              onChange={(e) => setNewItemUnitCount(parseInt(e.target.value, 10) || 1)}
+              required
+            />
           </div>
 
           <div className={styles.inputGroup}>

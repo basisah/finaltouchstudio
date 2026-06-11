@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { INVENTORY_CATEGORIES } from "../../constants/inventory";
+import { get } from "../../api/client";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
@@ -203,6 +204,13 @@ export default function ItemsPage() {
 
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const [dbItems, setDbItems] = useState([]);
+
+  useEffect(() => {
+    get("/items")
+      .then((data) => setDbItems(data))
+      .catch((err) => console.error("Error fetching items:", err));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -217,19 +225,14 @@ export default function ItemsPage() {
           ...prev,
           [catId]: subcatId
         }));
-      } else if (itemId) {
-        for (const category of INVENTORY_CATEGORIES) {
-          if (category.id === catId) {
-            const item = category.items.find((i) => i.id === itemId);
-            if (item) {
-              setActiveSubcats(prev => ({
-                ...prev,
-                [catId]: item.subCategoryId
-              }));
-              setSelectedItem(item);
-            }
-            break;
-          }
+      } else if (itemId && dbItems.length > 0) {
+        const item = dbItems.find((i) => i.id === itemId);
+        if (item) {
+          setActiveSubcats(prev => ({
+            ...prev,
+            [catId]: item.subCategoryId
+          }));
+          setSelectedItem(item);
         }
       }
 
@@ -242,20 +245,9 @@ export default function ItemsPage() {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [location.search]);
+  }, [location.search, dbItems]);
 
-  const fallingElements = useMemo(() => {
-    const emojis = ["🎈", "🪑", "🌸", "✨", "🎉", "🎀", "🎈", "🌸", "🪑", "🎈", "🎈", "🌸", "🫧"];
-    return Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
-      emoji: emojis[i % emojis.length],
-      left: `${Math.random() * 100}%`,
-      duration: `${15 + Math.random() * 20}s`,
-      delay: `${Math.random() * 15}s`,
-      size: `${24 + Math.random() * 24}px`,
-      animationName: Math.random() > 0.5 ? styles.sinkInWaterRight : styles.sinkInWaterLeft
-    }));
-  }, []);
+
 
   const handleOpenItem = (item) => {
     setSelectedItem(item);
@@ -295,43 +287,7 @@ export default function ItemsPage() {
     <div className={styles.page}>
       <Navbar />
 
-      {/* Decorative Floating Elements */}
-      <div className={styles.floatingOrb1} />
-      <div className={styles.floatingOrb2} />
-      <div className={styles.floatingOrb3} />
-      <div className={styles.floatingSparkle1}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M12 2v20M2 12h20M7 7l10 10M7 17L17 7" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className={styles.floatingSparkle2}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M12 3v18M3 12h18" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className={styles.floatingRing1} />
-      <div className={styles.floatingRing2} />
-      <div className={styles.floatingFlower1}>🌸</div>
-      <div className={styles.floatingFlower2}>✨</div>
-      <div className={styles.confetti1} />
-      <div className={styles.confetti2} />
 
-      {/* Falling/Sinking Water-like Elements */}
-      <div className={styles.fallingContainer}>
-        {fallingElements.map((el) => (
-          <div
-            key={el.id}
-            className={styles.fallingElement}
-            style={{
-              left: el.left,
-              animation: `${el.animationName} ${el.duration} linear ${el.delay} infinite`,
-              fontSize: el.size,
-            }}
-          >
-            {el.emoji}
-          </div>
-        ))}
-      </div>
 
       <header className={styles.hero}>
         <div className={styles.heroInner}>
@@ -408,51 +364,64 @@ export default function ItemsPage() {
                   </div>
 
                   {/* Items Grid */}
-                  <div className={styles.gridContainer}>
-                    {category.items
-                      .filter((item) => item.subCategoryId === activeSubcatId)
+                  <div className={styles.productGrid}>
+                    {dbItems
+                      .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId)
                       .map((item) => {
                         const cartItem = getCartItem(item.id);
                         return (
                           <div
                             key={item.id}
-                            className={`${styles.gridItem} ${cartItem ? styles.itemInCart : ""}`}
+                            className={`${styles.productCard} ${cartItem ? styles.productInCart : ""}`}
                             onClick={() => handleOpenItem(item)}
                           >
-                            <div className={styles.circleCard}>
-                              <div className={styles.iconWrapper}>
-                                {getSvgIcon(item.title)}
+                            <div className={styles.productIconContainer}>
+                              <div className={styles.productIconWrapper}>
+                                {item.image && item.image.startsWith("/uploads") ? (
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.title} 
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }} 
+                                  />
+                                ) : (
+                                  getSvgIcon(item.title)
+                                )}
                               </div>
                             </div>
                             
-                            <div className={styles.cardLabelWrapper}>
-                              <span className={styles.cardLabel}>{item.title}</span>
-                              {cartItem ? (
-                                <button
-                                  type="button"
-                                  className={styles.quickRemoveBtn}
-                                  onClick={(e) => handleQuickRemove(item.id, e)}
-                                  title="Remove from cart"
-                                >
-                                  Remove
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className={styles.quickAddBtn}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenItem(item);
-                                  }}
-                                  title="Add to cart"
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="9" cy="21" r="1"></circle>
-                                    <circle cx="20" cy="21" r="1"></circle>
-                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                  </svg>
-                                </button>
-                              )}
+                            <div className={styles.productDetails}>
+                              <h4 className={styles.productTitle}>{item.title}</h4>
+                              <div className={styles.productFooter}>
+                                <span className={styles.productPrice}>
+                                  $25.00 <span className={styles.priceUnit}>/day</span>
+                                </span>
+                                {cartItem ? (
+                                  <button
+                                    type="button"
+                                    className={styles.productRemoveBtn}
+                                    onClick={(e) => handleQuickRemove(item.id, e)}
+                                    title="Remove from cart"
+                                  >
+                                    Remove
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className={styles.productAddBtn}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenItem(item);
+                                    }}
+                                    title="Add to cart"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Add
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );

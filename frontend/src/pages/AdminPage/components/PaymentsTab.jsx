@@ -22,15 +22,13 @@ export default function PaymentsTab({
           <p>Track rent deposits, final settlements and methods</p>
         </div>
 
-        <div className={styles.tableWrapper}>
+        <div className={styles.tableWrapper} style={{ overflowX: "hidden" }}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Transaction ID</th>
-                <th>Client Name</th>
+                <th>Transaction Details</th>
                 <th>Date</th>
                 <th>Amount Paid</th>
-                <th>Method</th>
                 <th>Status Toggle</th>
               </tr>
             </thead>
@@ -38,16 +36,22 @@ export default function PaymentsTab({
               {payments.map((pay) => (
                 <tr key={pay.id}>
                   <td>
-                    <code>{pay.id}</code>
-                  </td>
-                  <td>
-                    <strong>{pay.memberName}</strong>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <code style={{ fontSize: "0.72rem", background: "var(--bg-main)", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--border-shadow)", color: "var(--text-main)", fontWeight: "600" }}>
+                          {pay.id}
+                        </code>
+                        <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>{pay.memberName}</strong>
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", opacity: 0.85 }}>
+                        💳 Method: {pay.method}
+                      </div>
+                    </div>
                   </td>
                   <td className={styles.dateCol}>{pay.date}</td>
                   <td className={styles.amountCol}>
                     <strong>{pay.amount}</strong>
                   </td>
-                  <td>{pay.method}</td>
                   <td>
                     <div className={styles.availabilityToggle}>
                       <span
