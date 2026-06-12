@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import styles from "../AdminPage.module.css";
 import ItemEditModal from "./ItemEditModal";
+import { getItemStockQuantity, isItemRentable } from "../../../utils/itemStock";
 
 const getItemSortLabel = (item) =>
   String(item.name || item.title || item.id || "").trim().toLowerCase();
@@ -141,7 +142,8 @@ export default function ItemsTab({
               </thead>
               <tbody>
                 {filteredItems.map((item) => {
-                  const isAvailable = Boolean(item.isAvailable);
+                  const stockQty = getItemStockQuantity(item);
+                  const isAvailable = isItemRentable(item);
                   return (
                     <tr
                       key={item.id}
@@ -207,7 +209,7 @@ export default function ItemsTab({
                                   borderRadius: "4px",
                                 }}
                               >
-                                Stock: {item.unit_count || 1} units
+                                Stock: {stockQty} units
                               </span>
                             </div>
                           </div>

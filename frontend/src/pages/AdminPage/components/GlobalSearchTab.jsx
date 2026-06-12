@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "../AdminPage.module.css";
+import { isItemRentable } from "../../../utils/itemStock";
 
 const SEARCH_LABELS = {
   items_title: "Items by Title",
@@ -50,7 +51,7 @@ export default function GlobalSearchTab({
               </thead>
               <tbody>
                 {searchResults.map((item) => {
-                  const isAvailable = Boolean(item.isAvailable);
+                  const isAvailable = isItemRentable(item);
                   const displayName = item.name || item.title || "Untitled item";
                   return (
                     <tr

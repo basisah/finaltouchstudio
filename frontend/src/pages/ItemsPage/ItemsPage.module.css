@@ -546,6 +546,20 @@
   transform: translateY(-1px);
 }
 
+.rentBtnDisabled,
+.rentBtn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rentBtnDisabled:hover,
+.rentBtn:disabled:hover {
+  opacity: 1;
+  transform: none;
+}
+
 .qtyControl {
   display: flex;
   align-items: center;

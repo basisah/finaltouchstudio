@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { getItemStatus } from "../utils/itemStatus";
+import { getItemStatus, getItemStockQuantity, isItemRentable } from "../utils/itemStatus";
 import { getItemIcon } from "../utils/itemIcon";
 import styles from "../ItemsPage.module.css";
 
@@ -14,6 +14,8 @@ function InventoryItemCard({
   onDecreaseQty,
 }) {
   const status = getItemStatus(item);
+  const stockQty = getItemStockQuantity(item);
+  const canRent = isItemRentable(item);
   const title = item.title || item.name || "Untitled Item";
   const categoryLabel = categoryMap?.[item.categoryId]?.label || item.categoryId;
   const hasUpload = item.image && String(item.image).startsWith("/uploads");
@@ -41,7 +43,7 @@ function InventoryItemCard({
         <p className={styles.itemCardOccasion}>{categoryLabel}</p>
 
         <div className={styles.itemCardMeta}>
-          <span className={styles.itemCardQty}>Qty: {item.unit_count || 1}</span>
+          <span className={styles.itemCardQty}>Qty: {stockQty}</span>
           <span className={`${styles.statusBadge} ${styles[`status${status.variant}`]}`}>
             {status.label}
           </span>
@@ -64,13 +66,14 @@ function InventoryItemCard({
           ) : (
             <button
               type="button"
-              className={styles.rentBtn}
+              className={`${styles.rentBtn} ${!canRent ? styles.rentBtnDisabled : ""}`}
+              disabled={!canRent}
               onClick={(e) => {
                 e.stopPropagation();
-                onAdd();
+                if (canRent) onAdd();
               }}
             >
-              Rent
+              {canRent ? "Rent" : "Unavailable"}
             </button>
           )}
         </div>
