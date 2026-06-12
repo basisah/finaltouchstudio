@@ -1,11 +1,11 @@
 import { memo } from "react";
-import { getDisplayCategoryById, getDisplayCategoryId } from "../itemsPageCategories";
 import { getItemStatus } from "../utils/itemStatus";
 import { getItemIcon } from "../utils/itemIcon";
 import styles from "../ItemsPage.module.css";
 
 function InventoryItemCard({
   item,
+  categoryMap,
   inCart,
   cartQuantity,
   onOpen,
@@ -15,8 +15,7 @@ function InventoryItemCard({
 }) {
   const status = getItemStatus(item);
   const title = item.title || item.name || "Untitled Item";
-  const categoryLabel =
-    getDisplayCategoryById(getDisplayCategoryId(item.categoryId))?.label || item.categoryId;
+  const categoryLabel = categoryMap?.[item.categoryId]?.label || item.categoryId;
   const hasUpload = item.image && String(item.image).startsWith("/uploads");
 
   return (

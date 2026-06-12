@@ -5,6 +5,7 @@ import styles from "../ItemsPage.module.css";
 function InventoryCategorySection({
   category,
   items,
+  categoryMap,
   cartMap,
   onOpenItem,
   onRentItem,
@@ -24,7 +25,7 @@ function InventoryCategorySection({
     <section
       id={`category-section-${category.id}`}
       className={styles.categorySection}
-      style={{ "--section-accent": category.accent || "#BD7893" }}
+      style={{ "--section-accent": category.color || category.accent || "#BD7893" }}
     >
       <header className={styles.categorySectionHeader}>
         <button
@@ -80,6 +81,7 @@ function InventoryCategorySection({
                 <InventoryItemCard
                   key={item.id}
                   item={item}
+                  categoryMap={categoryMap}
                   inCart={Boolean(cartItem)}
                   cartQuantity={cartItem?.quantity || 0}
                   onOpen={onOpenItem}

@@ -2,16 +2,17 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { get } from "../../api/client";
+import { getCategories } from "../../api/categories.api";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import CategoryNavPills from "./components/CategoryNavPills";
 import InventoryCategorySection from "./components/InventoryCategorySection";
 import { useActiveCategoryObserver } from "./hooks/useActiveCategoryObserver";
+import { resolveInventoryCategories } from "../../constants/inventory";
 import {
-  DISPLAY_CATEGORIES,
-  groupItemsByDisplayCategory,
-  getDisplayCategoryById,
+  buildPillCategories,
+  groupItemsByCategoryId,
 } from "./itemsPageCategories";
 import styles from "./ItemsPage.module.css";
 
@@ -30,6 +31,7 @@ export default function ItemsPage() {
   const location = useLocation();
 
   const [dbItems, setDbItems] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [showToast, setShowToast] = useState(false);
@@ -41,22 +43,43 @@ export default function ItemsPage() {
       .catch((err) => console.error("Error fetching items:", err));
   }, []);
 
+  useEffect(() => {
+    getCategories()
+      .then((data) => setDbCategories(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
   const filteredItems = useMemo(
     () => dbItems.filter((item) => matchesSearch(item, searchQuery)),
     [dbItems, searchQuery]
   );
 
+  const effectiveCategories = useMemo(() => {
+    if (dbCategories.length > 0) return dbCategories;
+
+    // Local/dev fallback: no rows in categories table yet, but items exist
+    const itemCategoryIds = new Set(dbItems.map((item) => item.categoryId).filter(Boolean));
+    return resolveInventoryCategories([]).filter((cat) => itemCategoryIds.has(cat.id));
+  }, [dbCategories, dbItems]);
+
   const groupedItems = useMemo(
-    () => groupItemsByDisplayCategory(filteredItems),
-    [filteredItems]
+    () => groupItemsByCategoryId(filteredItems, effectiveCategories),
+    [filteredItems, effectiveCategories]
+  );
+
+  const visiblePillCategories = useMemo(
+    () => buildPillCategories(effectiveCategories),
+    [effectiveCategories]
+  );
+
+  const categoryById = useMemo(
+    () => Object.fromEntries(effectiveCategories.map((c) => [c.id, c])),
+    [effectiveCategories]
   );
 
   const visibleSectionIds = useMemo(
-    () =>
-      DISPLAY_CATEGORIES.filter((c) => c.id !== "all" && (groupedItems[c.id]?.length ?? 0) > 0).map(
-        (c) => c.id
-      ),
-    [groupedItems]
+    () => visiblePillCategories.filter((c) => c.id !== "all").map((c) => c.id),
+    [visiblePillCategories]
   );
 
   const [activePillId, setActivePillId] = useActiveCategoryObserver(visibleSectionIds, {
@@ -96,7 +119,7 @@ export default function ItemsPage() {
     const catId = params.get("category");
     const itemId = params.get("item");
 
-    if (catId && getDisplayCategoryById(catId)) {
+    if (catId && (catId === "all" || categoryById[catId])) {
       setActivePillId(catId);
       const timer = setTimeout(() => scrollToCategory(catId), 400);
       if (itemId) {
@@ -105,7 +128,7 @@ export default function ItemsPage() {
       }
       return () => clearTimeout(timer);
     }
-  }, [location.search, dbItems, scrollToCategory, setActivePillId]);
+  }, [location.search, dbItems, categoryById, scrollToCategory, setActivePillId]);
 
   const triggerToast = useCallback((msg) => {
     setToastMsg(msg);
@@ -122,7 +145,7 @@ export default function ItemsPage() {
     [addToCart, triggerToast]
   );
 
-  const categoriesToRender = DISPLAY_CATEGORIES.filter((c) => c.id !== "all");
+  const categoriesToRender = effectiveCategories;
 
   return (
     <div className={styles.page}>
@@ -157,9 +180,15 @@ export default function ItemsPage() {
           </div>
         </div>
 
-        <div className={styles.stickyPillsWrap}>
-          <CategoryNavPills activeId={activePillId} onSelect={handlePillSelect} />
-        </div>
+        {visiblePillCategories.length > 0 && (
+          <div className={styles.stickyPillsWrap}>
+            <CategoryNavPills
+              categories={visiblePillCategories}
+              activeId={activePillId}
+              onSelect={handlePillSelect}
+            />
+          </div>
+        )}
 
         <div className={styles.categoriesStack}>
           {categoriesToRender.map((category) => (
@@ -167,6 +196,7 @@ export default function ItemsPage() {
               key={category.id}
               category={category}
               items={groupedItems[category.id] || []}
+              categoryMap={categoryById}
               cartMap={cartMap}
               onOpenItem={handleOpenItem}
               onRentItem={handleRentItem}
