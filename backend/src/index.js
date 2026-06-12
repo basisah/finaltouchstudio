@@ -18,6 +18,7 @@ const packageRoutes = require("./routes/packageRoutes");
 const userAuthRoutes = require("./routes/userAuthRoutes");  // User registration, login, google OAuth logins
 const itemRoutes = require("./routes/itemRoutes");          // Rental inventory (public GET)
 const bookingRoutes = require("./routes/bookingRoutes");    // checkout, cart, orders (public/user)
+const contactRoutes = require("./routes/contactRoutes");    // contact form + admin inbox
 const categoryRoutes = require("./routes/categoryRoutes");    // categories (public GET)
 
 // Admin Routes
@@ -52,6 +53,7 @@ app.use("/api/auth", userAuthRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api", bookingRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Mount Admin Routes
 app.use("/api/admin/auth", adminAuth);

@@ -44,6 +44,19 @@ async function initializeDatabase() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
 
+    const itemColumnMigrations = [
+      "ALTER TABLE items ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT ''",
+      "ALTER TABLE items ADD COLUMN title VARCHAR(255) NOT NULL DEFAULT ''",
+      "ALTER TABLE items ADD COLUMN unit_count INT DEFAULT 1",
+    ];
+    for (const sql of itemColumnMigrations) {
+      try {
+        await db.query(sql);
+      } catch {
+        // column already exists
+      }
+    }
+
     // 4. Create flat-rate bundled decor tier package models
     await db.query(`CREATE TABLE IF NOT EXISTS packages (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -116,8 +129,15 @@ async function initializeDatabase() {
       email VARCHAR(255) NOT NULL,
       occasion VARCHAR(255) NOT NULL,
       message TEXT NOT NULL,
+      is_read BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
+
+    try {
+      await db.query(`ALTER TABLE enquiries ADD COLUMN is_read BOOLEAN DEFAULT FALSE`);
+    } catch {
+      // Column already exists on older databases
+    }
 
     console.log("🚀 Database schema verification complete!");
   } catch (error) {
