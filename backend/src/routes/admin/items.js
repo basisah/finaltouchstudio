@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-const fs = require("fs");
 const multer = require("multer");
 const db = require("../../db");
 const auth = require("../../middleware/auth");
+const { getItemUploadDir } = require("../../utils/uploadsPath");
 
 // Helper middleware to verify admin role
 const isAdmin = (req, res, next) => {
@@ -15,15 +15,9 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-// Configure Multer storage
-const uploadDir = path.join(__dirname, "../../../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, getItemUploadDir());
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

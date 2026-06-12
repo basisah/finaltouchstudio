@@ -12,6 +12,7 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const initializeDatabase = require("./initDb");  // Database setup script initDb.js
+const { getUploadsRoot, ensureDir } = require("./utils/uploadsPath");
 
 // Routes
 const packageRoutes = require("./routes/packageRoutes");
@@ -38,17 +39,8 @@ app.use(cors());
 // Handle incoming JSON payloads
 app.use(express.json());
 
-// Expose static uploads folder (use /tmp on Vercel — filesystem is read-only elsewhere)
-const uploadDir = process.env.VERCEL
-  ? path.join("/tmp", "finaltouch-uploads")
-  : path.join(__dirname, "../uploads");
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-} catch (err) {
-  console.error("Upload directory init failed:", err.message);
-}
+const uploadDir = getUploadsRoot();
+ensureDir(uploadDir);
 app.use("/uploads", express.static(uploadDir));
 
 // Initialize database tables and seed data
