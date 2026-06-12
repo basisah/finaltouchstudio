@@ -51,12 +51,12 @@ export default function CategorySection() {
         if (data && data.length > 0) {
           setCategories(data);
         } else {
-          setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+          setCategories(CATEGORIES);
         }
       })
       .catch((err) => {
         console.warn("Category fetch failed, using fallback static data:", err);
-        setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+        setCategories(CATEGORIES);
       })
       .finally(() => {
         setLoading(false);

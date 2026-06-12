@@ -257,7 +257,7 @@
 @media (max-width: 640px) {
   .section {
     padding: 120px 12px 40px;
-    overflow-x: hidden;
+    overflow: hidden; /* avoid overflow-x:hidden resetting overflow-y to auto */
   }
 
   .header {
