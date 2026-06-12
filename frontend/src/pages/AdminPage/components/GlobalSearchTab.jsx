@@ -13,8 +13,8 @@ export default function GlobalSearchTab({
   searchType,
   searchResults,
   setActiveTab,
-  setItemCategoryFilter,
   setSearchQuery,
+  onOpenItem,
 }) {
   const contextLabel = SEARCH_LABELS[searchType] || searchType.replace(/_/g, " ");
 
@@ -53,7 +53,12 @@ export default function GlobalSearchTab({
                   const isAvailable = Boolean(item.isAvailable);
                   const displayName = item.name || item.title || "Untitled item";
                   return (
-                    <tr key={item.id}>
+                    <tr
+                      key={item.id}
+                      className={styles.clickableRow}
+                      onClick={() => onOpenItem(item)}
+                      title="Click to edit item"
+                    >
                       <td>
                         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                           <div style={{ flexShrink: 0 }}>
@@ -106,19 +111,13 @@ export default function GlobalSearchTab({
                           {isAvailable ? "Available" : "Unavailable"}
                         </span>
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          onClick={() => {
-                            setActiveTab("items");
-                            if (item.categoryId) {
-                              setItemCategoryFilter(item.categoryId);
-                            }
-                            setSearchQuery("");
-                          }}
+                          onClick={() => onOpenItem(item)}
                           className={styles.replyBtn}
                         >
-                          View in Items
+                          Edit Item
                         </button>
                       </td>
                     </tr>

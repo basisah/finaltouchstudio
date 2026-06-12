@@ -90,6 +90,14 @@ export default function AdminPage() {
   // Global Search
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("items_title");
+  const [editingItem, setEditingItem] = useState(null);
+
+  const handleOpenItemFromSearch = (item) => {
+    setActiveTab("items");
+    setItemCategoryFilter(item.categoryId || "all");
+    setEditingItem(item);
+    setSearchQuery("");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
@@ -432,8 +440,8 @@ export default function AdminPage() {
               searchType={searchType}
               searchResults={searchResults}
               setActiveTab={setActiveTab}
-              setItemCategoryFilter={setItemCategoryFilter}
               setSearchQuery={setSearchQuery}
+              onOpenItem={handleOpenItemFromSearch}
             />
           )}
 
@@ -466,6 +474,8 @@ export default function AdminPage() {
               newItemUnitCount={newItemUnitCount}
               setNewItemUnitCount={setNewItemUnitCount}
               addFormRef={addItemFormRef}
+              editingItem={editingItem}
+              setEditingItem={setEditingItem}
             />
           )}
 

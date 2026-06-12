@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import styles from "../AdminPage.module.css";
 import ItemEditModal from "./ItemEditModal";
 
@@ -32,8 +32,9 @@ export default function ItemsTab({
   newItemUnitCount,
   setNewItemUnitCount,
   addFormRef,
+  editingItem,
+  setEditingItem,
 }) {
-  const [editingItem, setEditingItem] = useState(null);
   const activeCategory = categories.find((c) => c.id === itemCategoryFilter);
   const filteredItems = useMemo(() => {
     const list =
