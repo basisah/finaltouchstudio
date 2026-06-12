@@ -1,10 +1,16 @@
-import { get, post, del } from "./client";
+import { get, patch, post, del } from "./client";
 
 /** Submit a legacy booking form */
 export const submitBooking = (data) => post("/bookings", data);
 
 /** Submit the contact-us form */
 export const submitContact = (data) => post("/contact", data);
+
+/** Fetch enquiries for admin inbox */
+export const getEnquiries = () => get("/contact");
+
+/** Mark all enquiries as read */
+export const markAllEnquiriesRead = () => patch("/contact/read-all");
 
 // ==========================================
 // CART ENDPOINTS
