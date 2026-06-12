@@ -2,4 +2,4 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 
-export default require("../../backend/src/index.js");
+export default require("../vendor-backend/src/index.js");
