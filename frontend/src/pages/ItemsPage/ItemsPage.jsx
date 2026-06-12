@@ -27,7 +27,7 @@ function matchesSearch(item, query) {
 }
 
 export default function ItemsPage() {
-  const { cart, addToCart, updateQuantity } = useCart();
+  const { cart, addToCart } = useCart();
   const location = useLocation();
 
   const [dbItems, setDbItems] = useState([]);
@@ -86,11 +86,6 @@ export default function ItemsPage() {
     topOffset: SCROLL_OFFSET,
   });
 
-  const cartMap = useMemo(
-    () => new Map(cart.map((entry) => [entry.item.id, entry])),
-    [cart]
-  );
-
   const scrollToCategory = useCallback((categoryId) => {
     if (categoryId === "all") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -111,7 +106,6 @@ export default function ItemsPage() {
     [scrollToCategory, setActivePillId]
   );
 
-  const handleOpenItem = useCallback((item) => setSelectedItem(item), []);
   const handleRentItem = useCallback((item) => setSelectedItem(item), []);
 
   useEffect(() => {
@@ -197,10 +191,7 @@ export default function ItemsPage() {
               category={category}
               items={groupedItems[category.id] || []}
               categoryMap={categoryById}
-              cartMap={cartMap}
-              onOpenItem={handleOpenItem}
               onRentItem={handleRentItem}
-              onUpdateQuantity={updateQuantity}
             />
           ))}
 
@@ -217,6 +208,7 @@ export default function ItemsPage() {
       {selectedItem && (
         <DateRangePickerModal
           item={selectedItem}
+          cart={cart}
           onClose={() => setSelectedItem(null)}
           onConfirm={handleConfirmDates}
         />

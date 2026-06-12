@@ -6,10 +6,7 @@ function InventoryCategorySection({
   category,
   items,
   categoryMap,
-  cartMap,
-  onOpenItem,
   onRentItem,
-  onUpdateQuantity,
   defaultExpanded = true,
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -75,22 +72,14 @@ function InventoryCategorySection({
       {expanded && (
         <div className={styles.categoryBody}>
           <div className={styles.itemGrid}>
-            {items.map((item) => {
-              const cartItem = cartMap.get(item.id);
-              return (
-                <InventoryItemCard
-                  key={item.id}
-                  item={item}
-                  categoryMap={categoryMap}
-                  inCart={Boolean(cartItem)}
-                  cartQuantity={cartItem?.quantity || 0}
-                  onOpen={onOpenItem}
-                  onAdd={() => onRentItem(item)}
-                  onIncreaseQty={() => cartItem && onUpdateQuantity(cartItem.id, 1)}
-                  onDecreaseQty={() => cartItem && onUpdateQuantity(cartItem.id, -1)}
-                />
-              );
-            })}
+            {items.map((item) => (
+              <InventoryItemCard
+                key={item.id}
+                item={item}
+                categoryMap={categoryMap}
+                onRent={onRentItem}
+              />
+            ))}
           </div>
         </div>
       )}
