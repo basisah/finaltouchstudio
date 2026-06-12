@@ -3,6 +3,19 @@ if (BASE_URL.startsWith('http') && !BASE_URL.endsWith('/api')) {
   BASE_URL = `${BASE_URL}/api`;
 }
 
+/** Base URL for API routes, e.g. `/api` or `https://example.com/api`. */
+export function getApiBaseUrl() {
+  return BASE_URL;
+}
+
+/** Origin for static uploads, e.g. `/uploads` on local or full URL in production. */
+export function getUploadsBaseUrl() {
+  if (BASE_URL.startsWith('http')) {
+    return BASE_URL.replace(/\/api$/, '');
+  }
+  return '';
+}
+
 async function request(method, path, body) {
   const token = localStorage.getItem('admin_token');
   const options = {
