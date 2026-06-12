@@ -38,10 +38,16 @@ app.use(cors());
 // Handle incoming JSON payloads
 app.use(express.json());
 
-// Expose static uploads folder
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Expose static uploads folder (use /tmp on Vercel — filesystem is read-only elsewhere)
+const uploadDir = process.env.VERCEL
+  ? path.join("/tmp", "finaltouch-uploads")
+  : path.join(__dirname, "../uploads");
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.error("Upload directory init failed:", err.message);
 }
 app.use("/uploads", express.static(uploadDir));
 
