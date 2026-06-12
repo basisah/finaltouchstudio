@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
 import { get, post, put, del } from "../../api/client";
@@ -13,7 +13,7 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import InventoryTab from "./components/InventoryTab";
+import ItemsTab from "./components/ItemsTab";
 import MembersTab from "./components/MembersTab";
 import PaymentsTab from "./components/PaymentsTab";
 import EnquiriesTab from "./components/EnquiriesTab";
@@ -37,10 +37,8 @@ export default function AdminPage() {
         setCategories(data);
         // Default active tab to first category if not set or invalid
         if (data.length > 0) {
-          setActiveTab((prev) => {
-            const tabsList = ["members", "payments", "packages", "enquiries", "categories"];
-            if (tabsList.includes(prev)) return prev;
-            if (data.some(c => c.id === prev)) return prev;
+          setItemCategoryFilter((prev) => {
+            if (prev === "all" || data.some((c) => c.id === prev)) return prev;
             return data[0].id;
           });
         }
@@ -57,13 +55,10 @@ export default function AdminPage() {
   }, []);
 
   // Nav Selection
-  const [activeTab, setActiveTab] = useState("birthday");
+  const [activeTab, setActiveTab] = useState("items");
+  const [itemCategoryFilter, setItemCategoryFilter] = useState("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Category additions
-  const [newCatLabel, setNewCatLabel] = useState("");
-  const [newCatEmoji, setNewCatEmoji] = useState("🎂");
-  const [showAddCatForm, setShowAddCatForm] = useState(false);
+  const addItemFormRef = useRef(null);
 
   // Item additions
   const [newItemSN, setNewItemSN] = useState("");
@@ -109,31 +104,15 @@ export default function AdminPage() {
     fetchEnquiries();
   }, []);
 
-  // Add Category
-  const handleAddCategory = (e) => {
-    e.preventDefault();
-    if (!newCatLabel.trim()) return;
-    const id = newCatLabel.toLowerCase().replace(/\s+/g, "-");
-    if (categories.some((cat) => cat.id === id)) {
-      alert("Category already exists.");
-      return;
+  const handleAddNewItemNav = () => {
+    setActiveTab("items");
+    setSearchQuery("");
+    if (itemCategoryFilter === "all" && categories.length > 0) {
+      setItemCategoryFilter(categories[0].id);
     }
-    const newCategory = { id, label: newCatLabel, emoji: newCatEmoji, color: "#9F507C" };
-    setCategories([...categories, newCategory]);
-    setActiveTab(id);
-    setNewCatLabel("");
-    setNewCatEmoji("🎂");
-    setShowAddCatForm(false);
-  };
-
-  // Delete Category
-  const handleDeleteCategory = (catId) => {
-    if (window.confirm(`Delete category "${catId}"? Items inside will lose their category.`)) {
-      setCategories(categories.filter((cat) => cat.id !== catId));
-      setItems(items.map((item) => (item.categoryId === catId ? { ...item, categoryId: null } : item)));
-      const remaining = categories.filter((cat) => cat.id !== catId);
-      setActiveTab(remaining.length > 0 ? remaining[0].id : "enquiries");
-    }
+    requestAnimationFrame(() => {
+      addItemFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   // Toggle Item Availability
@@ -143,7 +122,7 @@ export default function AdminPage() {
     try {
       const updatedItem = await put(`/items/${itemId}`, {
         ...item,
-        isAvailable: !item.isAvailable
+        isAvailable: !Boolean(item.isAvailable),
       });
       setItems(items.map((i) => (i.id === itemId ? updatedItem : i)));
     } catch (err) {
@@ -156,10 +135,17 @@ export default function AdminPage() {
     e.preventDefault();
     if (!newItemName.trim() || !newItemSN.trim()) return;
 
-    if (items.some((item) => item.serialNumber && item.serialNumber.toLowerCase() === newItemSN.toLowerCase())) {
+    const sn = newItemSN.trim().toLowerCase();
+    if (items.some((item) => (item.id || "").toLowerCase() === sn)) {
       alert("Unique Serial Number required. This one already exists!");
       return;
     }
+
+    if (itemCategoryFilter === "all") {
+      alert("Please select a target category in the add form.");
+      return;
+    }
+    const targetCategory = itemCategoryFilter;
 
     try {
       let imagePath = newItemPic || "✨";
@@ -192,7 +178,7 @@ export default function AdminPage() {
         name: newItemName,
         title: newItemName,
         description: newItemDesc,
-        categoryId: activeTab,
+        categoryId: targetCategory,
         subCategoryId: newItemSubCategory,
         isAvailable: true,
         unit_count: newItemUnitCount,
@@ -288,27 +274,53 @@ export default function AdminPage() {
   };
 
   // Filters & Counts
-  const activeCategory = categories.find((cat) => cat.id === activeTab);
-  const activeCategoryItems = items.filter((item) => item.categoryId === activeTab);
   const unreadEnquiriesCount = enquiries.filter((e) => !e.read).length;
 
-  // Search Results evaluation
+  const normalize = (value) => String(value ?? "").toLowerCase().trim();
+
+  const getItemSearchText = (item) =>
+    [
+      item.name,
+      item.title,
+      item.description,
+      item.subCategoryId,
+      item.categoryId,
+      categories.find((c) => c.id === item.categoryId)?.label,
+    ]
+      .map(normalize)
+      .filter(Boolean)
+      .join(" ");
+
+  const getMemberSearchText = (mem) =>
+    [mem.name, mem.email, mem.phone, mem.id, mem.status, mem.joinDate]
+      .map(normalize)
+      .filter(Boolean)
+      .join(" ");
+
+  // Search Results evaluation (client-side over loaded admin data)
   const getSearchResults = () => {
-    if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
+    const query = normalize(searchQuery);
+    if (!query) return [];
 
     if (searchType === "items_title") {
-      return items.filter(
-        (item) => item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
-      );
-    } else if (searchType === "items_serial") {
-      return items.filter((item) => item.serialNumber.toLowerCase().includes(query));
-    } else if (searchType === "members") {
-      return members.filter(
-        (mem) =>
-          mem.name.toLowerCase().includes(query) ||
-          mem.email.toLowerCase().includes(query) ||
-          mem.id.toLowerCase().includes(query)
+      return items.filter((item) => getItemSearchText(item).includes(query));
+    }
+    if (searchType === "items_serial") {
+      return items.filter((item) => {
+        const serial = normalize(item.serialNumber || item.id);
+        return serial.includes(query);
+      });
+    }
+    if (searchType === "members") {
+      return members.filter((mem) => getMemberSearchText(mem).includes(query));
+    }
+    if (searchType === "enquiries") {
+      return enquiries.filter((enq) =>
+        [enq.name, enq.email, enq.occasion, enq.message, enq.date]
+          .map(normalize)
+          .filter(Boolean)
+          .join(" ")
+          .includes(query)
       );
     }
     return [];
@@ -320,24 +332,16 @@ export default function AdminPage() {
     <div className={styles.dashboard}>
       {/* Sidebar Section */}
       <Sidebar
-        categories={categories}
         items={items}
         members={members}
         payments={payments}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        showAddCatForm={showAddCatForm}
-        setShowAddCatForm={setShowAddCatForm}
-        newCatLabel={newCatLabel}
-        setNewCatLabel={setNewCatLabel}
-        newCatEmoji={newCatEmoji}
-        setNewCatEmoji={setNewCatEmoji}
-        handleAddCategory={handleAddCategory}
-        handleDeleteCategory={handleDeleteCategory}
         setSearchQuery={setSearchQuery}
         handleLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        onAddNewItem={handleAddNewItemNav}
       />
 
       {isSidebarOpen && (
@@ -368,17 +372,19 @@ export default function AdminPage() {
               searchQuery={searchQuery}
               searchType={searchType}
               searchResults={searchResults}
-              categories={categories}
               setActiveTab={setActiveTab}
+              setItemCategoryFilter={setItemCategoryFilter}
               setSearchQuery={setSearchQuery}
             />
           )}
 
-          {/* B. Default Tab Route: Category Items Inventory */}
-          {activeCategory && searchQuery.trim() === "" && (
-            <InventoryTab
-              activeCategory={activeCategory}
-              activeCategoryItems={activeCategoryItems}
+          {/* B. Items Management */}
+          {activeTab === "items" && searchQuery.trim() === "" && (
+            <ItemsTab
+              categories={categories}
+              items={items}
+              itemCategoryFilter={itemCategoryFilter}
+              setItemCategoryFilter={setItemCategoryFilter}
               handleToggleAvailability={handleToggleAvailability}
               handleDeleteItem={handleDeleteItem}
               handleAddItem={handleAddItem}
@@ -396,6 +402,7 @@ export default function AdminPage() {
               setNewItemFile={setNewItemFile}
               newItemUnitCount={newItemUnitCount}
               setNewItemUnitCount={setNewItemUnitCount}
+              addFormRef={addItemFormRef}
             />
           )}
 
@@ -445,29 +452,6 @@ export default function AdminPage() {
             <CategoriesTab categories={categories} onRefresh={refreshData} />
           )}
 
-          {/* F. Category Setup Guide (when clicking add new category button) */}
-          {activeTab === "" && searchQuery.trim() === "" && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2>Setup Category</h2>
-                <p>Use the left panel category controls to design and save your new filter category.</p>
-              </div>
-              <div className={styles.guideContent}>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>1</span>
-                  <p>Choose an appropriate emoji representitive (e.g. 🎓 for education).</p>
-                </div>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>2</span>
-                  <p>Enter a name that will be displayed in user gallery filter buttons.</p>
-                </div>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>3</span>
-                  <p>Click "Save" to mount the category. You can then immediately start adding inventory items to it!</p>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
       </main>
     </div>
