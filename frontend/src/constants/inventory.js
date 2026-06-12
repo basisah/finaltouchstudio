@@ -1,11 +1,11 @@
-/** Occasion / collection groupings (now stored as item subCategoryId). */
+/** Legacy static taxonomy used to derive product-type categories. */
 export const INVENTORY_OCCASIONS = [
   {
     id: "birthday",
     label: "Birthday Collection",
     color: "#B8729A", // Light mauve
     imageKey: "birthday",
-    subcategories: [
+    productTypes: [
       { id: "light", label: "Lights & Neon", emoji: "💡" },
       { id: "balloons", label: "Balloon Decor", emoji: "🎈" },
       { id: "backdrops", label: "Backdrops & Arches", emoji: "🌸" },
@@ -16,20 +16,20 @@ export const INVENTORY_OCCASIONS = [
       { id: "props", label: "Accessories & Props", emoji: "🧸" }
     ],
     items: [
-      { id: "b1", title: "Neon Sign", subCategoryId: "light" },
-      { id: "b2", title: "Circle Arch", subCategoryId: "backdrops" },
-      { id: "b3", title: "Shimmer Wall", subCategoryId: "backdrops" },
-      { id: "b4", title: "Cylinder Plinths", subCategoryId: "plinths" },
-      { id: "b5", title: "Marquee Numbers", subCategoryId: "light" },
-      { id: "b6", title: "Balloon Stand", subCategoryId: "balloons" },
-      { id: "b7", title: "Cake Riser", subCategoryId: "displays" },
-      { id: "b8", title: "Cupcake Tower", subCategoryId: "displays" },
-      { id: "b9", title: "Table Runner", subCategoryId: "linens" },
-      { id: "b10", title: "Throne Chair", subCategoryId: "seating" },
-      { id: "b11", title: "Activity Bench", subCategoryId: "seating" },
-      { id: "b12", title: "Mirror Pedestals", subCategoryId: "plinths" },
-      { id: "b13", title: "Teddy Bear", subCategoryId: "props" },
-      { id: "b14", title: "Balloon Wall", subCategoryId: "balloons" }
+      { id: "b1", title: "Neon Sign", categoryId: "light" },
+      { id: "b2", title: "Circle Arch", categoryId: "backdrops" },
+      { id: "b3", title: "Shimmer Wall", categoryId: "backdrops" },
+      { id: "b4", title: "Cylinder Plinths", categoryId: "plinths" },
+      { id: "b5", title: "Marquee Numbers", categoryId: "light" },
+      { id: "b6", title: "Balloon Stand", categoryId: "balloons" },
+      { id: "b7", title: "Cake Riser", categoryId: "displays" },
+      { id: "b8", title: "Cupcake Tower", categoryId: "displays" },
+      { id: "b9", title: "Table Runner", categoryId: "linens" },
+      { id: "b10", title: "Throne Chair", categoryId: "seating" },
+      { id: "b11", title: "Activity Bench", categoryId: "seating" },
+      { id: "b12", title: "Mirror Pedestals", categoryId: "plinths" },
+      { id: "b13", title: "Teddy Bear", categoryId: "props" },
+      { id: "b14", title: "Balloon Wall", categoryId: "balloons" }
     ]
   },
   {
@@ -37,7 +37,7 @@ export const INVENTORY_OCCASIONS = [
     label: "Marriage (Wedding & Reception)",
     color: "#9F507C", // Deep mauve
     imageKey: "marriage",
-    subcategories: [
+    productTypes: [
       { id: "lights", label: "Lights & Chandeliers", emoji: "💡" },
       { id: "backdrops", label: "Frames & Panelling", emoji: "💒" },
       { id: "arches", label: "Floral Arches", emoji: "🌸" },
@@ -48,24 +48,24 @@ export const INVENTORY_OCCASIONS = [
       { id: "tableware", label: "Table Decor", emoji: "🍽️" }
     ],
     items: [
-      { id: "m1", title: "Floral Arch", subCategoryId: "arches" },
-      { id: "m2", title: "Gold Frame", subCategoryId: "backdrops" },
-      { id: "m3", title: "Stage Panel", subCategoryId: "backdrops" },
-      { id: "m4", title: "Drape Curtain", subCategoryId: "backdrops" },
-      { id: "m5", title: "Wedding Sofa", subCategoryId: "seating" },
-      { id: "m6", title: "Throne Chair", subCategoryId: "seating" },
-      { id: "m7", title: "Gold Chair", subCategoryId: "chairs" },
-      { id: "m8", title: "Clear Chair", subCategoryId: "chairs" },
-      { id: "m9", title: "White Chair", subCategoryId: "chairs" },
-      { id: "m10", title: "Red Carpet", subCategoryId: "carpets" },
-      { id: "m11", title: "White Carpet", subCategoryId: "carpets" },
-      { id: "m12", title: "Crystal Pillar", subCategoryId: "stands" },
-      { id: "m13", title: "Blossom Tree", subCategoryId: "stands" },
-      { id: "m14", title: "Candelabra", subCategoryId: "lights" },
-      { id: "m15", title: "Charger Plate", subCategoryId: "tableware" },
-      { id: "m16", title: "Flower Runner", subCategoryId: "tableware" },
-      { id: "m17", title: "LED Uplights", subCategoryId: "lights" },
-      { id: "m18", title: "Chandelier", subCategoryId: "lights" }
+      { id: "m1", title: "Floral Arch", categoryId: "arches" },
+      { id: "m2", title: "Gold Frame", categoryId: "backdrops" },
+      { id: "m3", title: "Stage Panel", categoryId: "backdrops" },
+      { id: "m4", title: "Drape Curtain", categoryId: "backdrops" },
+      { id: "m5", title: "Wedding Sofa", categoryId: "seating" },
+      { id: "m6", title: "Throne Chair", categoryId: "seating" },
+      { id: "m7", title: "Gold Chair", categoryId: "chairs" },
+      { id: "m8", title: "Clear Chair", categoryId: "chairs" },
+      { id: "m9", title: "White Chair", categoryId: "chairs" },
+      { id: "m10", title: "Red Carpet", categoryId: "carpets" },
+      { id: "m11", title: "White Carpet", categoryId: "carpets" },
+      { id: "m12", title: "Crystal Pillar", categoryId: "stands" },
+      { id: "m13", title: "Blossom Tree", categoryId: "stands" },
+      { id: "m14", title: "Candelabra", categoryId: "lights" },
+      { id: "m15", title: "Charger Plate", categoryId: "tableware" },
+      { id: "m16", title: "Flower Runner", categoryId: "tableware" },
+      { id: "m17", title: "LED Uplights", categoryId: "lights" },
+      { id: "m18", title: "Chandelier", categoryId: "lights" }
     ]
   },
   {
@@ -73,7 +73,7 @@ export const INVENTORY_OCCASIONS = [
     label: "Bridal Holud / Gaye Holud / Mehndi",
     color: "#D97706", // Gold / Amber
     imageKey: "holud",
-    subcategories: [
+    productTypes: [
       { id: "mandap", label: "Mandaps & Arches", emoji: "💒" },
       { id: "drapes", label: "Colorful Drapes", emoji: "🏳️" },
       { id: "seating", label: "Seating & Benches", emoji: "🪑" },
@@ -84,25 +84,25 @@ export const INVENTORY_OCCASIONS = [
       { id: "accessories", label: "Florals & Accessories", emoji: "🌸" }
     ],
     items: [
-      { id: "h1", title: "Wooden Mandap", subCategoryId: "mandap" },
-      { id: "h2", title: "Color Drapes", subCategoryId: "drapes" },
-      { id: "h3", title: "Floor Mattress", subCategoryId: "seating" },
-      { id: "h4", title: "Square Cushion", subCategoryId: "cushions" },
-      { id: "h5", title: "Round Cushion", subCategoryId: "cushions" },
-      { id: "h6", title: "Wooden Bench", subCategoryId: "seating" },
-      { id: "h7", title: "Sweet Dala", subCategoryId: "dalas" },
-      { id: "h8", title: "Saree Dala", subCategoryId: "dalas" },
-      { id: "h9", title: "Sherwani Dala", subCategoryId: "dalas" },
-      { id: "h10", title: "Paan Dala", subCategoryId: "dalas" },
-      { id: "h11", title: "Mirror Tray", subCategoryId: "trays" },
-      { id: "h12", title: "Decorated Kula", subCategoryId: "trays" },
-      { id: "h13", title: "Ethnic Umbrella", subCategoryId: "props" },
-      { id: "h14", title: "Marigold String", subCategoryId: "accessories" },
-      { id: "h15", title: "Brass Bowl", subCategoryId: "accessories" },
-      { id: "h16", title: "Jewelry Stand", subCategoryId: "accessories" },
-      { id: "h17", title: "Welcome Board", subCategoryId: "accessories" },
-      { id: "h18", title: "Mehndi Ring", subCategoryId: "mandap" },
-      { id: "h19", title: "Clay Pots", subCategoryId: "props" }
+      { id: "h1", title: "Wooden Mandap", categoryId: "mandap" },
+      { id: "h2", title: "Color Drapes", categoryId: "drapes" },
+      { id: "h3", title: "Floor Mattress", categoryId: "seating" },
+      { id: "h4", title: "Square Cushion", categoryId: "cushions" },
+      { id: "h5", title: "Round Cushion", categoryId: "cushions" },
+      { id: "h6", title: "Wooden Bench", categoryId: "seating" },
+      { id: "h7", title: "Sweet Dala", categoryId: "dalas" },
+      { id: "h8", title: "Saree Dala", categoryId: "dalas" },
+      { id: "h9", title: "Sherwani Dala", categoryId: "dalas" },
+      { id: "h10", title: "Paan Dala", categoryId: "dalas" },
+      { id: "h11", title: "Mirror Tray", categoryId: "trays" },
+      { id: "h12", title: "Decorated Kula", categoryId: "trays" },
+      { id: "h13", title: "Ethnic Umbrella", categoryId: "props" },
+      { id: "h14", title: "Marigold String", categoryId: "accessories" },
+      { id: "h15", title: "Brass Bowl", categoryId: "accessories" },
+      { id: "h16", title: "Jewelry Stand", categoryId: "accessories" },
+      { id: "h17", title: "Welcome Board", categoryId: "accessories" },
+      { id: "h18", title: "Mehndi Ring", categoryId: "mandap" },
+      { id: "h19", title: "Clay Pots", categoryId: "props" }
     ]
   },
   {
@@ -110,7 +110,7 @@ export const INVENTORY_OCCASIONS = [
     label: "Baby Shower Props",
     color: "#8B5CF6", // Lavender / Violet
     imageKey: "baby",
-    subcategories: [
+    productTypes: [
       { id: "signs", label: "Signs & Neon", emoji: "💡" },
       { id: "backdrops", label: "Greenery Walls", emoji: "🌿" },
       { id: "balloons", label: "Balloon Sculptures", emoji: "🎈" },
@@ -121,18 +121,18 @@ export const INVENTORY_OCCASIONS = [
       { id: "effects", label: "Effects & Cannons", emoji: "🎉" }
     ],
     items: [
-      { id: "bs1", title: "Oh Baby Sign", subCategoryId: "signs" },
-      { id: "bs2", title: "Hedge Wall", subCategoryId: "backdrops" },
-      { id: "bs3", title: "Balloon Sculpture", subCategoryId: "balloons" },
-      { id: "bs4", title: "Peacock Chair", subCategoryId: "seating" },
-      { id: "bs5", title: "Tufted Armchair", subCategoryId: "seating" },
-      { id: "bs6", title: "BABY Blocks", subCategoryId: "blocks" },
-      { id: "bs7", title: "Teddy Display", subCategoryId: "displays" },
-      { id: "bs8", title: "Confetti Cannon", subCategoryId: "effects" },
-      { id: "bs9", title: "Dessert Platter", subCategoryId: "platters" },
-      { id: "bs10", title: "Candy Jar", subCategoryId: "platters" },
-      { id: "bs11", title: "Easel Board", subCategoryId: "signs" },
-      { id: "bs12", title: "Cloud Balloon", subCategoryId: "balloons" }
+      { id: "bs1", title: "Oh Baby Sign", categoryId: "signs" },
+      { id: "bs2", title: "Hedge Wall", categoryId: "backdrops" },
+      { id: "bs3", title: "Balloon Sculpture", categoryId: "balloons" },
+      { id: "bs4", title: "Peacock Chair", categoryId: "seating" },
+      { id: "bs5", title: "Tufted Armchair", categoryId: "seating" },
+      { id: "bs6", title: "BABY Blocks", categoryId: "blocks" },
+      { id: "bs7", title: "Teddy Display", categoryId: "displays" },
+      { id: "bs8", title: "Confetti Cannon", categoryId: "effects" },
+      { id: "bs9", title: "Dessert Platter", categoryId: "platters" },
+      { id: "bs10", title: "Candy Jar", categoryId: "platters" },
+      { id: "bs11", title: "Easel Board", categoryId: "signs" },
+      { id: "bs12", title: "Cloud Balloon", categoryId: "balloons" }
     ]
   },
   {
@@ -140,7 +140,7 @@ export const INVENTORY_OCCASIONS = [
     label: "Global Essentials (Shared Inventory)",
     color: "#542141", // Aubergine
     imageKey: "global",
-    subcategories: [
+    productTypes: [
       { id: "tables", label: "Tables", emoji: "🪵" },
       { id: "linens", label: "Linens & Tablecloths", emoji: "🧺" },
       { id: "runners", label: "Runners & Napkins", emoji: "🧣" },
@@ -151,47 +151,29 @@ export const INVENTORY_OCCASIONS = [
       { id: "effects", label: "Stage Effects", emoji: "💨" }
     ],
     items: [
-      { id: "g1", title: "Folding Table", subCategoryId: "tables" },
-      { id: "g2", title: "Cocktail Table", subCategoryId: "tables" },
-      { id: "g3", title: "White Cloth", subCategoryId: "linens" },
-      { id: "g4", title: "Black Cloth", subCategoryId: "linens" },
-      { id: "g5", title: "Sequin Runner", subCategoryId: "runners" },
-      { id: "g6", title: "Velvet Napkin", subCategoryId: "runners" },
-      { id: "g7", title: "Chafing Dish", subCategoryId: "buffet" },
-      { id: "g8", title: "Beverage Dispenser", subCategoryId: "dispensers" },
-      { id: "g9", title: "Cutlery Set", subCategoryId: "dispensers" },
-      { id: "g10", title: "Party Speaker", subCategoryId: "audio" },
-      { id: "g11", title: "Fairy Lights", subCategoryId: "lights" },
-      { id: "g12", title: "Smoke Machine", subCategoryId: "effects" },
-      { id: "g13", title: "Background Stand", subCategoryId: "effects" },
-      { id: "g14", title: "LED Curtain", subCategoryId: "lights" }
+      { id: "g1", title: "Folding Table", categoryId: "tables" },
+      { id: "g2", title: "Cocktail Table", categoryId: "tables" },
+      { id: "g3", title: "White Cloth", categoryId: "linens" },
+      { id: "g4", title: "Black Cloth", categoryId: "linens" },
+      { id: "g5", title: "Sequin Runner", categoryId: "runners" },
+      { id: "g6", title: "Velvet Napkin", categoryId: "runners" },
+      { id: "g7", title: "Chafing Dish", categoryId: "buffet" },
+      { id: "g8", title: "Beverage Dispenser", categoryId: "dispensers" },
+      { id: "g9", title: "Cutlery Set", categoryId: "dispensers" },
+      { id: "g10", title: "Party Speaker", categoryId: "audio" },
+      { id: "g11", title: "Fairy Lights", categoryId: "lights" },
+      { id: "g12", title: "Smoke Machine", categoryId: "effects" },
+      { id: "g13", title: "Background Stand", categoryId: "effects" },
+      { id: "g14", title: "LED Curtain", categoryId: "lights" }
     ]
   }
 ];
 
-const OCCASION_EMOJI = {
-  birthday: "🎂",
-  marriage: "💒",
-  holud: "🌼",
-  baby: "🍼",
-  global: "✨",
-};
-
-export const OCCASION_IDS = INVENTORY_OCCASIONS.map((o) => o.id);
-
-/** Occasions as selectable subcategories (Birthday, Marriage, etc.). */
-export const OCCASION_CATEGORIES = INVENTORY_OCCASIONS.map((o) => ({
-  id: o.id,
-  label: o.label,
-  emoji: OCCASION_EMOJI[o.id] || "📦",
-  color: o.color,
-}));
-
-function invertInventoryTaxonomy(occasions) {
+function buildProductTypeCategories(occasions) {
   const topMap = new Map();
 
   for (const occasion of occasions) {
-    for (const sub of occasion.subcategories || []) {
+    for (const sub of occasion.productTypes || []) {
       if (!topMap.has(sub.id)) {
         topMap.set(sub.id, {
           id: sub.id,
@@ -199,40 +181,24 @@ function invertInventoryTaxonomy(occasions) {
           emoji: sub.emoji,
           color: occasion.color,
           imageKey: sub.id,
-          subcategories: [],
           items: [],
-          _occasionIds: new Set(),
-        });
-      }
-      const top = topMap.get(sub.id);
-      if (!top._occasionIds.has(occasion.id)) {
-        top._occasionIds.add(occasion.id);
-        top.subcategories.push({
-          id: occasion.id,
-          label: occasion.label,
-          emoji: OCCASION_EMOJI[occasion.id] || "📦",
         });
       }
     }
 
     for (const item of occasion.items || []) {
-      const top = topMap.get(item.subCategoryId);
+      const top = topMap.get(item.categoryId);
       if (top) {
-        top.items.push({
-          ...item,
-          subCategoryId: occasion.id,
-        });
+        top.items.push({ ...item });
       }
     }
   }
 
-  return Array.from(topMap.values())
-    .map(({ _occasionIds, ...rest }) => rest)
-    .sort((a, b) => a.label.localeCompare(b.label));
+  return Array.from(topMap.values()).sort((a, b) => a.label.localeCompare(b.label));
 }
 
-/** Product-type categories (Lights, Balloons, etc.) with occasions as subcategories. */
-export const INVENTORY_CATEGORIES = invertInventoryTaxonomy(INVENTORY_OCCASIONS);
+/** Product-type categories (Lights, Balloons, Backdrops, etc.). */
+export const INVENTORY_CATEGORIES = buildProductTypeCategories(INVENTORY_OCCASIONS);
 
 /** Merge DB rows with static product-type categories for admin filters. */
 export function resolveInventoryCategories(dbCategories = []) {
@@ -251,10 +217,6 @@ export function resolveInventoryCategories(dbCategories = []) {
       color: inv.color,
     };
   });
-}
-
-export function getOccasionLabel(occasionId) {
-  return OCCASION_CATEGORIES.find((o) => o.id === occasionId)?.label || occasionId;
 }
 
 export function getProductTypeLabel(productTypeId) {

@@ -7,7 +7,6 @@ const seedItem = {
   id: "ci-seed-item",
   title: "CI Seed Item",
   categoryId: "props",
-  subCategoryId: "birthday",
   description: "Seeded for list tests",
 };
 
@@ -15,7 +14,6 @@ const testItem = {
   id: "ci-test-item",
   title: "CI Test Item",
   categoryId: "props",
-  subCategoryId: "birthday",
   description: "Created in tests",
 };
 
@@ -28,14 +26,13 @@ describe("API", () => {
     await initializeDatabase();
     await db.query("DELETE FROM items WHERE id IN (?, ?)", [seedItem.id, testItem.id]);
     await db.query(
-      `INSERT INTO items (id, name, title, categoryId, subCategoryId, description, isAvailable, image)
-       VALUES (?, ?, ?, ?, ?, ?, TRUE, ?)`,
+      `INSERT INTO items (id, name, title, categoryId, description, isAvailable, image)
+       VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
       [
         seedItem.id,
         seedItem.title,
         seedItem.title,
         seedItem.categoryId,
-        seedItem.subCategoryId,
         seedItem.description,
         "✨",
       ]
@@ -158,7 +155,6 @@ describe("API", () => {
         .send({
           title: "Updated CI Item",
           categoryId: "props",
-          subCategoryId: "birthday",
           description: "Updated in tests",
           isAvailable: true,
           image: "✨",
@@ -176,7 +172,6 @@ describe("API", () => {
         .send({
           title: "Missing",
           categoryId: "props",
-          subCategoryId: "birthday",
           isAvailable: true,
           image: "✨",
         });

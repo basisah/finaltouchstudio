@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import styles from "../AdminPage.module.css";
-import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 import ItemEditModal from "./ItemEditModal";
 
 const getItemSortLabel = (item) =>
@@ -28,8 +27,6 @@ export default function ItemsTab({
   setNewItemName,
   newItemDesc,
   setNewItemDesc,
-  newItemSubCategory,
-  setNewItemSubCategory,
   newItemFile,
   setNewItemFile,
   newItemUnitCount,
@@ -52,18 +49,19 @@ export default function ItemsTab({
     });
   }, [items, itemCategoryFilter, itemSortOrder]);
 
-  const inventoryCat = INVENTORY_CATEGORIES.find((c) => c.id === itemCategoryFilter);
-  const subcategories = inventoryCat?.subcategories || [];
-
-  const getSubcategoryLabel = (item) => {
-    const inv = INVENTORY_CATEGORIES.find((c) => c.id === item.categoryId);
-    const sub = inv?.subcategories?.find((s) => s.id === item.subCategoryId);
-    return sub?.label || item.subCategoryId || "General";
-  };
-
   const getCategoryLabel = (categoryId) => {
     const cat = categories.find((c) => c.id === categoryId);
     return cat ? `${cat.emoji} ${cat.label}` : categoryId || "Uncategorized";
+  };
+
+  const handleOpenAddForm = () => {
+    setShowAddItemForm(true);
+    if (itemCategoryFilter === "all" && categories.length > 0) {
+      setItemCategoryFilter(categories[0].id);
+    }
+    requestAnimationFrame(() => {
+      addFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   return (
@@ -71,12 +69,24 @@ export default function ItemsTab({
       className={`${styles.categoryGrid} ${!showAddItemForm ? styles.categoryGridFull : ""}`}
     >
       <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <h2>📋 Items Inventory ({filteredItems.length})</h2>
-          <p>
-            Manage rental items, toggle availability, and review stock across categories. Click a row
-            to edit.
-          </p>
+        <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+          <div>
+            <h2>📋 Items Inventory ({filteredItems.length})</h2>
+            <p>
+              Manage rental items, toggle availability, and review stock across categories. Click a row
+              to edit.
+            </p>
+          </div>
+          {!showAddItemForm && (
+            <button
+              type="button"
+              className={styles.addItemBtn}
+              style={{ width: "auto", marginTop: 0, flexShrink: 0 }}
+              onClick={handleOpenAddForm}
+            >
+              ➕ Add New Item
+            </button>
+          )}
         </div>
 
         <div className={styles.itemsFilterBar}>
@@ -114,8 +124,7 @@ export default function ItemsTab({
         {filteredItems.length === 0 ? (
           <div className={styles.emptyState}>
             <p>
-              No items in this view yet. Click <strong>+ Add New Item</strong> in the sidebar to
-              create one.
+              No items in this view yet. Click <strong>+ Add New Item</strong> above to create one.
             </p>
           </div>
         ) : (
@@ -124,7 +133,7 @@ export default function ItemsTab({
               <thead>
                 <tr>
                   <th>Item Details</th>
-                  {itemCategoryFilter === "all" && <th>Product Type</th>}
+                  {itemCategoryFilter === "all" && <th>Category</th>}
                   <th>Availability</th>
                   <th>Action</th>
                 </tr>
@@ -198,20 +207,6 @@ export default function ItemsTab({
                                 }}
                               >
                                 Stock: {item.unit_count || 1} units
-                              </span>
-                              <span
-                                className={styles.btnCount}
-                                style={{
-                                  background: "rgba(73, 34, 91, 0.05)",
-                                  color: "var(--text-muted)",
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  border: "1px solid var(--border-shadow)",
-                                }}
-                              >
-                                {getSubcategoryLabel(item)}
                               </span>
                             </div>
                           </div>
@@ -305,7 +300,7 @@ export default function ItemsTab({
 
         <form onSubmit={handleAddItem} className={styles.itemForm}>
           <div className={styles.inputGroup}>
-            <label htmlFor="itemTargetCategory">Product Type</label>
+            <label htmlFor="itemTargetCategory">Category</label>
             <select
               id="itemTargetCategory"
               className={styles.picSelect}
@@ -354,37 +349,6 @@ export default function ItemsTab({
               <option value="💡">💡 neon</option>
               <option value="🌹">🌹 rose</option>
             </select>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="itemSubCategory" title="Occasion / Collection">
-              Occasion
-            </label>
-            {subcategories.length > 0 ? (
-              <select
-                id="itemSubCategory"
-                value={newItemSubCategory}
-                onChange={(e) => setNewItemSubCategory(e.target.value)}
-                className={styles.picSelect}
-                required
-              >
-                <option value="">-- Select Subcategory --</option>
-                {subcategories.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.emoji} {sub.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id="itemSubCategory"
-                type="text"
-                placeholder="e.g. backdrops, lights, props..."
-                value={newItemSubCategory}
-                onChange={(e) => setNewItemSubCategory(e.target.value)}
-                required
-              />
-            )}
           </div>
 
           <div className={styles.inputGroup}>
