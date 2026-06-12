@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginAdmin } from "../../api/admin/auth.api";
 import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
@@ -15,26 +16,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Hit backend auth API
-      const response = await fetch("/api/admin/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const data = await loginAdmin(username, password);
 
-      const data = await response.json();
-
-      if (response.ok && data.token) {
+      if (data.token) {
         localStorage.setItem("admin_token", data.token);
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }
         navigate("/admin");
       } else {
-        setError(data.error || "Invalid username or password");
+        setError("Invalid username or password");
       }
     } catch (err) {
-      setError("Failed to connect to authentication server. Please check your connection.");
+      setError(err.message || "Failed to connect to authentication server. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
