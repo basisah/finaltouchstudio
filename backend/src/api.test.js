@@ -6,16 +6,16 @@ const app = require("./index");
 const seedItem = {
   id: "ci-seed-item",
   title: "CI Seed Item",
-  categoryId: "birthday",
-  subCategoryId: "props",
+  categoryId: "props",
+  subCategoryId: "birthday",
   description: "Seeded for list tests",
 };
 
 const testItem = {
   id: "ci-test-item",
   title: "CI Test Item",
-  categoryId: "birthday",
-  subCategoryId: "props",
+  categoryId: "props",
+  subCategoryId: "birthday",
   description: "Created in tests",
 };
 
@@ -157,8 +157,8 @@ describe("API", () => {
         .set("Authorization", `Bearer ${authToken}`)
         .send({
           title: "Updated CI Item",
-          categoryId: "birthday",
-          subCategoryId: "props",
+          categoryId: "props",
+          subCategoryId: "birthday",
           description: "Updated in tests",
           isAvailable: true,
           image: "✨",
@@ -175,7 +175,8 @@ describe("API", () => {
         .set("Authorization", `Bearer ${authToken}`)
         .send({
           title: "Missing",
-          categoryId: "birthday",
+          categoryId: "props",
+          subCategoryId: "birthday",
           isAvailable: true,
           image: "✨",
         });

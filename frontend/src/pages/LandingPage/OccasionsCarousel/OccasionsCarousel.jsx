@@ -34,7 +34,9 @@ export default function OccasionsCarousel() {
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Our Catalog</h2>
-          <p className={styles.sectionSub}>Browse items by category — click any item to book</p>
+          <p className={styles.sectionSub}>
+            Browse by product type — pick an occasion collection to see items
+          </p>
         </div>
 
         {INVENTORY_CATEGORIES.map((category) => {
@@ -48,7 +50,11 @@ export default function OccasionsCarousel() {
               style={{ "--category-color": colors.accent }}
             >
               <div className={styles.categoryHeader}>
-                {icon && <img src={icon} alt="" className={styles.catIcon} />}
+                {icon ? (
+                  <img src={icon} alt="" className={styles.catIcon} />
+                ) : (
+                  <span className={styles.catIconEmoji}>{category.emoji || "✨"}</span>
+                )}
                 <h3
                   className={styles.categoryTitle}
                   style={{ color: colors.accent }}

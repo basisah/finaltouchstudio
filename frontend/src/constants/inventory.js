@@ -1,4 +1,5 @@
-export const INVENTORY_CATEGORIES = [
+/** Occasion / collection groupings (now stored as item subCategoryId). */
+export const INVENTORY_OCCASIONS = [
   {
     id: "birthday",
     label: "Birthday Collection",
@@ -167,3 +168,95 @@ export const INVENTORY_CATEGORIES = [
     ]
   }
 ];
+
+const OCCASION_EMOJI = {
+  birthday: "🎂",
+  marriage: "💒",
+  holud: "🌼",
+  baby: "🍼",
+  global: "✨",
+};
+
+export const OCCASION_IDS = INVENTORY_OCCASIONS.map((o) => o.id);
+
+/** Occasions as selectable subcategories (Birthday, Marriage, etc.). */
+export const OCCASION_CATEGORIES = INVENTORY_OCCASIONS.map((o) => ({
+  id: o.id,
+  label: o.label,
+  emoji: OCCASION_EMOJI[o.id] || "📦",
+  color: o.color,
+}));
+
+function invertInventoryTaxonomy(occasions) {
+  const topMap = new Map();
+
+  for (const occasion of occasions) {
+    for (const sub of occasion.subcategories || []) {
+      if (!topMap.has(sub.id)) {
+        topMap.set(sub.id, {
+          id: sub.id,
+          label: sub.label,
+          emoji: sub.emoji,
+          color: occasion.color,
+          imageKey: sub.id,
+          subcategories: [],
+          items: [],
+          _occasionIds: new Set(),
+        });
+      }
+      const top = topMap.get(sub.id);
+      if (!top._occasionIds.has(occasion.id)) {
+        top._occasionIds.add(occasion.id);
+        top.subcategories.push({
+          id: occasion.id,
+          label: occasion.label,
+          emoji: OCCASION_EMOJI[occasion.id] || "📦",
+        });
+      }
+    }
+
+    for (const item of occasion.items || []) {
+      const top = topMap.get(item.subCategoryId);
+      if (top) {
+        top.items.push({
+          ...item,
+          subCategoryId: occasion.id,
+        });
+      }
+    }
+  }
+
+  return Array.from(topMap.values())
+    .map(({ _occasionIds, ...rest }) => rest)
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** Product-type categories (Lights, Balloons, etc.) with occasions as subcategories. */
+export const INVENTORY_CATEGORIES = invertInventoryTaxonomy(INVENTORY_OCCASIONS);
+
+/** Merge DB rows with static product-type categories for admin filters. */
+export function resolveInventoryCategories(dbCategories = []) {
+  const dbById = Object.fromEntries(
+    (Array.isArray(dbCategories) ? dbCategories : []).map((c) => [c.id, c])
+  );
+
+  return INVENTORY_CATEGORIES.map((inv) => {
+    const db = dbById[inv.id];
+    if (db) return db;
+
+    return {
+      id: inv.id,
+      label: inv.label,
+      emoji: inv.emoji || "📦",
+      color: inv.color,
+    };
+  });
+}
+
+export function getOccasionLabel(occasionId) {
+  return OCCASION_CATEGORIES.find((o) => o.id === occasionId)?.label || occasionId;
+}
+
+export function getProductTypeLabel(productTypeId) {
+  return INVENTORY_CATEGORIES.find((c) => c.id === productTypeId)?.label || productTypeId;
+}
