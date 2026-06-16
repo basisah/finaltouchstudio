@@ -98,7 +98,7 @@ export default function AdminPage() {
   };
 
   // Add Category
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCatLabel.trim()) return;
     const id = newCatLabel.toLowerCase().replace(/\s+/g, "-");
@@ -107,20 +107,29 @@ export default function AdminPage() {
       return;
     }
     const newCategory = { id, label: newCatLabel, emoji: newCatEmoji, color: "#9F507C" };
-    setCategories([...categories, newCategory]);
-    setActiveTab(id);
-    setNewCatLabel("");
-    setNewCatEmoji("🎂");
-    setShowAddCatForm(false);
+    try {
+      await post("/categories", newCategory);
+      refreshData();
+      setActiveTab(id);
+      setNewCatLabel("");
+      setNewCatEmoji("🎂");
+      setShowAddCatForm(false);
+    } catch (err) {
+      alert("Failed to add category: " + err.message);
+    }
   };
 
   // Delete Category
-  const handleDeleteCategory = (catId) => {
+  const handleDeleteCategory = async (catId) => {
     if (window.confirm(`Delete category "${catId}"? Items inside will lose their category.`)) {
-      setCategories(categories.filter((cat) => cat.id !== catId));
-      setItems(items.map((item) => (item.categoryId === catId ? { ...item, categoryId: null } : item)));
-      const remaining = categories.filter((cat) => cat.id !== catId);
-      setActiveTab(remaining.length > 0 ? remaining[0].id : "enquiries");
+      try {
+        await del(`/categories/${catId}`);
+        refreshData();
+        const remaining = categories.filter((cat) => cat.id !== catId);
+        setActiveTab(remaining.length > 0 ? remaining[0].id : "enquiries");
+      } catch (err) {
+        alert("Failed to delete category: " + err.message);
+      }
     }
   };
 
@@ -129,11 +138,11 @@ export default function AdminPage() {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
     try {
-      const updatedItem = await put(`/items/${itemId}`, {
+      await put(`/items/${itemId}`, {
         ...item,
         isAvailable: !item.isAvailable
       });
-      setItems(items.map((i) => (i.id === itemId ? updatedItem : i)));
+      refreshData();
     } catch (err) {
       alert("Failed to toggle availability: " + err.message);
     }
@@ -173,7 +182,7 @@ export default function AdminPage() {
         imagePath = uploadData.path;
       }
 
-      const createdItem = await post("/items", {
+      await post("/items", {
         id: newItemSN.trim(),
         serialNumber: newItemSN.trim(),
         name: newItemName,
@@ -186,7 +195,7 @@ export default function AdminPage() {
         image: imagePath
       });
 
-      setItems([...items, createdItem]);
+      refreshData();
       setNewItemName("");
       setNewItemDesc("");
       setNewItemSN("");
@@ -204,7 +213,7 @@ export default function AdminPage() {
     if (window.confirm("Delete this item permanently?")) {
       try {
         await del(`/items/${itemId}`);
-        setItems(items.filter((item) => item.id !== itemId));
+        refreshData();
       } catch (err) {
         alert("Failed to delete item: " + err.message);
       }
