@@ -3,14 +3,16 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import styles from "./Navbar.module.css";
 
-// Desktop: only Items link (Profile + Cart are icons)
+// Desktop: only Items + Build links (Profile + Cart are icons)
 const DESKTOP_NAV = [
   { label: "Items",    href: "/items"     },
+  { label: "Build",    href: "/build"     },
 ];
 
-// Mobile: only Items as a text link (Cart + Profile are icons)
+// Mobile: only Items + Build as text links (Cart + Profile are icons)
 const MOBILE_NAV = [
   { label: "Items", href: "/items" },
+  { label: "Build", href: "/build" },
 ];
 
 export default function Navbar() {
@@ -31,6 +33,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (location.pathname === "/items") setActiveLink("/items");
+    else if (location.pathname === "/build") setActiveLink("/build");
     else if (location.hash) setActiveLink(location.hash);
     else setActiveLink("#home");
   }, [location]);

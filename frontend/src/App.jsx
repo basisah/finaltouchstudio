@@ -11,6 +11,7 @@ import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
 import CartPage from "./pages/CartPage/CartPage";
 import CustomerLoginPage from "./pages/CustomerLoginPage/CustomerLoginPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
+import BuildPage from "./pages/BuildPage/BuildPage";
 
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/login" element={<CustomerLoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/build" element={<BuildPage />} />
           <Route path="/khaledadmin" element={<LoginPage />} />
           <Route 
             path="/admin" 
