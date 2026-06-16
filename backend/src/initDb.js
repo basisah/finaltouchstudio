@@ -16,6 +16,28 @@ async function initializeDatabase() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
 
+    // Ensure columns exist in users table (in case the table already existed with an older schema)
+    try {
+      await db.query("ALTER TABLE users ADD COLUMN google_id VARCHAR(255) UNIQUE NULL");
+      console.log("Added column 'google_id' to 'users' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255) NULL");
+      console.log("Added column 'avatar_url' to 'users' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'user'");
+      console.log("Added column 'role' to 'users' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
     // 2. Create structural navigational categories taxonomy
     await db.query(`CREATE TABLE IF NOT EXISTS categories (
       id VARCHAR(50) PRIMARY KEY,
@@ -43,6 +65,28 @@ async function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
+
+    // Ensure columns exist in items table (in case the table already existed with an older schema)
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN title VARCHAR(255)");
+      console.log("Added column 'title' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN subCategoryId VARCHAR(50) DEFAULT NULL");
+      console.log("Added column 'subCategoryId' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN unit_count INT DEFAULT 1");
+      console.log("Added column 'unit_count' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
 
     // 4. Create flat-rate bundled decor tier package models
     await db.query(`CREATE TABLE IF NOT EXISTS packages (
@@ -81,6 +125,35 @@ async function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );`);
+
+    // Ensure columns exist in orders table (in case the table already existed with an older schema)
+    try {
+      await db.query("ALTER TABLE orders ADD COLUMN fulfillment_type ENUM('delivery', 'pickup') NOT NULL DEFAULT 'pickup'");
+      console.log("Added column 'fulfillment_type' to 'orders' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE orders ADD COLUMN delivery_fee DECIMAL(10, 2) DEFAULT 0.00");
+      console.log("Added column 'delivery_fee' to 'orders' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE orders ADD COLUMN venue_address TEXT");
+      console.log("Added column 'venue_address' to 'orders' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE orders ADD COLUMN special_notes TEXT DEFAULT NULL");
+      console.log("Added column 'special_notes' to 'orders' table.");
+    } catch (err) {
+      // Column may already exist
+    }
 
     // 7. Create itemized transaction details sub-breakdown table for order audits
     await db.query(`CREATE TABLE IF NOT EXISTS order_items (

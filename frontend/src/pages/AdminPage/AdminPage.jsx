@@ -141,8 +141,7 @@ export default function AdminPage() {
   const handleAddItem = async (e) => {
     e.preventDefault();
     if (!newItemName.trim() || !newItemSN.trim()) return;
-
-    if (items.some((item) => item.serialNumber && item.serialNumber.toLowerCase() === newItemSN.toLowerCase())) {
+    if (items.some((item) => (item.id && item.id.toLowerCase() === newItemSN.toLowerCase()) || (item.serialNumber && item.serialNumber.toLowerCase() === newItemSN.toLowerCase()))) {
       alert("Unique Serial Number required. This one already exists!");
       return;
     }

@@ -145,7 +145,15 @@ export default function OccasionsCarousel() {
     get("/categories")
       .then((data) => {
         if (data && data.length > 0) {
-          setCategories(data);
+          const merged = data.map((dbCat) => {
+            const staticCat = INVENTORY_CATEGORIES.find((c) => c.id === dbCat.id);
+            return {
+              ...staticCat,
+              ...dbCat,
+              subcategories: dbCat.subcategories || staticCat?.subcategories || [],
+            };
+          });
+          setCategories(merged);
         } else {
           setCategories(INVENTORY_CATEGORIES);
         }

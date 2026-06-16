@@ -41,7 +41,6 @@ router.post("/upload", auth, isAdmin, upload.single("image"), (req, res) => {
   const fileUrl = `/uploads/${req.file.filename}`;
   res.status(201).json({ path: fileUrl });
 });
-
 // Create item
 router.post("/items", auth, isAdmin, async (req, res) => {
   const { id, name, title, categoryId, subCategoryId, description, isAvailable, unit_count, image } = req.body;
@@ -63,6 +62,9 @@ router.post("/items", auth, isAdmin, async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Error creating item:", err);
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ error: "An item with this Serial Number/ID already exists" });
+    }
     res.status(500).json({ error: "Failed to create item" });
   }
 });
