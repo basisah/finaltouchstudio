@@ -1443,4 +1443,149 @@
   margin-right: 6px; /* Create space between text and icon */
 }
 
+/* ── Responsive Overrides for Mobile Grid & Categories ── */
+@media (max-width: 768px) {
+  /* Product Grid: 3 items in a row */
+  .productGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-top: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* Product Card adjustments to shrink elements gracefully */
+  .productIconContainer3d {
+    height: 110px !important;
+  }
+
+  .productDetails3d {
+    padding: 8px 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .productTitle {
+    font-size: 0.8rem !important;
+    height: 2.5em !important;
+    line-height: 1.25 !important;
+  }
+
+  .productFooter {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  .productPrice {
+    font-size: 0.75rem !important;
+  }
+
+  .priceUnit {
+    font-size: 0.65rem !important;
+  }
+
+  .productAddBtn {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+    border-radius: 6px !important;
+  }
+
+  .cardQuantityControl {
+    gap: 4px !important;
+    padding: 2px 4px !important;
+    border-radius: 8px !important;
+  }
+
+  .qtyControlBtn {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.75rem !important;
+    border-radius: 4px !important;
+  }
+
+  .qtyValue {
+    font-size: 0.75rem !important;
+    min-width: 10px !important;
+  }
+
+  /* Hover Info Button mobile dimensions */
+  .infoBtn3d:hover {
+    width: 90px !important;
+  }
+
+  .infoBtn3d:hover .infoText {
+    max-width: 60px !important;
+  }
+
+  /* Categories Grid: 4 categories in a row */
+  .gridContainer3d {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px 8px !important;
+    justify-items: center !important;
+  }
+
+  .gridItem3d {
+    width: 100% !important;
+    max-width: 90px !important;
+  }
+
+  .circleCard3d {
+    width: 68px !important;
+    height: 68px !important;
+    border-radius: 50% !important;
+    margin-bottom: 6px !important;
+  }
+
+  .subcatEmoji {
+    font-size: 24px !important;
+  }
+
+  .cardLabel {
+    font-size: 9px !important;
+    min-height: auto !important;
+    line-height: 1.2 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra adjustments for very narrow screens */
+  .productGrid {
+    gap: 6px !important;
+  }
+
+  .productIconContainer3d {
+    height: 85px !important;
+  }
+
+  .productDetails3d {
+    padding: 6px 6px 8px !important;
+    gap: 6px !important;
+  }
+
+  .productTitle {
+    font-size: 0.75rem !important;
+  }
+
+  .productPrice {
+    font-size: 0.7rem !important;
+  }
+
+  .productAddBtn {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .circleCard3d {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .subcatEmoji {
+    font-size: 20px !important;
+  }
+
+  .cardLabel {
+    font-size: 8px !important;
+  }
+}
+
 
