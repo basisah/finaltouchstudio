@@ -5,6 +5,7 @@ import LoginPage from "./pages/AdminPage/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CartProvider } from "./context/CartContext";
 import ItemsPage from "./pages/ItemsPage/ItemsPage";
+import ItemDetailPage from "./pages/ItemDetailPage/ItemDetailPage";
 import PackageDetail from "./pages/PackageDetail/PackageDetail";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
 import CartPage from "./pages/CartPage/CartPage";
@@ -19,6 +20,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/items" element={<ItemsPage />} />
+          <Route path="/item/:id" element={<ItemDetailPage />} />
           <Route path="/package/:id" element={<PackageDetail />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/cart" element={<CartPage />} />

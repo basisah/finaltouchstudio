@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { INVENTORY_CATEGORIES } from "../../constants/inventory";
+import { getSortedCategories } from "../../utils/categoryHelper";
 import { get } from "../../api/client";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
 import Navbar from "../../components/Navbar/Navbar";
@@ -14,8 +15,10 @@ import marriageIcon from "../../assets/Icons/wedding-couple.png";
 import bridalIcon from "../../assets/Icons/bridal-shower.png";
 import babyIcon from "../../assets/Icons/baby.png";
 import managerIcon from "../../assets/Icons/manager.png";
+import proposalIcon from "../../assets/Icons/ring.png";
 
 const categoryIcons = {
+  proposal: proposalIcon,
   birthday: birthdayIcon,
   marriage: marriageIcon,
   holud: bridalIcon,
@@ -200,6 +203,9 @@ export default function ItemsPage() {
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const lastSearchRef = useRef("__INITIAL__");
+  const hasScrolledRef = useRef(false);
   const [activeSubcats, setActiveSubcats] = useState({});
 
   const [showToast, setShowToast] = useState(false);
@@ -218,31 +224,27 @@ export default function ItemsPage() {
     // Fetch categories
     get("/categories")
       .then((data) => {
-        if (data && data.length > 0) {
-          const merged = data.map((dbCat) => {
-            const staticCat = INVENTORY_CATEGORIES.find((c) => c.id === dbCat.id);
-            return {
-              ...staticCat,
-              ...dbCat,
-              subcategories: dbCat.subcategories || staticCat?.subcategories || [],
-            };
-          });
-          setCategories(merged);
-        } else {
-          setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
-        }
+        const { allItemsCategories } = getSortedCategories(data || []);
+        setCategories(allItemsCategories);
       })
       .catch((err) => {
         console.warn("Failed to load categories, falling back to static:", err);
-        setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+        const { allItemsCategories } = getSortedCategories([]);
+        setCategories(allItemsCategories);
       });
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const catId = params.get("category");
-    const itemId = params.get("item");
     const subcatId = params.get("subcategory");
+    const itemId = params.get("item");
+
+    // Reset scroll flag when search parameters change
+    if (location.search !== lastSearchRef.current) {
+      lastSearchRef.current = location.search;
+      hasScrolledRef.current = false;
+    }
 
     if (catId) {
       setActiveCategoryId(catId);
@@ -263,16 +265,36 @@ export default function ItemsPage() {
         }
       }
 
-      // 2. Perform smooth scroll in a timeout to allow layout shifts to settle
-      const timer = setTimeout(() => {
+      // Auto-expand first subcategory if user deep-linked to a category but no subcategory is expanded yet
+      if (!subcatId && !itemId && categories.length > 0) {
+        const catObj = categories.find(c => c.id === catId);
+        if (catObj && catObj.subcategories && catObj.subcategories.length > 0) {
+          setActiveSubcats(prev => {
+            if (prev[catId]) return prev;
+            return {
+              ...prev,
+              [catId]: catObj.subcategories[0].id
+            };
+          });
+        }
+      }
+
+      // 2. Perform smooth scroll if the element is available and we haven't scrolled yet
+      if (!hasScrolledRef.current && categories.length > 0) {
         const element = document.getElementById(`category-section-${catId}`);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
+          const timer = setTimeout(() => {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            hasScrolledRef.current = true;
+          }, 150);
+          return () => clearTimeout(timer);
         }
-      }, 300);
-      return () => clearTimeout(timer);
-    } else if (categories.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(categories[0].id);
+      }
+    } else {
+      // Default active tab selection if no query param is present and not already active
+      if (categories.length > 0 && !activeCategoryId) {
+        setActiveCategoryId(categories[0].id);
+      }
     }
   }, [location.search, dbItems, categories, activeCategoryId]);
 
@@ -342,7 +364,7 @@ export default function ItemsPage() {
     setActiveCategoryId(catId);
     const element = document.getElementById(`category-section-${catId}`);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
@@ -502,9 +524,21 @@ export default function ItemsPage() {
                           <div
                             key={item.id}
                             className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
-                            onClick={() => handleOpenItem(item)}
+                            onClick={() => window.open(`/item/${item.id}`, "_blank")}
                           >
-                             <div className={styles.productIconContainer3d}>
+                            <button
+                              type="button"
+                              className={styles.infoBtn3d}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(`/item/${item.id}`, "_blank");
+                              }}
+                              title="View details"
+                            >
+                              <span className={styles.infoText}>see item</span>
+                              <span className={styles.infoIcon}>ⓘ</span>
+                            </button>
+                            <div className={styles.productIconContainer3d}>
                                {item.image && item.image.startsWith("/uploads") ? (
                                  <img 
                                    src={item.image} 
@@ -581,7 +615,7 @@ export default function ItemsPage() {
                             className={styles.gridItem3d}
                             onClick={() => {
                               setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
-                              document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                              document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                             }}
                           >
                             <div className={styles.circleCard3d}>

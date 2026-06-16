@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
 import { get, post, put, del } from "../../api/client";
 import { compressImage } from "../../utils/imageCompressor";
+import { getSortedCategories } from "../../utils/categoryHelper";
 
 // Modular Imports
 import {
@@ -36,14 +37,15 @@ export default function AdminPage() {
   const refreshData = () => {
     get("/categories")
       .then((data) => {
-        setCategories(data);
+        const { allItemsCategories } = getSortedCategories(data || []);
+        setCategories(allItemsCategories);
         // Default active tab to first category if not set or invalid
-        if (data.length > 0) {
+        if (allItemsCategories.length > 0) {
           setActiveTab((prev) => {
             const tabsList = ["members", "payments", "packages", "enquiries", "categories"];
             if (tabsList.includes(prev)) return prev;
-            if (data.some(c => c.id === prev)) return prev;
-            return data[0].id;
+            if (allItemsCategories.some(c => c.id === prev)) return prev;
+            return allItemsCategories[0].id;
           });
         }
       })
@@ -59,7 +61,7 @@ export default function AdminPage() {
   }, []);
 
   // Nav Selection
-  const [activeTab, setActiveTab] = useState("birthday");
+  const [activeTab, setActiveTab] = useState("proposal");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Category additions

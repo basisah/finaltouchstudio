@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { CATEGORIES } from "../../../constants/categories";
+import { Link } from "react-router-dom";
+import { getSortedCategories } from "../../../utils/categoryHelper";
 import styles from "./CategorySection.module.css";
 
 // Import category images
@@ -48,15 +49,13 @@ export default function CategorySection() {
         return res.json();
       })
       .then((data) => {
-        if (data && data.length > 0) {
-          setCategories(data);
-        } else {
-          setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
-        }
+        const { landingCategories } = getSortedCategories(data || []);
+        setCategories(landingCategories);
       })
       .catch((err) => {
         console.warn("Category fetch failed, using fallback static data:", err);
-        setCategories(CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
+        const { landingCategories } = getSortedCategories([]);
+        setCategories(landingCategories);
       })
       .finally(() => {
         setLoading(false);
@@ -110,7 +109,7 @@ export default function CategorySection() {
       <div className={styles.timeline}>
         {categories.map((cat, index) => {
           const isEven = index % 2 === 0;
-          const imgUrl = cat.image_url || marriageImg;
+          const imgUrl = cat.image_url || categoryImages[cat.id] || marriageImg;
           const iconUrl = categoryIcons[cat.id];
           const isLast = index === categories.length - 1;
 
@@ -128,9 +127,9 @@ export default function CategorySection() {
             <div key={cat.id} className={`${styles.row} ${isEven ? styles.rowEven : styles.rowOdd}`}>
               
               <div className={styles.imageCol}>
-                <div className={styles.imageWrapper}>
+                <Link to={`/items?category=${cat.id}`} className={styles.imageWrapper} style={{ display: "block" }}>
                   {imgUrl && <img src={imgUrl} alt={cat.label} className={styles.circleImage} />}
-                </div>
+                </Link>
               </div>
 
               <div className={styles.textCol}>
@@ -141,13 +140,17 @@ export default function CategorySection() {
                     ) : (
                       <span style={{ marginRight: "10px", fontSize: "1.6rem" }}>{cat.emoji || "🎉"}</span>
                     )}
-                    <h3 className={styles.title}>{cat.label}</h3>
+                    <Link to={`/items?category=${cat.id}`} style={{ textDecoration: "none" }}>
+                      <h3 className={styles.title}>{cat.label}</h3>
+                    </Link>
                   </div>
                   <p className={styles.desc}>{description}</p>
                   
-                  <div className={styles.linkWrapper}>
+                  <Link to={`/items?category=${cat.id}`} className={styles.linkWrapper} style={{ textDecoration: "none" }}>
+                    <span className={styles.linkLine}></span>
+                    <span className={styles.linkText}>explore props</span>
                     <span className={styles.linkCircle}></span>
-                  </div>
+                  </Link>
                 </div>
               </div>
 

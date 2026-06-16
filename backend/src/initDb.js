@@ -192,6 +192,23 @@ async function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
+    // 10. Seed/Upsert permanent categories to guarantee their presence and sorting
+    const permanentCats = [
+      ["proposal", "Proposal", "💍", "#8B5CF6", "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.", 1],
+      ["holud", "Holud", "🌼", "#D97706", "Traditional Gaye Holud & Mehndi night stage setups with vibrant colors.", 2],
+      ["marriage", "Marriage", "💒", "#9F507C", "Exquisite wedding, holud & reception stages blending modern and traditional luxury.", 3],
+      ["baby", "Baby Shower", "🍼", "#A78BFA", "Cute, colorful & magical themes for celebrating your little one.", 4],
+      ["birthday", "Birthday", "🎂", "#B8729A", "Bespoke balloon walls, kids themes & customized stage setups for your special day.", 5]
+    ];
+
+    for (const [id, label, emoji, color, description, display_order] of permanentCats) {
+      await db.query(
+        "INSERT INTO categories (id, label, emoji, color, description, display_order) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE display_order = ?",
+        [id, label, emoji, color, description, display_order, display_order]
+      );
+    }
+    console.log("✅ Seeded/Updated permanent categories display order.");
+
     console.log("🚀 Database schema verification complete!");
   } catch (error) {
     console.error("❌ Database initialization failed:", error);

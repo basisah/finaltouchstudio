@@ -117,7 +117,7 @@ export default function Sidebar({
             </form>
           )}
 
-          {activeCategory && (
+          {activeCategory && !["proposal", "holud", "marriage", "baby", "baby-shower", "birthday"].includes(activeCategory.id) && (
             <button
               className={styles.deleteCategoryBtn}
               onClick={() => handleDeleteCategory(activeCategory.id)}

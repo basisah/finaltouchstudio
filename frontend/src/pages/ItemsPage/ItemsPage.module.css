@@ -71,14 +71,16 @@
 }
 
 .categoryHeaderIcon {
-  width: 40px;
-  height: 40px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  filter: drop-shadow(4px 6px 12px rgba(0, 0, 0, 0.22));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.categoryBlock3d:hover .categoryHeaderIcon,
 .categoryBlock:hover .categoryHeaderIcon {
-  transform: scale(1.1);
+  transform: translateY(-4px) scale(1.12) rotate(4deg);
 }
 
 .categoryTitle {
@@ -517,12 +519,14 @@
 
 /* ── Subcategory Expanding UI ── */
 .subcatEmoji {
-  font-size: 32px;
-  transition: transform 0.3s ease;
+  font-size: 44px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.15));
 }
 
-.gridItem:hover .subcatEmoji {
-  transform: scale(1.15);
+.gridItem:hover .subcatEmoji,
+.gridItem3d:hover .subcatEmoji {
+  transform: scale(1.15) rotate(6deg);
 }
 
 .expandedSection {
@@ -1248,17 +1252,21 @@
 }
 
 .circleCard3d {
-  width: 95px;
-  height: 95px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 6px 6px 14px rgba(73, 34, 91, 0.03), -6px -6px 14px #ffffff, inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #ffffff 0%, #f6f0fa 100%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    8px 10px 20px rgba(73, 34, 91, 0.08), 
+    -8px -8px 20px #ffffff, 
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(73, 34, 91, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 10px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-bottom: 12px;
 }
 
 .gridItem3d {
@@ -1266,12 +1274,15 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  width: 120px;
+  width: 135px;
 }
 
 .gridItem3d:hover .circleCard3d {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 10px 10px 20px rgba(73, 34, 91, 0.05), -10px -10px 20px #ffffff;
+  transform: translateY(-8px) scale(1.06);
+  box-shadow: 
+    12px 16px 28px rgba(73, 34, 91, 0.12), 
+    -12px -12px 28px #ffffff;
+  border-color: var(--category-color, var(--btn-primary));
 }
 
 .productCard3d {
@@ -1354,6 +1365,82 @@
   color: var(--text-main);
   min-width: 16px;
   text-align: center;
+}
+
+/* ── Hover Info Icon 3D Button ── */
+.infoBtn3d {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(165, 106, 189, 0.25);
+  color: var(--btn-primary);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align elements to the right to keep the icon stationary */
+  padding: 0 9px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: 
+    opacity 0.25s ease, 
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+    background 0.2s ease, 
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.productCard3d:hover .infoBtn3d {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.infoBtn3d:hover {
+  width: 110px; /* Expand to the left */
+  background: var(--btn-primary);
+  color: #ffffff;
+  border-color: var(--btn-primary);
+}
+
+.infoIcon {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: bold;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px; /* Exact width to keep centered when button is closed */
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.infoText {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  margin-right: 0;
+}
+
+.infoBtn3d:hover .infoText {
+  opacity: 1;
+  max-width: 80px; /* Expand text block width */
+  margin-right: 6px; /* Create space between text and icon */
 }
 
 
