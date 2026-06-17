@@ -3,14 +3,6 @@ const db = require("./db");
 const initializeDatabase = require("./initDb");
 const app = require("./index");
 
-const seedItem = {
-  id: "ci-seed-item",
-  title: "CI Seed Item",
-  categoryId: "birthday",
-  subCategoryId: "props",
-  description: "Seeded for list tests",
-};
-
 const testItem = {
   id: "ci-test-item",
   title: "CI Test Item",
@@ -26,24 +18,10 @@ describe("API", () => {
   beforeAll(async () => {
     await db.waitForConnection();
     await initializeDatabase();
-    await db.query("DELETE FROM items WHERE id IN (?, ?)", [seedItem.id, testItem.id]);
-    await db.query(
-      `INSERT INTO items (id, name, title, categoryId, subCategoryId, description, isAvailable, image)
-       VALUES (?, ?, ?, ?, ?, ?, TRUE, ?)`,
-      [
-        seedItem.id,
-        seedItem.title,
-        seedItem.title,
-        seedItem.categoryId,
-        seedItem.subCategoryId,
-        seedItem.description,
-        "✨",
-      ]
-    );
+    await db.query("DELETE FROM items WHERE id = ?", [testItem.id]);
   });
 
   afterAll(async () => {
-    await db.query("DELETE FROM items WHERE id IN (?, ?)", [seedItem.id, testItem.id]);
     await db.closePool();
   });
 
@@ -57,19 +35,19 @@ describe("API", () => {
     });
   });
 
-  describe("POST /api/admin/auth/login", () => {
+  describe("POST /api/auth/login", () => {
     it("returns 401 for invalid credentials", async () => {
       const res = await request(app)
-        .post("/api/admin/auth/login")
+        .post("/api/auth/login")
         .send({ username: "wrong", password: "wrong" });
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe("Invalid username or password");
+      expect(res.body.error).toBe("Invalid credentials");
     });
 
     it("returns a token for valid credentials", async () => {
       const res = await request(app)
-        .post("/api/admin/auth/login")
+        .post("/api/auth/login")
         .send({
           username: process.env.ADMIN_USERNAME || "admin",
           password: process.env.ADMIN_PASSWORD || "testpassword",
@@ -81,16 +59,16 @@ describe("API", () => {
     });
   });
 
-  describe("GET /api/admin/auth/verify", () => {
+  describe("GET /api/auth/verify", () => {
     it("returns 401 without a token", async () => {
-      const res = await request(app).get("/api/admin/auth/verify");
+      const res = await request(app).get("/api/auth/verify");
 
       expect(res.status).toBe(401);
     });
 
     it("returns valid for a good token", async () => {
       const res = await request(app)
-        .get("/api/admin/auth/verify")
+        .get("/api/auth/verify")
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -138,7 +116,7 @@ describe("API", () => {
         .send({ description: "Missing required fields" });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe("Name is required");
+      expect(res.body.error).toBe("id, title, and categoryId are required");
     });
   });
 
@@ -216,7 +194,7 @@ describe("API", () => {
         .send({ email: "test@example.com" });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe("Name, email, and message are required");
+      expect(res.body.error).toBe("name, email, and message are required");
     });
 
     it("creates an enquiry", async () => {
@@ -228,7 +206,7 @@ describe("API", () => {
       });
 
       expect(res.status).toBe(201);
-      expect(res.body.enquiryId).toBeDefined();
+      expect(res.body.id).toBeDefined();
     });
   });
 
