@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styles from './DateRangePickerModal.module.css';
-import { getItemStockQuantity, isItemRentable } from '../../utils/itemStock';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -12,8 +11,6 @@ export default function DateRangePickerModal({ item, onClose, onConfirm }) {
   const [returnDate, setReturnDate] = useState(null);
   const [hoverDate, setHoverDate] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const maxStock = getItemStockQuantity(item);
-  const canRent = isItemRentable(item);
 
   // Closed days (Sundays and specific dates)
   const isClosedDay = (dateObj) => {
@@ -188,8 +185,7 @@ export default function DateRangePickerModal({ item, onClose, onConfirm }) {
                 <span className={styles.qtyVal}>{quantity}</span>
                 <button 
                   className={styles.qtyBtn} 
-                  onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-                  disabled={!canRent || quantity >= maxStock}
+                  onClick={() => setQuantity(Math.min(item.unit_count || 1, quantity + 1))}
                 >
                   +
                 </button>
@@ -197,7 +193,7 @@ export default function DateRangePickerModal({ item, onClose, onConfirm }) {
             </div>
             
             <div className={styles.stockLabel}>
-              {canRent ? `Max available stock: ${maxStock} units` : "This item is currently unavailable"}
+              Max available stock: {item.unit_count || 1} units
             </div>
 
             <div className={styles.actions}>
@@ -206,7 +202,7 @@ export default function DateRangePickerModal({ item, onClose, onConfirm }) {
               </button>
               <button 
                 className={styles.confirmBtn}
-                disabled={!pickupDate || !canRent}
+                disabled={!pickupDate}
                 onClick={() => onConfirm({ pickupDate, returnDate: returnDate || pickupDate, quantity, item })}
               >
                 Confirm

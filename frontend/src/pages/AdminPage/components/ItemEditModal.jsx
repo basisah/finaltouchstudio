@@ -23,7 +23,7 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
       name: item.name || item.title || "",
       description: item.description || "",
       categoryId: item.categoryId || "",
-      unit_count: item.unit_count ?? 1,
+      unit_count: item.unit_count || 1,
       isAvailable: Boolean(item.isAvailable),
       imageEmoji: hasUpload ? "✨" : item.image || "✨",
     });
@@ -42,7 +42,7 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
       ...form,
       name: form.name.trim(),
       title: form.name.trim(),
-      unit_count: Math.max(0, parseInt(form.unit_count, 10) || 0),
+      unit_count: parseInt(form.unit_count, 10) || 1,
       imageFile,
     });
   };
@@ -125,13 +125,10 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
               <input
                 id="editItemQty"
                 type="number"
-                min="0"
+                min="1"
                 value={form.unit_count}
                 onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    unit_count: Math.max(0, parseInt(e.target.value, 10) || 0),
-                  }))
+                  setForm((p) => ({ ...p, unit_count: parseInt(e.target.value, 10) || 1 }))
                 }
                 required
               />

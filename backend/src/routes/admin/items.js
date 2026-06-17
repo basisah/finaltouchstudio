@@ -42,8 +42,7 @@ router.post("/items", auth, isAdmin, async (req, res) => {
   const finalName = name || title;
   const finalTitle = title || name;
   const finalId = id || "item-" + Date.now();
-  const parsedUnitCount = parseInt(unit_count, 10);
-  const finalUnitCount = Number.isNaN(parsedUnitCount) ? 1 : Math.max(0, parsedUnitCount);
+  const finalUnitCount = parseInt(unit_count, 10) || 1;
   const finalCategoryId = categoryId || "global";
 
   if (!finalName) {
@@ -67,8 +66,7 @@ router.put("/items/:id", auth, isAdmin, async (req, res) => {
   const { name, title, categoryId, description, isAvailable, unit_count, image } = req.body;
   const finalName = name || title;
   const finalTitle = title || name;
-  const parsedUnitCount = parseInt(unit_count, 10);
-  const finalUnitCount = Number.isNaN(parsedUnitCount) ? 1 : Math.max(0, parsedUnitCount);
+  const finalUnitCount = parseInt(unit_count, 10) || 1;
   const itemId = req.params.id;
 
   try {
