@@ -64,20 +64,6 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("proposal");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Category additions
-  const [newCatLabel, setNewCatLabel] = useState("");
-  const [newCatEmoji, setNewCatEmoji] = useState("🎂");
-  const [showAddCatForm, setShowAddCatForm] = useState(false);
-
-  // Item additions
-  const [newItemSN, setNewItemSN] = useState("");
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemDesc, setNewItemDesc] = useState("");
-  const [newItemPic, setNewItemPic] = useState("✨");
-  const [newItemSubCategory, setNewItemSubCategory] = useState("");
-  const [newItemFile, setNewItemFile] = useState(null);
-  const [newItemUnitCount, setNewItemUnitCount] = useState(1);
-
   // Member additions
   const [newMemName, setNewMemName] = useState("");
   const [newMemEmail, setNewMemEmail] = useState("");
@@ -95,129 +81,6 @@ export default function AdminPage() {
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     navigate("/");
-  };
-
-  // Add Category
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCatLabel.trim()) return;
-    const id = newCatLabel.toLowerCase().replace(/\s+/g, "-");
-    if (categories.some((cat) => cat.id === id)) {
-      alert("Category already exists.");
-      return;
-    }
-    const newCategory = { id, label: newCatLabel, emoji: newCatEmoji, color: "#9F507C" };
-    try {
-      await post("/categories", newCategory);
-      refreshData();
-      setActiveTab(id);
-      setNewCatLabel("");
-      setNewCatEmoji("🎂");
-      setShowAddCatForm(false);
-    } catch (err) {
-      alert("Failed to add category: " + err.message);
-    }
-  };
-
-  // Delete Category
-  const handleDeleteCategory = async (catId) => {
-    if (window.confirm(`Delete category "${catId}"? Items inside will lose their category.`)) {
-      try {
-        await del(`/categories/${catId}`);
-        refreshData();
-        const remaining = categories.filter((cat) => cat.id !== catId);
-        setActiveTab(remaining.length > 0 ? remaining[0].id : "enquiries");
-      } catch (err) {
-        alert("Failed to delete category: " + err.message);
-      }
-    }
-  };
-
-  // Toggle Item Availability
-  const handleToggleAvailability = async (itemId) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
-    try {
-      await put(`/items/${itemId}`, {
-        ...item,
-        isAvailable: !item.isAvailable
-      });
-      refreshData();
-    } catch (err) {
-      alert("Failed to toggle availability: " + err.message);
-    }
-  };
-
-  // Add Item
-  const handleAddItem = async (e) => {
-    e.preventDefault();
-    if (!newItemName.trim() || !newItemSN.trim()) return;
-    if (items.some((item) => (item.id && item.id.toLowerCase() === newItemSN.toLowerCase()) || (item.serialNumber && item.serialNumber.toLowerCase() === newItemSN.toLowerCase()))) {
-      alert("Unique Serial Number required. This one already exists!");
-      return;
-    }
-
-    try {
-      let imagePath = newItemPic || "✨";
-
-      if (newItemFile) {
-        const compressedFile = await compressImage(newItemFile);
-        const formData = new FormData();
-        formData.append("image", compressedFile);
-
-        const token = localStorage.getItem("admin_token");
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          body: formData
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload image");
-        }
-
-        const uploadData = await uploadRes.json();
-        imagePath = uploadData.path;
-      }
-
-      await post("/items", {
-        id: newItemSN.trim(),
-        serialNumber: newItemSN.trim(),
-        name: newItemName,
-        title: newItemName,
-        description: newItemDesc,
-        categoryId: activeTab,
-        subCategoryId: newItemSubCategory,
-        isAvailable: true,
-        unit_count: newItemUnitCount,
-        image: imagePath
-      });
-
-      refreshData();
-      setNewItemName("");
-      setNewItemDesc("");
-      setNewItemSN("");
-      setNewItemPic("✨");
-      setNewItemSubCategory("");
-      setNewItemFile(null);
-      setNewItemUnitCount(1);
-    } catch (err) {
-      alert("Failed to add item: " + err.message);
-    }
-  };
-
-  // Delete Item
-  const handleDeleteItem = async (itemId) => {
-    if (window.confirm("Delete this item permanently?")) {
-      try {
-        await del(`/items/${itemId}`);
-        refreshData();
-      } catch (err) {
-        alert("Failed to delete item: " + err.message);
-      }
-    }
   };
 
   // Add Member
@@ -307,6 +170,10 @@ export default function AdminPage() {
 
   const searchResults = getSearchResults();
 
+  const onTriggerAddCategory = () => {
+    setActiveTab("add_category");
+  };
+
   return (
     <div className={styles.dashboard}>
       {/* Sidebar Section */}
@@ -317,14 +184,7 @@ export default function AdminPage() {
         payments={payments}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        showAddCatForm={showAddCatForm}
-        setShowAddCatForm={setShowAddCatForm}
-        newCatLabel={newCatLabel}
-        setNewCatLabel={setNewCatLabel}
-        newCatEmoji={newCatEmoji}
-        setNewCatEmoji={setNewCatEmoji}
-        handleAddCategory={handleAddCategory}
-        handleDeleteCategory={handleDeleteCategory}
+        onTriggerAddCategory={onTriggerAddCategory}
         setSearchQuery={setSearchQuery}
         handleLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
@@ -366,27 +226,13 @@ export default function AdminPage() {
           )}
 
           {/* B. Default Tab Route: Category Items Inventory */}
-          {activeCategory && searchQuery.trim() === "" && (
+          {(activeCategory || activeTab === "add_category") && searchQuery.trim() === "" && (
             <InventoryTab
-              activeCategory={activeCategory}
+              activeCategory={activeCategory || { id: "add_category", label: "Add Category", emoji: "➕" }}
               activeCategoryItems={activeCategoryItems}
-              handleToggleAvailability={handleToggleAvailability}
-              handleDeleteItem={handleDeleteItem}
-              handleAddItem={handleAddItem}
-              newItemSN={newItemSN}
-              setNewItemSN={setNewItemSN}
-              newItemPic={newItemPic}
-              setNewItemPic={setNewItemPic}
-              newItemName={newItemName}
-              setNewItemName={setNewItemName}
-              newItemDesc={newItemDesc}
-              setNewItemDesc={setNewItemDesc}
-              newItemSubCategory={newItemSubCategory}
-              setNewItemSubCategory={setNewItemSubCategory}
-              newItemFile={newItemFile}
-              setNewItemFile={setNewItemFile}
-              newItemUnitCount={newItemUnitCount}
-              setNewItemUnitCount={setNewItemUnitCount}
+              refreshData={refreshData}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
             />
           )}
 
@@ -436,7 +282,46 @@ export default function AdminPage() {
             <CategoriesTab categories={categories} onRefresh={refreshData} />
           )}
 
-          {/* F. Category Setup Guide (when clicking add new category button) */}
+          {/* I. General Settings Tab */}
+          {activeTab === "general_settings" && searchQuery.trim() === "" && (
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2>⚙️ General Settings</h2>
+                <p>Manage system-wide configuration, business rules, and branding metadata.</p>
+              </div>
+              <div className={styles.emptyState}>
+                <p>System configuration panel is loaded and active. Ready for deployment integrations.</p>
+              </div>
+            </div>
+          )}
+
+          {/* J. Analytics Dashboard Tab */}
+          {activeTab === "analytics" && searchQuery.trim() === "" && (
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2>📊 Live Analytics Dashboard</h2>
+                <p>Overview of sales metrics, popular item rentals, category performance, and client trends.</p>
+              </div>
+              <div className={styles.emptyState}>
+                <p>No analytical data recorded for this billing cycle. Try making checkout reservations first.</p>
+              </div>
+            </div>
+          )}
+
+          {/* K. User Management Tab */}
+          {activeTab === "user_management" && searchQuery.trim() === "" && (
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2>👤 User & Staff Management</h2>
+                <p>Manage staff privileges, register new administrators, and review customer access tokens.</p>
+              </div>
+              <div className={styles.emptyState}>
+                <p>Active Administrator Directory. Use database controls to register secondary workspace credentials.</p>
+              </div>
+            </div>
+          )}
+
+          {/* F. Category Setup Guide (fallback empty activeTab state) */}
           {activeTab === "" && searchQuery.trim() === "" && (
             <div className={styles.card}>
               <div className={styles.cardHeader}>
@@ -446,7 +331,7 @@ export default function AdminPage() {
               <div className={styles.guideContent}>
                 <div className={styles.guideStep}>
                   <span className={styles.stepNum}>1</span>
-                  <p>Choose an appropriate emoji representitive (e.g. 🎓 for education).</p>
+                  <p>Choose an appropriate emoji representative (e.g. 🎓 for education).</p>
                 </div>
                 <div className={styles.guideStep}>
                   <span className={styles.stepNum}>2</span>

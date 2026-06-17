@@ -1,6 +1,7 @@
 .dashboard {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--bg-main);
   color: var(--text-main);
   font-family: var(--font-sans);
@@ -293,7 +294,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .header {
@@ -458,6 +459,7 @@
   display: flex;
   flex-direction: column;
   gap: 30px;
+  overflow: hidden;
 }
 
 .categoryGrid {
@@ -1190,4 +1192,543 @@
 .cancelBtn:hover {
   background: var(--bg-main);
   color: var(--text-main);
+}
+
+/* ── Sidebar 3-Column Extensions ───────────────────────────────────────── */
+.sectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.addCategoryHeaderBtn {
+  background: rgba(165, 110, 189, 0.15);
+  border: 1px solid rgba(165, 110, 189, 0.3);
+  color: var(--btn-primary);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addCategoryHeaderBtn:hover {
+  background: var(--btn-primary);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.expandCategoriesBtn {
+  background: transparent;
+  border: none;
+  color: var(--btn-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  text-align: left;
+  transition: opacity 0.2s ease;
+}
+
+.expandCategoriesBtn:hover {
+  opacity: 0.8;
+}
+
+/* ── 3-Column Layout Container ─────────────────────────────────────────── */
+.inventoryGridContainer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 24px;
+  height: 100%;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.middleWorkspace {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Custom scrollbars */
+.middleWorkspace::-webkit-scrollbar,
+.rightFeed::-webkit-scrollbar,
+.feedScrollArea::-webkit-scrollbar,
+.navigation::-webkit-scrollbar {
+  width: 6px;
+}
+
+.middleWorkspace::-webkit-scrollbar-track,
+.rightFeed::-webkit-scrollbar-track,
+.feedScrollArea::-webkit-scrollbar-track,
+.navigation::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+
+.middleWorkspace::-webkit-scrollbar-thumb,
+.rightFeed::-webkit-scrollbar-thumb,
+.feedScrollArea::-webkit-scrollbar-thumb,
+.navigation::-webkit-scrollbar-thumb {
+  background: rgba(165, 110, 189, 0.2);
+  border-radius: 4px;
+}
+
+.middleWorkspace::-webkit-scrollbar-thumb:hover,
+.rightFeed::-webkit-scrollbar-thumb:hover,
+.feedScrollArea::-webkit-scrollbar-thumb:hover,
+.navigation::-webkit-scrollbar-thumb:hover {
+  background: rgba(165, 110, 189, 0.4);
+}
+
+.rightFeed {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feedScrollArea {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-top: 12px;
+}
+
+/* ── State A: Emoji Selection Grid ────────────────────────────────────── */
+.emojiSelectionGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.emojiGridButton {
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emojiGridButton:hover {
+  background: rgba(165, 110, 189, 0.08);
+  border-color: var(--btn-primary);
+  transform: translateY(-2px);
+}
+
+.emojiGridButtonActive {
+  background: var(--btn-primary) !important;
+  border-color: var(--btn-primary) !important;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(165, 110, 189, 0.3);
+}
+
+/* ── State B: Layout & Preview Tabs ────────────────────────────────────── */
+.splitRow {
+  display: flex;
+  gap: 16px;
+}
+
+.readOnlyInput {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  color: var(--text-muted) !important;
+  font-family: monospace;
+  font-weight: 600;
+  border-style: dashed !important;
+}
+
+.clearSelectionBtn {
+  background: rgba(165, 110, 189, 0.1);
+  border: 1px solid rgba(165, 110, 189, 0.25);
+  color: var(--btn-primary);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearSelectionBtn:hover {
+  background: var(--btn-primary);
+  color: #fff;
+}
+
+.actionSplitTabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-shadow);
+  padding-bottom: 10px;
+  margin-top: 8px;
+}
+
+.tabBtn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.tabBtn:hover {
+  background: rgba(165, 110, 189, 0.06);
+  color: var(--text-main);
+}
+
+.tabBtnActive {
+  background: rgba(165, 110, 189, 0.12) !important;
+  color: var(--btn-primary) !important;
+  font-weight: 700;
+}
+
+.dynamicPreviewContainer {
+  background: var(--bg-main);
+  border: 1px solid var(--border-shadow);
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 120px;
+}
+
+.previewSecTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Tutorial Step Builder ────────────────────────────────────────────── */
+.tutorialStepBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emptySteps {
+  text-align: center;
+  padding: 20px 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.stepsList {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepItem {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  line-height: 1.4;
+  display: list-item;
+  position: relative;
+  padding-right: 32px;
+}
+
+.stepText {
+  display: inline-block;
+}
+
+.removeStepBtn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px;
+}
+
+.removeStepBtn:hover {
+  font-weight: bold;
+}
+
+.addStepRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.stepInput {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.stepInput:focus {
+  border-color: var(--btn-primary);
+}
+
+.addStepBtn {
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addStepBtn:hover {
+  background: var(--btn-hover);
+}
+
+/* ── Media/Photo Uploader ─────────────────────────────────────────────── */
+.mediaUploaderContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mediaSplitGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+}
+
+.mediaUploadCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.mediaThumbLarge {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border-shadow);
+}
+
+.mediaThumbPlaceholderLarge {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 8px;
+  font-size: 1.8rem;
+}
+
+.secondaryUploadBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryUploadBtn:hover {
+  background: rgba(165, 110, 189, 0.08);
+  border-color: var(--btn-primary);
+}
+
+.uploadHelperText {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.galleryPreviewSection {
+  border-top: 1px solid var(--border-shadow);
+  padding-top: 12px;
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.galleryThumbWrapper {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-shadow);
+}
+
+.galleryThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deleteGalleryImgBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.deleteGalleryImgBtn:hover {
+  background: #ef4444;
+}
+
+/* ── Right Section Feed Horizontal Item Cards ─────────────────────────── */
+.feedCardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emptyStateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 200px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.itemHorizontalCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.itemHorizontalCard:hover {
+  border-color: var(--btn-primary);
+  background: rgba(165, 110, 189, 0.03);
+  transform: translateX(2px);
+}
+
+.itemHorizontalCardEditing {
+  border-color: var(--btn-primary) !important;
+  background: rgba(165, 110, 189, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(165, 110, 189, 0.1);
+}
+
+.itemCardThumbCol {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-shadow);
+}
+
+.itemCardThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.itemCardThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-main);
+  font-size: 1.5rem;
+  border-radius: 8px;
+}
+
+.itemCardInfoCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.itemCardTitle {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemCardMeta {
+  display: flex;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.itemCardPrice {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--btn-primary);
+  font-weight: 700;
+}
+
+.itemCardActionsCol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.deleteIconBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.deleteIconBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
 }

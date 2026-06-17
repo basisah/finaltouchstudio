@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "../AdminPage.module.css";
 
 export default function Sidebar({
@@ -8,23 +8,20 @@ export default function Sidebar({
   payments,
   activeTab,
   setActiveTab,
-  showAddCatForm,
-  setShowAddCatForm,
-  newCatLabel,
-  setNewCatLabel,
-  newCatEmoji,
-  setNewCatEmoji,
-  handleAddCategory,
-  handleDeleteCategory,
+  onTriggerAddCategory,
   setSearchQuery,
   handleLogout,
   isSidebarOpen,
   setIsSidebarOpen,
 }) {
-  const activeCategory = categories.find((cat) => cat.id === activeTab);
+  const [isCatExpanded, setIsCatExpanded] = useState(false);
+
+  // Show up to 10 categories by default, expand logic showing all
+  const visibleCategories = isCatExpanded ? categories : categories.slice(0, 10);
 
   return (
     <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
+      {/* Top Brand Area */}
       <div className={styles.sidebarHeader}>
         <span className={styles.sidebarIcon}>✨</span>
         <div>
@@ -33,17 +30,32 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Navigation - Scrollable Content */}
       <nav className={styles.navigation}>
-        {/* Section 1: Item Categories */}
-        <p className={styles.navLabel}>Item Categories</p>
+        {/* Categories Header & Controls */}
+        <div className={styles.sectionHeaderRow}>
+          <p className={styles.navLabel}>Categories</p>
+          <button
+            type="button"
+            className={styles.addCategoryHeaderBtn}
+            onClick={() => {
+              onTriggerAddCategory();
+              setSearchQuery("");
+              if (setIsSidebarOpen) setIsSidebarOpen(false);
+            }}
+            title="Add New Category"
+          >
+            ➕
+          </button>
+        </div>
+
         <ul className={styles.catList}>
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <li key={cat.id}>
               <button
                 className={`${styles.navBtn} ${activeTab === cat.id ? styles.active : ""}`}
                 onClick={() => {
                   setActiveTab(cat.id);
-                  setShowAddCatForm(false);
                   setSearchQuery(""); // Clear search when navigating
                   if (setIsSidebarOpen) setIsSidebarOpen(false);
                 }}
@@ -58,78 +70,65 @@ export default function Sidebar({
           ))}
         </ul>
 
-        {/* Add Category Controls */}
-        <div className={styles.categoryControls}>
-          {!showAddCatForm ? (
+        {/* Overflow Logic Arrow */}
+        {categories.length > 10 && (
+          <button
+            type="button"
+            className={styles.expandCategoriesBtn}
+            onClick={() => setIsCatExpanded(!isCatExpanded)}
+          >
+            {isCatExpanded ? "↑ Collapse List" : "↓ Expand List"}
+          </button>
+        )}
+
+        <div className={styles.divider}></div>
+
+        {/* Middle Section: Settings & Modules */}
+        <p className={styles.navLabel}>Settings</p>
+        <ul className={styles.sysList}>
+          <li>
             <button
-              className={styles.addCategoryTrigger}
+              className={`${styles.navBtn} ${activeTab === "general_settings" ? styles.active : ""}`}
               onClick={() => {
-                setShowAddCatForm(true);
-                setActiveTab("");
+                setActiveTab("general_settings");
                 setSearchQuery("");
                 if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
-              ➕ Add New Category
+              <span className={styles.btnEmoji}>⚙️</span>
+              <span className={styles.btnLabel}>General Settings</span>
             </button>
-          ) : (
-            <form onSubmit={handleAddCategory} className={styles.addCatForm}>
-              <h4>New Category</h4>
-              <div className={styles.formRow}>
-                <input
-                  type="text"
-                  placeholder="e.g. Graduation"
-                  value={newCatLabel}
-                  onChange={(e) => setNewCatLabel(e.target.value)}
-                  className={styles.catInput}
-                  required
-                  autoFocus
-                />
-                <select
-                  value={newCatEmoji}
-                  onChange={(e) => setNewCatEmoji(e.target.value)}
-                  className={styles.catEmojiSelect}
-                >
-                  <option value="🎓">🎓</option>
-                  <option value="🎂">🎂</option>
-                  <option value="💍">💍</option>
-                  <option value="💒">💒</option>
-                  <option value="🌸">🌸</option>
-                  <option value="🍼">🍼</option>
-                  <option value="🎈">🎈</option>
-                  <option value="🥳">🥳</option>
-                  <option value="👔">👔</option>
-                </select>
-              </div>
-              <div className={styles.catFormActions}>
-                <button type="submit" className={styles.saveCatBtn}>Save</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddCatForm(false);
-                    if (categories.length > 0) setActiveTab(categories[0].id);
-                  }}
-                  className={styles.cancelCatBtn}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-
-          {activeCategory && !["proposal", "holud", "marriage", "baby", "baby-shower", "birthday"].includes(activeCategory.id) && (
+          </li>
+          <li>
             <button
-              className={styles.deleteCategoryBtn}
-              onClick={() => handleDeleteCategory(activeCategory.id)}
+              className={`${styles.navBtn} ${activeTab === "analytics" ? styles.active : ""}`}
+              onClick={() => {
+                setActiveTab("analytics");
+                setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
             >
-              🗑️ Delete "{activeCategory.label}"
+              <span className={styles.btnEmoji}>📊</span>
+              <span className={styles.btnLabel}>Analytics</span>
             </button>
-          )}
-        </div>
+          </li>
+          <li>
+            <button
+              className={`${styles.navBtn} ${activeTab === "user_management" ? styles.active : ""}`}
+              onClick={() => {
+                setActiveTab("user_management");
+                setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
+            >
+              <span className={styles.btnEmoji}>👤</span>
+              <span className={styles.btnLabel}>User Management</span>
+            </button>
+          </li>
+        </ul>
 
         <div className={styles.divider}></div>
 
-        {/* Section 2: Management Functionalities */}
         <p className={styles.navLabel}>Management Modules</p>
         <ul className={styles.sysList}>
           <li>
@@ -137,13 +136,12 @@ export default function Sidebar({
               className={`${styles.navBtn} ${activeTab === "members" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("members");
-                setShowAddCatForm(false);
                 setSearchQuery("");
                 if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               <span className={styles.btnEmoji}>👥</span>
-              <span className={styles.btnLabel}>Members Management</span>
+              <span className={styles.btnLabel}>Members Directory</span>
               <span className={styles.btnCount}>{members.length}</span>
             </button>
           </li>
@@ -152,13 +150,12 @@ export default function Sidebar({
               className={`${styles.navBtn} ${activeTab === "payments" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("payments");
-                setShowAddCatForm(false);
                 setSearchQuery("");
                 if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
             >
               <span className={styles.btnEmoji}>💳</span>
-              <span className={styles.btnLabel}>Payments & Invoices</span>
+              <span className={styles.btnLabel}>Payments Ledger</span>
               <span className={styles.btnCount}>{payments.length}</span>
             </button>
           </li>
@@ -167,7 +164,6 @@ export default function Sidebar({
               className={`${styles.navBtn} ${activeTab === "packages" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("packages");
-                setShowAddCatForm(false);
                 setSearchQuery("");
                 if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
@@ -181,7 +177,6 @@ export default function Sidebar({
               className={`${styles.navBtn} ${activeTab === "categories" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("categories");
-                setShowAddCatForm(false);
                 setSearchQuery("");
                 if (setIsSidebarOpen) setIsSidebarOpen(false);
               }}
@@ -193,6 +188,7 @@ export default function Sidebar({
         </ul>
       </nav>
 
+      {/* Bottom Fixed Logout Section */}
       <div className={styles.sidebarFooter}>
         <button onClick={handleLogout} className={styles.logoutBtn}>
           Logout <span>🚪</span>

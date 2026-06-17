@@ -62,6 +62,9 @@ async function initializeDatabase() {
       isAvailable BOOLEAN DEFAULT TRUE,
       unit_count INT DEFAULT 1,
       image VARCHAR(255) DEFAULT '✨',
+      price DECIMAL(10, 2) DEFAULT 0.00,
+      tutorial_steps TEXT DEFAULT NULL,
+      gallery_images TEXT DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
@@ -84,6 +87,27 @@ async function initializeDatabase() {
     try {
       await db.query("ALTER TABLE items ADD COLUMN unit_count INT DEFAULT 1");
       console.log("Added column 'unit_count' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN price DECIMAL(10, 2) DEFAULT 0.00");
+      console.log("Added column 'price' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN tutorial_steps TEXT DEFAULT NULL");
+      console.log("Added column 'tutorial_steps' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN gallery_images TEXT DEFAULT NULL");
+      console.log("Added column 'gallery_images' to 'items' table.");
     } catch (err) {
       // Column may already exist
     }
