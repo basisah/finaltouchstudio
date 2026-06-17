@@ -31,7 +31,8 @@ const adminOrders = require("./routes/admin/orders");
 // Server configuration
 const app = express();
 const PORT = process.env.PORT || 4000;
-const API = "/api";
+// On Vercel Services, routePrefix "/api" is stripped before the request reaches Express.
+const API = process.env.VERCEL ? "" : "/api";
 
 // Middleware to suport frontend
 app.use(cors());
@@ -53,14 +54,14 @@ app.use(`${API}/packages`, packageRoutes);
 app.use(`${API}/auth`, userAuthRoutes);
 app.use(`${API}/items`, itemRoutes);
 app.use(`${API}/categories`, categoryRoutes);
-app.use(API, bookingRoutes);
+app.use(API || "/", bookingRoutes);
 app.use(`${API}/contact`, contactRoutes);
 
 // Mount Admin Routes
 app.use(`${API}/admin/auth`, adminAuth);
 app.use(`${API}/admin/orders`, adminOrders);
 app.use(`${API}/categories`, adminCategories);
-app.use(API, adminItems); // handles POST /upload, and CRUD on /items
+app.use(API || "/", adminItems); // handles POST /upload, and CRUD on /items
 app.use(`${API}/packages`, adminPackages);
 
 // Health check

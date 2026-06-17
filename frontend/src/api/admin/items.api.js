@@ -1,4 +1,4 @@
-import { post, put, del, getApiBaseUrl } from "../client";
+import { post, put, del } from "../client";
 import { compressImage } from "../../utils/imageCompressor";
 
 /** Create new item */
@@ -17,7 +17,7 @@ export const uploadItemImage = async (file) => {
   const fd = new FormData();
   fd.append("image", compressedFile);
   
-  const res = await fetch(`${getApiBaseUrl()}/upload`, {
+  const res = await fetch("/api/upload", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: fd,
