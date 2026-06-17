@@ -11,7 +11,7 @@ import {
   initialPayments,
 } from "./mockData";
 
-import { resolveInventoryCategories } from "../../constants/inventory";
+import { resolveInventoryCategories, getOccasionLabel } from "../../constants/inventory";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import ItemsTab from "./components/ItemsTab";
@@ -72,6 +72,7 @@ export default function AdminPage() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemDesc, setNewItemDesc] = useState("");
   const [newItemPic, setNewItemPic] = useState("✨");
+  const [newItemSubCategory, setNewItemSubCategory] = useState("");
   const [newItemFile, setNewItemFile] = useState(null);
   const [newItemUnitCount, setNewItemUnitCount] = useState(1);
   const [isSavingItem, setIsSavingItem] = useState(false);
@@ -111,6 +112,18 @@ export default function AdminPage() {
   useEffect(() => {
     fetchEnquiries();
   }, []);
+
+  const handleAddNewItemNav = () => {
+    setActiveTab("items");
+    setSearchQuery("");
+    setShowAddItemForm(true);
+    if (itemCategoryFilter === "all" && categories.length > 0) {
+      setItemCategoryFilter(categories[0].id);
+    }
+    requestAnimationFrame(() => {
+      addItemFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   // Toggle Item Availability
   const handleToggleAvailability = async (itemId) => {
@@ -176,6 +189,7 @@ export default function AdminPage() {
         title: newItemName,
         description: newItemDesc,
         categoryId: targetCategory,
+        subCategoryId: newItemSubCategory,
         isAvailable: true,
         unit_count: newItemUnitCount,
         image: imagePath
@@ -186,6 +200,7 @@ export default function AdminPage() {
       setNewItemDesc("");
       setNewItemSN("");
       setNewItemPic("✨");
+      setNewItemSubCategory("");
       setNewItemFile(null);
       setNewItemUnitCount(1);
       setShowAddItemForm(false);
@@ -201,6 +216,7 @@ export default function AdminPage() {
       title,
       description,
       categoryId,
+      subCategoryId,
       unit_count,
       isAvailable,
       imageEmoji,
@@ -245,6 +261,7 @@ export default function AdminPage() {
         title: title || name,
         description,
         categoryId,
+        subCategoryId,
         unit_count,
         isAvailable,
         image: imagePath,
@@ -344,8 +361,10 @@ export default function AdminPage() {
       item.name,
       item.title,
       item.description,
+      item.subCategoryId,
       item.categoryId,
       categories.find((c) => c.id === item.categoryId)?.label,
+      getOccasionLabel(item.subCategoryId),
     ]
       .map(normalize)
       .filter(Boolean)
@@ -401,6 +420,7 @@ export default function AdminPage() {
         handleLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        onAddNewItem={handleAddNewItemNav}
       />
 
       {isSidebarOpen && (
@@ -461,6 +481,8 @@ export default function AdminPage() {
               setNewItemName={setNewItemName}
               newItemDesc={newItemDesc}
               setNewItemDesc={setNewItemDesc}
+              newItemSubCategory={newItemSubCategory}
+              setNewItemSubCategory={setNewItemSubCategory}
               newItemFile={newItemFile}
               setNewItemFile={setNewItemFile}
               newItemUnitCount={newItemUnitCount}

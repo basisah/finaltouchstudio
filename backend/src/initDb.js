@@ -1,5 +1,28 @@
 const db = require("./db");
 
+const OCCASION_IDS = ["birthday", "marriage", "holud", "baby", "global"];
+
+/** One-time style migration: product types become categoryId, occasions become subCategoryId. */
+async function swapItemCategoryTaxonomy() {
+  try {
+    const [rows] = await db.query(
+      `SELECT id FROM items WHERE categoryId IN (?) LIMIT 1`,
+      [OCCASION_IDS]
+    );
+    if (rows.length === 0) return;
+
+    await db.query(
+      `UPDATE items
+       SET categoryId = (@tmp := categoryId), categoryId = subCategoryId, subCategoryId = @tmp
+       WHERE categoryId IN (?)`,
+      [OCCASION_IDS]
+    );
+    console.log("↔️  Swapped items.categoryId ↔ items.subCategoryId (occasion ↔ product type)");
+  } catch (err) {
+    console.error("Category taxonomy migration failed:", err);
+  }
+}
+
 async function initializeDatabase() {
   console.log("🛠️ Syncing database schemas...");
   try {
@@ -35,6 +58,7 @@ async function initializeDatabase() {
       name VARCHAR(255) NOT NULL,
       title VARCHAR(255) NOT NULL,
       categoryId VARCHAR(50) NOT NULL,
+      subCategoryId VARCHAR(50) DEFAULT NULL,
       description TEXT,
       isAvailable BOOLEAN DEFAULT TRUE,
       unit_count INT DEFAULT 1,
@@ -138,12 +162,7 @@ async function initializeDatabase() {
       // Column already exists on older databases
     }
 
-    try {
-      await db.query("ALTER TABLE items DROP COLUMN subCategoryId");
-      console.log("🗑️  Dropped legacy items.subCategoryId column");
-    } catch {
-      // column already removed or never existed
-    }
+    await swapItemCategoryTaxonomy();
 
     console.log("🚀 Database schema verification complete!");
   } catch (error) {

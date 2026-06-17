@@ -92,16 +92,9 @@ export default function Navbar() {
     (href.startsWith("/#") && activeLink === href.substring(1));
 
   const isLandingPage = location.pathname === "/";
-  const isItemsPage = location.pathname === "/items";
-
-  const themeClass = isLandingPage
-    ? ""
-    : isItemsPage
-      ? styles.burgundy
-      : styles.light;
 
   return (
-    <header className={`${styles.navbar} ${themeClass} ${scrolled ? styles.scrolled : ""}`}>
+    <header className={`${styles.navbar} ${!isLandingPage ? styles.light : ""} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.inner}>
 
         {/* Logo — FT mark always visible; brand text hidden on mobile */}

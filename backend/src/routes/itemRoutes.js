@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
-// Get all items (public, supports categoryId filtering)
+// Get all items (public, supports categoryId and subCategoryId filtering)
 router.get("/", async (req, res) => {
-  const { categoryId } = req.query;
+  const { categoryId, subCategoryId } = req.query;
   try {
     let query = "SELECT * FROM items";
     const params = [];
@@ -14,12 +14,16 @@ router.get("/", async (req, res) => {
       conditions.push("categoryId = ?");
       params.push(categoryId);
     }
+    if (subCategoryId) {
+      conditions.push("subCategoryId = ?");
+      params.push(subCategoryId);
+    }
 
     if (conditions.length > 0) {
       query += " WHERE " + conditions.join(" AND ");
     }
 
-    query += " ORDER BY categoryId ASC, id ASC";
+    query += " ORDER BY categoryId, subCategoryId ASC, id ASC";
 
     const [rows] = await db.query(query, params);
     res.json(rows);

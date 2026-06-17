@@ -11,6 +11,7 @@ export default function Sidebar({
   handleLogout,
   isSidebarOpen,
   setIsSidebarOpen,
+  onAddNewItem,
 }) {
   return (
     <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
@@ -38,6 +39,18 @@ export default function Sidebar({
               <span className={styles.btnEmoji}>📋</span>
               <span className={styles.btnLabel}>Items Management</span>
               <span className={styles.btnCount}>{items.length}</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className={styles.addItemTrigger}
+              onClick={() => {
+                onAddNewItem();
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
+            >
+              <span className={styles.addItemTriggerText}>+ Add New Item</span>
             </button>
           </li>
           <li>

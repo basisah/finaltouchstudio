@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS items (
     name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     categoryId VARCHAR(50) NOT NULL,
+    subCategoryId VARCHAR(50) DEFAULT NULL,
     description TEXT,
     isAvailable BOOLEAN DEFAULT TRUE,
     unit_count INT DEFAULT 1,            -- stock update

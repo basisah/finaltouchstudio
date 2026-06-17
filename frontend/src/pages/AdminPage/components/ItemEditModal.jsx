@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "../AdminPage.module.css";
+import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 
 const EMOJI_OPTIONS = ["✨", "🎂", "💍", "💒", "🌸", "🧸", "🎈", "💡", "🌹", "🖼️", "🍼", "👑"];
 
@@ -7,6 +8,7 @@ const emptyForm = {
   name: "",
   description: "",
   categoryId: "",
+  subCategoryId: "",
   unit_count: 1,
   isAvailable: true,
   imageEmoji: "✨",
@@ -23,6 +25,7 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
       name: item.name || item.title || "",
       description: item.description || "",
       categoryId: item.categoryId || "",
+      subCategoryId: item.subCategoryId || "",
       unit_count: item.unit_count || 1,
       isAvailable: Boolean(item.isAvailable),
       imageEmoji: hasUpload ? "✨" : item.image || "✨",
@@ -32,6 +35,8 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
 
   if (!item) return null;
 
+  const inventoryCat = INVENTORY_CATEGORIES.find((c) => c.id === form.categoryId);
+  const subcategories = inventoryCat?.subcategories || [];
   const hasUpload = item.image && String(item.image).startsWith("/uploads");
 
   const handleSubmit = (e) => {
@@ -99,24 +104,59 @@ export default function ItemEditModal({ item, categories, onClose, onSave, isSav
             />
           </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="editItemCategory">Category</label>
-            <select
-              id="editItemCategory"
-              className={styles.picSelect}
-              value={form.categoryId}
-              onChange={(e) => setForm((p) => ({ ...p, categoryId: e.target.value }))}
-              required
-            >
-              <option value="" disabled>
-                Select category
-              </option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.label}
+          <div className={styles.itemModalRow}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="editItemCategory">Product Type</label>
+              <select
+                id="editItemCategory"
+                className={styles.picSelect}
+                value={form.categoryId}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, categoryId: e.target.value, subCategoryId: "" }))
+                }
+                required
+              >
+                <option value="" disabled>
+                  Select category
                 </option>
-              ))}
-            </select>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.emoji} {cat.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label htmlFor="editItemSubCategory" title="Occasion / Collection">
+                Occasion
+              </label>
+              {subcategories.length > 0 ? (
+                <select
+                  id="editItemSubCategory"
+                  className={styles.picSelect}
+                  value={form.subCategoryId}
+                  onChange={(e) => setForm((p) => ({ ...p, subCategoryId: e.target.value }))}
+                  required
+                >
+                  <option value="">-- Select --</option>
+                  {subcategories.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.emoji} {sub.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id="editItemSubCategory"
+                  type="text"
+                  value={form.subCategoryId}
+                  onChange={(e) => setForm((p) => ({ ...p, subCategoryId: e.target.value }))}
+                  placeholder="e.g. backdrops"
+                  required
+                />
+              )}
+            </div>
           </div>
 
           <div className={styles.itemModalRow}>
