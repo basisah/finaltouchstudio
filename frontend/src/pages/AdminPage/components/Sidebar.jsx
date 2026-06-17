@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styles from "../AdminPage.module.css";
+import logoImg from "../../../assets/Logo/FinalTouchStudiosLogo.png";
 
 export default function Sidebar({
   categories,
@@ -23,7 +24,7 @@ export default function Sidebar({
     <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
       {/* Top Brand Area */}
       <div className={styles.sidebarHeader}>
-        <span className={styles.sidebarIcon}>✨</span>
+        <img src={logoImg} alt="FinalTouch Studios Logo" className={styles.logoMarkImg} />
         <div>
           <h3>FinalTouch</h3>
           <p>Admin Workspace</p>

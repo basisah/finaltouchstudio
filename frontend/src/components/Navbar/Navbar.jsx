@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import styles from "./Navbar.module.css";
 
+import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
+
 // Desktop: only Items + Build links (Profile + Cart are icons)
 const DESKTOP_NAV = [
   { label: "Items",    href: "/items"     },
@@ -100,9 +102,9 @@ export default function Navbar() {
     <header className={`${styles.navbar} ${!isLandingPage ? styles.light : ""} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.inner}>
 
-        {/* Logo — FT mark always visible; brand text hidden on mobile */}
+        {/* Logo */}
         <Link to="/" className={styles.logo} onClick={(e) => handleLinkClick("/#home", e)}>
-          <span className={styles.logoMark}>FT</span>
+          <img src={logoImg} alt="FinalTouch Studios Logo" className={styles.logoMarkImg} />
           <span className={styles.logoText}>
             FinalTouch<span className={styles.logoAccent}> Studio</span>
           </span>

@@ -28,6 +28,13 @@
   border-bottom: 1px solid var(--border-shadow);
 }
 
+.logoMarkImg {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .sidebarIcon {
   font-size: 1.8rem;
 }

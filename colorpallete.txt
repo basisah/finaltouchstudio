@@ -1,0 +1,3 @@
+Golden:    #e2c9a5
+BG:        #e4cee4
+secondary: #8a5fb5

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -25,7 +26,7 @@ export default function Footer() {
         {/* ── LEFT: Brand + Story ────────────────────────────────── */}
         <div className={styles.col}>
           <div className={styles.brand}>
-            <div className={styles.logoMark}>FT</div>
+            <img src={logoImg} alt="FinalTouch Studios Logo" className={styles.logoMarkImg} />
             <div>
               <span className={styles.brandName}>FinalTouch</span>
               <span className={styles.brandNameItalic}> Studio</span>
