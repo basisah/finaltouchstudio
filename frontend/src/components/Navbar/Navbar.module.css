@@ -35,6 +35,13 @@
   text-decoration: none;
 }
 
+.logoMarkImg {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .logoMark {
   width: 36px;
   height: 36px;
@@ -363,11 +370,8 @@
   }
 
   /* Logo mark slightly smaller */
-  .logoMark {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    border-radius: 8px;
+  .logoMarkImg {
+    height: 36px;
   }
 
   /* Hide desktop nav and CTA */

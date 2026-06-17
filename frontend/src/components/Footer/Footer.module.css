@@ -55,6 +55,13 @@
   margin-bottom: 20px;
 }
 
+.logoMarkImg {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .logoMark {
   width: 40px;
   height: 40px;

@@ -39,6 +39,9 @@ async function initializeDatabase() {
       isAvailable BOOLEAN DEFAULT TRUE,
       unit_count INT DEFAULT 1,
       image VARCHAR(255) DEFAULT '✨',
+      price DECIMAL(10, 2) DEFAULT 0.00,
+      tutorial_steps TEXT DEFAULT NULL,
+      gallery_images TEXT DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
@@ -54,6 +57,27 @@ async function initializeDatabase() {
       } catch {
         // column already exists
       }
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN price DECIMAL(10, 2) DEFAULT 0.00");
+      console.log("Added column 'price' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN tutorial_steps TEXT DEFAULT NULL");
+      console.log("Added column 'tutorial_steps' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE items ADD COLUMN gallery_images TEXT DEFAULT NULL");
+      console.log("Added column 'gallery_images' to 'items' table.");
+    } catch (err) {
+      // Column may already exist
     }
 
     // 4. Create flat-rate bundled decor tier package models
@@ -156,6 +180,23 @@ async function initializeDatabase() {
     } catch {
       // column already removed or never existed
     }
+
+    // 10. Seed/Upsert permanent categories to guarantee their presence and sorting
+    const permanentCats = [
+      ["proposal", "Proposal", "💍", "#8B5CF6", "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.", 1],
+      ["holud", "Holud", "🌼", "#D97706", "Traditional Gaye Holud & Mehndi night stage setups with vibrant colors.", 2],
+      ["marriage", "Marriage", "💒", "#9F507C", "Exquisite wedding, holud & reception stages blending modern and traditional luxury.", 3],
+      ["baby", "Baby Shower", "🍼", "#A78BFA", "Cute, colorful & magical themes for celebrating your little one.", 4],
+      ["birthday", "Birthday", "🎂", "#B8729A", "Bespoke balloon walls, kids themes & customized stage setups for your special day.", 5]
+    ];
+
+    for (const [id, label, emoji, color, description, display_order] of permanentCats) {
+      await db.query(
+        "INSERT INTO categories (id, label, emoji, color, description, display_order) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE display_order = ?",
+        [id, label, emoji, color, description, display_order, display_order]
+      );
+    }
+    console.log("✅ Seeded/Updated permanent categories display order.");
 
     console.log("🚀 Database schema verification complete!");
   } catch (error) {

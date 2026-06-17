@@ -270,7 +270,9 @@ export default function CategoriesTab({ categories, onRefresh }) {
                     </p>
                     <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
                       <button className={styles.editBtn} onClick={() => startEdit(cat)}>✏️ Edit</button>
-                      <button className={styles.deleteBtn} onClick={() => handleDelete(cat.id)}>🗑️ Delete</button>
+                      {!["proposal", "holud", "marriage", "baby", "baby-shower", "birthday"].includes(cat.id) && (
+                        <button className={styles.deleteBtn} onClick={() => handleDelete(cat.id)}>🗑️ Delete</button>
+                      )}
                     </div>
                   </div>
                   <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: cat.color, flexShrink: 0 }} />

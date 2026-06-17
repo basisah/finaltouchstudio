@@ -38,21 +38,24 @@ router.post("/upload", auth, isAdmin, upload.single("image"), (req, res) => {
 
 // Create item
 router.post("/items", auth, isAdmin, async (req, res) => {
-  const { id, name, title, categoryId, description, isAvailable, unit_count, image } = req.body;
+  const { id, name, title, categoryId, description, isAvailable, unit_count, image, price, tutorial_steps, gallery_images } = req.body;
   const finalName = name || title;
   const finalTitle = title || name;
   const finalId = id || "item-" + Date.now();
   const parsedUnitCount = parseInt(unit_count, 10);
   const finalUnitCount = Number.isNaN(parsedUnitCount) ? 1 : Math.max(0, parsedUnitCount);
   const finalCategoryId = categoryId || "global";
+  const finalPrice = parseFloat(price) || 0.00;
+  const finalTutorial = tutorial_steps ? (typeof tutorial_steps === "object" ? JSON.stringify(tutorial_steps) : tutorial_steps) : null;
+  const finalGallery = gallery_images ? (typeof gallery_images === "object" ? JSON.stringify(gallery_images) : gallery_images) : null;
 
   if (!finalName) {
     return res.status(400).json({ error: "Name is required" });
   }
   try {
     await db.query(
-      "INSERT INTO items (id, name, title, categoryId, description, isAvailable, unit_count, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [finalId, finalName, finalTitle, finalCategoryId, description || null, isAvailable !== false, finalUnitCount, image || "✨"]
+      "INSERT INTO items (id, name, title, categoryId, description, isAvailable, unit_count, image, price, tutorial_steps, gallery_images) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [finalId, finalName, finalTitle, finalCategoryId, description || null, isAvailable !== false, finalUnitCount, image || "✨", finalPrice, finalTutorial, finalGallery]
     );
     const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [finalId]);
     res.status(201).json(rows[0]);
@@ -64,17 +67,20 @@ router.post("/items", auth, isAdmin, async (req, res) => {
 
 // Update item
 router.put("/items/:id", auth, isAdmin, async (req, res) => {
-  const { name, title, categoryId, description, isAvailable, unit_count, image } = req.body;
+  const { name, title, categoryId, description, isAvailable, unit_count, image, price, tutorial_steps, gallery_images } = req.body;
   const finalName = name || title;
   const finalTitle = title || name;
   const parsedUnitCount = parseInt(unit_count, 10);
   const finalUnitCount = Number.isNaN(parsedUnitCount) ? 1 : Math.max(0, parsedUnitCount);
+  const finalPrice = parseFloat(price) || 0.00;
+  const finalTutorial = tutorial_steps ? (typeof tutorial_steps === "object" ? JSON.stringify(tutorial_steps) : tutorial_steps) : null;
+  const finalGallery = gallery_images ? (typeof gallery_images === "object" ? JSON.stringify(gallery_images) : gallery_images) : null;
   const itemId = req.params.id;
 
   try {
     await db.query(
-      "UPDATE items SET name = ?, title = ?, categoryId = ?, description = ?, isAvailable = ?, unit_count = ?, image = ? WHERE id = ?",
-      [finalName, finalTitle, categoryId, description, isAvailable, finalUnitCount, image, itemId]
+      "UPDATE items SET name = ?, title = ?, categoryId = ?, description = ?, isAvailable = ?, unit_count = ?, image = ?, price = ?, tutorial_steps = ?, gallery_images = ? WHERE id = ?",
+      [finalName, finalTitle, categoryId, description, isAvailable, finalUnitCount, image, finalPrice, finalTutorial, finalGallery, itemId]
     );
     const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [itemId]);
     if (rows.length === 0) return res.status(404).json({ error: "Item not found" });
