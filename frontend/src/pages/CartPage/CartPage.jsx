@@ -84,25 +84,18 @@ export default function CartPage() {
     }
 
     try {
-      const firstCartItem = cart[0];
-      const rental_date = firstCartItem?.pickupDate
-        ? new Date(firstCartItem.pickupDate).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0];
-      const event_date = firstCartItem?.returnDate
-        ? new Date(firstCartItem.returnDate).toISOString().split("T")[0]
-        : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const itemsPayload = cart.map((cartItem) => ({
-        item_id: cartItem.item.id,
+      // Get items in the format the backend expects
+      const itemsPayload = cart.map(cartItem => ({
+        item_id: cartItem.item.categoryId ? cartItem.item.id : null,
+        package_id: !cartItem.item.categoryId ? cartItem.item.id : null,
         quantity: cartItem.quantity || 1,
-        price: MOCK_PRICE_PER_ITEM,
-        pickup_date: cartItem.pickupDate
-          ? new Date(cartItem.pickupDate).toISOString().split("T")[0]
-          : rental_date,
-        return_date: cartItem.returnDate
-          ? new Date(cartItem.returnDate).toISOString().split("T")[0]
-          : event_date,
+        price: MOCK_PRICE_PER_ITEM
       }));
+
+      // Extract rental dates from the cart items
+      const firstCartItem = cart[0];
+      const rental_date = firstCartItem?.pickupDate ? new Date(firstCartItem.pickupDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+      const event_date = firstCartItem?.returnDate ? new Date(firstCartItem.returnDate).toISOString().split("T")[0] : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
       let customerEmail = `${firstName.toLowerCase()}@example.com`;
       try {

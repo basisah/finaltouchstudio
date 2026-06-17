@@ -107,18 +107,6 @@ async function initializeDatabase() {
       FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL
     );`);
 
-    const orderItemColumnMigrations = [
-      "ALTER TABLE order_items ADD COLUMN pickup_date DATE NULL",
-      "ALTER TABLE order_items ADD COLUMN return_date DATE NULL",
-    ];
-    for (const sql of orderItemColumnMigrations) {
-      try {
-        await db.query(sql);
-      } catch {
-        // column already exists
-      }
-    }
-
     // 8. Create cross-device live shopping cart state caching table
     await db.query(`CREATE TABLE IF NOT EXISTS user_cart (
       id INT AUTO_INCREMENT PRIMARY KEY,

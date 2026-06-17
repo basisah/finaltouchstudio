@@ -17,16 +17,24 @@ export function CartProvider({ children }) {
   }, [cart]);
 
   const addToCart = (item, pickupDate, returnDate, quantity) => {
-    setCart((prev) => [
-      ...prev,
-      {
-        id: `${item.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        item,
-        pickupDate,
-        returnDate,
-        quantity: quantity || 1,
-      },
-    ]);
+    // Add item to cart with booking dates and quantity
+    setCart((prev) => {
+      const existingIndex = prev.findIndex((c) => c.item.id === item.id);
+      if (existingIndex > -1) {
+        return prev.map((c, i) => {
+          if (i === existingIndex) {
+            return {
+              ...c,
+              quantity: (c.quantity || 0) + quantity,
+              pickupDate: pickupDate || c.pickupDate,
+              returnDate: returnDate || c.returnDate
+            };
+          }
+          return c;
+        });
+      }
+      return [...prev, { id: item.id, item, pickupDate, returnDate, quantity }];
+    });
   };
 
   const removeFromCart = (cartItemId) => {

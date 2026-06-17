@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const auth = require("../middleware/auth");
-const { canRentQuantity } = require("../utils/rentalAvailability");
 const { sendNotificationEmail } = require("../utils/mailer");
 const getPurchaseUserTemplate = require("../emailservices/purchaseUser");
 const getPurchaseAdminTemplate = require("../emailservices/purchaseAdmin");
@@ -268,61 +267,11 @@ router.post("/orders", auth, async (req, res) => {
 
     const orderId = result.insertId;
 
-    // 2. Insert itemized details (with per-item rental dates when provided)
+    // 2. Insert itemized details
     for (const item of items) {
-      const itemPickup = item.pickup_date || rental_date;
-      const itemReturn = item.return_date || event_date;
-
-      if (item.item_id) {
-        const [stockRows] = await db.query(
-          "SELECT unit_count, isAvailable FROM items WHERE id = ?",
-          [item.item_id]
-        );
-        if (stockRows.length === 0) {
-          return res.status(400).json({ error: `Item ${item.item_id} not found` });
-        }
-        const totalStock = Math.max(0, parseInt(stockRows[0].unit_count, 10) || 0);
-        if (!stockRows[0].isAvailable || totalStock <= 0) {
-          return res.status(400).json({ error: `Item ${item.item_id} is not available for rent` });
-        }
-
-        const [existing] = await db.query(
-          `SELECT oi.quantity,
-                  COALESCE(oi.pickup_date, o.rental_date) AS pickup_date,
-                  COALESCE(oi.return_date, o.event_date) AS return_date
-           FROM order_items oi
-           INNER JOIN orders o ON o.id = oi.order_id
-           WHERE oi.item_id = ?
-             AND o.status IN ('pending', 'confirmed')`,
-          [item.item_id]
-        );
-
-        const bookings = existing.map((row) => ({
-          pickupDate: String(row.pickup_date).slice(0, 10),
-          returnDate: String(row.return_date).slice(0, 10),
-          quantity: parseInt(row.quantity, 10) || 0,
-        }));
-
-        const qty = parseInt(item.quantity, 10) || 1;
-        if (!canRentQuantity(bookings, itemPickup, itemReturn, qty, totalStock)) {
-          return res.status(409).json({
-            error: `Not enough stock for ${item.item_id} on the selected dates (requested ${qty})`,
-          });
-        }
-      }
-
       await db.query(
-        `INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent, pickup_date, return_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          item.item_id || null,
-          item.package_id || null,
-          item.quantity || 1,
-          item.price || 0.0,
-          itemPickup,
-          itemReturn,
-        ]
+        "INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent) VALUES (?, ?, ?, ?, ?)",
+        [orderId, item.item_id || null, item.package_id || null, item.quantity || 1, item.price || 0.00]
       );
     }
 
