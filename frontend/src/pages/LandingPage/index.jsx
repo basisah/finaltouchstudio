@@ -9,6 +9,7 @@ import Navbar             from "../../components/Navbar/Navbar";
 import HeroSection        from "./HeroSection/HeroSection";
 
 import CategorySection    from "./CategorySection/CategorySection";
+import OccasionsCarousel  from "./OccasionsCarousel/OccasionsCarousel";
 import PickupDelivery     from "./PickupDelivery/PickupDelivery";
 import Gallery            from "./Gallery/Gallery";
 import ContactUs          from "./ContactUs/ContactUs";
@@ -23,6 +24,7 @@ export default function LandingPage() {
       <HeroSection />
 
       <CategorySection />
+      <OccasionsCarousel />
       <PickupDelivery />
       <Gallery />
       <ContactUs />
