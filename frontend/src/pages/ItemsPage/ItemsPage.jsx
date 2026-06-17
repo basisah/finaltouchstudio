@@ -221,12 +221,12 @@ export default function ItemsPage() {
         if (data && data.length > 0) {
           setCategories(data);
         } else {
-          setCategories(INVENTORY_CATEGORIES);
+          setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
         }
       })
       .catch((err) => {
         console.warn("Failed to load categories, falling back to static:", err);
-        setCategories(INVENTORY_CATEGORIES);
+        setCategories(INVENTORY_CATEGORIES.map(c => ({ ...c, label: `[Demo] ${c.label}` })));
       });
   }, []);
 
@@ -342,21 +342,42 @@ export default function ItemsPage() {
     <div className={styles.page}>
       <Navbar />
 
-      <div className={styles.floatingOrb1} />
-      <div className={styles.floatingOrb2} />
-      <div className={styles.floatingOrb3} />
-      <div className={styles.floatingSparkle1}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M12 2v20M2 12h20M7 7l10 10M7 17L17 7" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className={styles.floatingSparkle2}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M12 3v18M3 12h18" strokeLinecap="round" />
-        </svg>
-      </div>
-
       <main className={styles.mainContainer3d}>
+        
+        {/* Top Showcase Banner Card */}
+        <section className={styles.showcaseCard3d}>
+          <div>
+            <span className={styles.showcaseBadge}>Featured Collection</span>
+            <h1 className={styles.showcaseTitle}>FinalTouch Signature Series</h1>
+            <p className={styles.showcaseDesc}>
+              Artisan rentals and staging items designed right here in Saskatoon. 
+              Select your dates, build custom packages, and celebrate with flair.
+            </p>
+            <div className={styles.showcaseMetrics}>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>$25.00</span>
+                <span className={styles.metricLabel}>Daily Rates</span>
+              </div>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>100%</span>
+                <span className={styles.metricLabel}>Customizable</span>
+              </div>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>High</span>
+                <span className={styles.metricLabel}>Prop Demand</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.showcaseVisualCol}>
+            <div className={styles.showcaseOrb}>
+              <div className={styles.showcaseOrbInner}>
+                ✨
+              </div>
+            </div>
+            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf1}`}>🌸</span>
+            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf2}`}>💡</span>
+          </div>
+        </section>
 
         {/* Centered Search Bar */}
         <div className={styles.searchBarWrapper}>

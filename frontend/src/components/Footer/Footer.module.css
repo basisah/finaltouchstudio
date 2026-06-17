@@ -1,12 +1,10 @@
 /* ── Footer wrapper ────────────────────────────────────────────────────────── */
 .footer {
-  background: #1a0f12;
+  background: var(--clr-weathervane);
   color: rgba(255, 255, 255, 0.75);
   font-family: var(--font-sans);
   position: relative;
-  flex-shrink: 0;
   margin-top: auto;
-  margin-bottom: 0;
 }
 
 /* Gradient fade-in from the section above */
