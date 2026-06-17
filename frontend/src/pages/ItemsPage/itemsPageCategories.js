@@ -111,24 +111,3 @@ export function groupItemsByDisplayCategory(items) {
 
   return groups;
 }
-
-/** Build pill nav from categories returned by the database. */
-export function buildPillCategories(dbCategories = []) {
-  if (!dbCategories.length) return [];
-
-  const all = DISPLAY_CATEGORIES.find((c) => c.id === "all");
-  return all ? [all, ...dbCategories] : dbCategories;
-}
-
-/** Group items under their database category id. */
-export function groupItemsByCategoryId(items, dbCategories = []) {
-  const groups = Object.fromEntries(dbCategories.map((c) => [c.id, []]));
-
-  for (const item of items) {
-    if (groups[item.categoryId]) {
-      groups[item.categoryId].push(item);
-    }
-  }
-
-  return groups;
-}

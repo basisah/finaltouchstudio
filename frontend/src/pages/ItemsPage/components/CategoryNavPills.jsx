@@ -1,13 +1,12 @@
 import { memo } from "react";
+import { DISPLAY_CATEGORIES } from "../itemsPageCategories";
 import styles from "../ItemsPage.module.css";
 
-function CategoryNavPills({ categories, activeId, onSelect }) {
-  if (!categories?.length) return null;
-
+function CategoryNavPills({ activeId, onSelect }) {
   return (
     <nav className={styles.pillsNav} aria-label="Category navigation">
       <div className={styles.pillsTrack}>
-        {categories.map((cat) => (
+        {DISPLAY_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             type="button"
