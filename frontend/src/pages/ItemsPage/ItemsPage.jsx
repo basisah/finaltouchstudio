@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import { INVENTORY_CATEGORIES, OCCASION_CATEGORIES } from "../../constants/inventory";
+import { INVENTORY_CATEGORIES } from "../../constants/inventory";
 import { get } from "../../api/client";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
 import Navbar from "../../components/Navbar/Navbar";
@@ -215,7 +215,19 @@ export default function ItemsPage() {
       .then((data) => setDbItems(data))
       .catch((err) => console.error("Error fetching items:", err));
 
-    setCategories(INVENTORY_CATEGORIES);
+    // Fetch categories
+    get("/categories")
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+        } else {
+          setCategories(INVENTORY_CATEGORIES);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load categories, falling back to static:", err);
+        setCategories(INVENTORY_CATEGORIES);
+      });
   }, []);
 
   useEffect(() => {
@@ -369,14 +381,11 @@ export default function ItemsPage() {
             if (uniqueSubcatIds.length === 0) {
               return [{ id: "general", label: "General Props", emoji: "✨" }];
             }
-            return uniqueSubcatIds.map((subId) => {
-              const occasion = OCCASION_CATEGORIES.find((o) => o.id === subId);
-              return {
-                id: subId,
-                label: occasion?.label || subId.charAt(0).toUpperCase() + subId.slice(1),
-                emoji: occasion?.emoji || "✨",
-              };
-            });
+            return uniqueSubcatIds.map(subId => ({
+              id: subId,
+              label: subId.charAt(0).toUpperCase() + subId.slice(1),
+              emoji: "✨"
+            }));
           })();
 
           const activeSubcatId = activeSubcats[category.id];

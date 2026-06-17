@@ -1,24 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import styles from "../AdminPage.module.css";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
-import ItemEditModal from "./ItemEditModal";
-
-const getItemSortLabel = (item) =>
-  String(item.name || item.title || item.id || "").trim().toLowerCase();
 
 export default function ItemsTab({
   categories,
   items,
   itemCategoryFilter,
   setItemCategoryFilter,
-  itemSortOrder,
-  setItemSortOrder,
   handleToggleAvailability,
   handleDeleteItem,
-  handleUpdateItem,
-  isSavingItem,
-  showAddItemForm,
-  setShowAddItemForm,
   handleAddItem,
   newItemSN,
   setNewItemSN,
@@ -36,21 +26,11 @@ export default function ItemsTab({
   setNewItemUnitCount,
   addFormRef,
 }) {
-  const [editingItem, setEditingItem] = useState(null);
   const activeCategory = categories.find((c) => c.id === itemCategoryFilter);
-  const filteredItems = useMemo(() => {
-    const list =
-      itemCategoryFilter === "all"
-        ? items
-        : items.filter((item) => item.categoryId === itemCategoryFilter);
-
-    return [...list].sort((a, b) => {
-      const cmp = getItemSortLabel(a).localeCompare(getItemSortLabel(b), undefined, {
-        sensitivity: "base",
-      });
-      return itemSortOrder === "za" ? -cmp : cmp;
-    });
-  }, [items, itemCategoryFilter, itemSortOrder]);
+  const filteredItems =
+    itemCategoryFilter === "all"
+      ? items
+      : items.filter((item) => item.categoryId === itemCategoryFilter);
 
   const inventoryCat = INVENTORY_CATEGORIES.find((c) => c.id === itemCategoryFilter);
   const subcategories = inventoryCat?.subcategories || [];
@@ -67,16 +47,11 @@ export default function ItemsTab({
   };
 
   return (
-    <div
-      className={`${styles.categoryGrid} ${!showAddItemForm ? styles.categoryGridFull : ""}`}
-    >
+    <div className={styles.categoryGrid}>
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <h2>📋 Items Inventory ({filteredItems.length})</h2>
-          <p>
-            Manage rental items, toggle availability, and review stock across categories. Click a row
-            to edit.
-          </p>
+          <p>Manage rental items, toggle availability, and review stock across categories.</p>
         </div>
 
         <div className={styles.itemsFilterBar}>
@@ -96,27 +71,11 @@ export default function ItemsTab({
               </option>
             ))}
           </select>
-
-          <label htmlFor="itemsSortOrder" className={styles.itemsFilterLabel}>
-            Sort by name
-          </label>
-          <select
-            id="itemsSortOrder"
-            className={styles.itemsFilterSelect}
-            value={itemSortOrder}
-            onChange={(e) => setItemSortOrder(e.target.value)}
-          >
-            <option value="az">A → Z</option>
-            <option value="za">Z → A</option>
-          </select>
         </div>
 
         {filteredItems.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>
-              No items in this view yet. Click <strong>+ Add New Item</strong> in the sidebar to
-              create one.
-            </p>
+            <p>No items in this view yet. Use the form on the right to add your first item.</p>
           </div>
         ) : (
           <div className={styles.tableWrapper} style={{ overflowX: "auto" }}>
@@ -124,7 +83,7 @@ export default function ItemsTab({
               <thead>
                 <tr>
                   <th>Item Details</th>
-                  {itemCategoryFilter === "all" && <th>Product Type</th>}
+                  {itemCategoryFilter === "all" && <th>Category</th>}
                   <th>Availability</th>
                   <th>Action</th>
                 </tr>
@@ -133,12 +92,7 @@ export default function ItemsTab({
                 {filteredItems.map((item) => {
                   const isAvailable = Boolean(item.isAvailable);
                   return (
-                    <tr
-                      key={item.id}
-                      className={styles.clickableRow}
-                      onClick={() => setEditingItem(item)}
-                      title="Click to edit"
-                    >
+                    <tr key={item.id}>
                       <td>
                         <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
                           <div style={{ flexShrink: 0 }}>
@@ -222,7 +176,7 @@ export default function ItemsTab({
                           <span className={styles.btnCount}>{getCategoryLabel(item.categoryId)}</span>
                         </td>
                       )}
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td>
                         <div className={styles.availabilityToggle}>
                           <span
                             className={`${styles.statusLabel} ${isAvailable ? styles.statusAvailable : styles.statusBooked}`}
@@ -240,24 +194,14 @@ export default function ItemsTab({
                           </label>
                         </div>
                       </td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                          <button
-                            type="button"
-                            className={styles.btnCount}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-shadow)" }}
-                            onClick={() => setEditingItem(item)}
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.deleteItemBtn}
-                            onClick={() => handleDeleteItem(item.id)}
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.deleteItemBtn}
+                          onClick={() => handleDeleteItem(item.id)}
+                        >
+                          🗑️ Delete
+                        </button>
                       </td>
                     </tr>
                   );
@@ -268,44 +212,19 @@ export default function ItemsTab({
         )}
       </div>
 
-      <ItemEditModal
-        item={editingItem}
-        categories={categories}
-        onClose={() => setEditingItem(null)}
-        isSaving={isSavingItem}
-        onSave={async (form) => {
-          try {
-            await handleUpdateItem(form);
-            setEditingItem(null);
-          } catch {
-            /* error surfaced in handleUpdateItem */
-          }
-        }}
-      />
-
-      {showAddItemForm && (
       <div className={styles.card} ref={addFormRef}>
-        <div className={styles.addItemCardHeader}>
-          <div>
-            <h2>➕ Add New Item</h2>
-            <p>
-              {activeCategory
-                ? `Adding to ${activeCategory.emoji} ${activeCategory.label}`
-                : "Select a target category below"}
-            </p>
-          </div>
-          <button
-            type="button"
-            className={styles.cancelCatBtn}
-            onClick={() => setShowAddItemForm(false)}
-          >
-            ✕ Close
-          </button>
+        <div className={styles.cardHeader}>
+          <h2>➕ Add New Item</h2>
+          <p>
+            {activeCategory
+              ? `Adding to ${activeCategory.emoji} ${activeCategory.label}`
+              : "Select a target category below"}
+          </p>
         </div>
 
         <form onSubmit={handleAddItem} className={styles.itemForm}>
           <div className={styles.inputGroup}>
-            <label htmlFor="itemTargetCategory">Product Type</label>
+            <label htmlFor="itemTargetCategory">Target Category</label>
             <select
               id="itemTargetCategory"
               className={styles.picSelect}
@@ -357,9 +276,7 @@ export default function ItemsTab({
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="itemSubCategory" title="Occasion / Collection">
-              Occasion
-            </label>
+            <label htmlFor="itemSubCategory">Subcategory Grouping</label>
             {subcategories.length > 0 ? (
               <select
                 id="itemSubCategory"
@@ -433,21 +350,11 @@ export default function ItemsTab({
             />
           </div>
 
-          <div className={styles.itemModalActions}>
-            <button
-              type="button"
-              className={styles.cancelCatBtn}
-              onClick={() => setShowAddItemForm(false)}
-            >
-              Cancel
-            </button>
-            <button type="submit" className={styles.addItemBtn}>
-              ✦ Add Item
-            </button>
-          </div>
+          <button type="submit" className={styles.addItemBtn}>
+            ✦ Add Item
+          </button>
         </form>
       </div>
-      )}
     </div>
   );
 }

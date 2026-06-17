@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../AdminPage.module.css";
 import { getPackages, getItems } from "../../../api/packages.api";
 import { createPackage, updatePackage, deletePackage } from "../../../api/admin/packages.api";
-import { INVENTORY_CATEGORIES, OCCASION_CATEGORIES } from "../../../constants/inventory";
+import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 
 export default function PackagesTab() {
   const [packages, setPackages] = useState([]);
@@ -15,10 +15,17 @@ export default function PackagesTab() {
   const [editingPackage, setEditingPackage] = useState(null);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [categoryId, setCategoryId] = useState(OCCASION_CATEGORIES[0]?.id || "birthday");
+  const [categoryId, setCategoryId] = useState("birthday");
   const [selectedItemIds, setSelectedItemIds] = useState([]);
 
-  const categoriesList = OCCASION_CATEGORIES;
+  // Categories mapping for easy display
+  const categoriesList = [
+    { id: "birthday", label: "Birthday Collection", emoji: "🎂" },
+    { id: "marriage", label: "Marriage Collection", emoji: "💒" },
+    { id: "holud", label: "Gaye Holud / Mehndi", emoji: "🌼" },
+    { id: "baby", label: "Baby Shower Props", emoji: "🍼" },
+    { id: "global", label: "Global Essentials", emoji: "⚙️" },
+  ];
 
   const fetchDashboardData = async () => {
     try {
@@ -43,7 +50,7 @@ export default function PackagesTab() {
     setEditingPackage(null);
     setName("");
     setPrice("");
-    setCategoryId(OCCASION_CATEGORIES[0]?.id || "birthday");
+    setCategoryId("birthday");
     setSelectedItemIds([]);
     setIsModalOpen(true);
   };
@@ -101,19 +108,21 @@ export default function PackagesTab() {
     }
   };
 
-  const filteredItemsForOccasion = allItems.filter(
-    (item) => item.subCategoryId === categoryId
+  // Filter items matching current category choice
+  const filteredItemsForCategory = allItems.filter(
+    (item) => item.categoryId === categoryId
   );
 
-  const groupedItems = INVENTORY_CATEGORIES.map((productType) => {
-    const typeItems = filteredItemsForOccasion.filter(
-      (item) => item.categoryId === productType.id
-    );
-    return { sub: productType, items: typeItems };
-  }).filter((group) => group.items.length > 0);
+  const activeCatObj = INVENTORY_CATEGORIES.find(c => c.id === categoryId);
+  const catSubcats = activeCatObj?.subcategories || [];
+  
+  const groupedItems = catSubcats.map(sub => {
+    const subItems = filteredItemsForCategory.filter(item => item.subCategoryId === sub.id);
+    return { sub, items: subItems };
+  });
 
-  const unassignedItems = filteredItemsForOccasion.filter(
-    (item) => !INVENTORY_CATEGORIES.some((cat) => cat.id === item.categoryId)
+  const unassignedItems = filteredItemsForCategory.filter(
+    item => !catSubcats.some(sub => sub.id === item.subCategoryId)
   );
 
   if (loading) {
@@ -126,7 +135,7 @@ export default function PackagesTab() {
         <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h2>📦 Decor Packages</h2>
-            <p>Bundle items by occasion collection (subcategory grouping)</p>
+            <p>Customize pre-defined packages for main landing page categories</p>
           </div>
           <button className={styles.addItemBtn} style={{ width: "auto", marginTop: 0 }} onClick={handleOpenCreateModal}>
             ➕ Create Custom Package
@@ -234,7 +243,7 @@ export default function PackagesTab() {
               </div>
 
               <div className={styles.inputGroup}>
-                <label>Occasion / Collection</label>
+                <label>Package Category</label>
                 <select
                   value={categoryId}
                   onChange={(e) => {
@@ -276,9 +285,9 @@ export default function PackagesTab() {
                   flexDirection: "column",
                   gap: "8px",
                 }}>
-                  {filteredItemsForOccasion.length === 0 ? (
+                  {filteredItemsForCategory.length === 0 ? (
                     <p style={{ color: "var(--txt-muted)", fontSize: "0.85rem" }}>
-                      No items found for this occasion. Add items in Items Management first!
+                      No items found in category '{categoryId}'. Add items to this category in the inventory tab first!
                     </p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>

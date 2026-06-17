@@ -11,7 +11,6 @@ import {
   initialPayments,
 } from "./mockData";
 
-import { resolveInventoryCategories, getOccasionLabel } from "../../constants/inventory";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import ItemsTab from "./components/ItemsTab";
@@ -32,24 +31,19 @@ export default function AdminPage() {
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
 
-  const applyCategories = (data) => {
-    const merged = resolveInventoryCategories(data);
-    setCategories(merged);
-    if (merged.length > 0) {
-      setItemCategoryFilter((prev) => {
-        if (prev === "all" || merged.some((c) => c.id === prev)) return prev;
-        return merged[0].id;
-      });
-    }
-  };
-
   const refreshData = () => {
     get("/categories")
-      .then(applyCategories)
-      .catch((err) => {
-        console.error("Error loading admin categories:", err);
-        applyCategories([]);
-      });
+      .then((data) => {
+        setCategories(data);
+        // Default active tab to first category if not set or invalid
+        if (data.length > 0) {
+          setItemCategoryFilter((prev) => {
+            if (prev === "all" || data.some((c) => c.id === prev)) return prev;
+            return data[0].id;
+          });
+        }
+      })
+      .catch((err) => console.error("Error loading admin categories:", err));
 
     get("/items")
       .then((data) => setItems(data))
@@ -63,7 +57,6 @@ export default function AdminPage() {
   // Nav Selection
   const [activeTab, setActiveTab] = useState("items");
   const [itemCategoryFilter, setItemCategoryFilter] = useState("all");
-  const [itemSortOrder, setItemSortOrder] = useState("az");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const addItemFormRef = useRef(null);
 
@@ -75,8 +68,6 @@ export default function AdminPage() {
   const [newItemSubCategory, setNewItemSubCategory] = useState("");
   const [newItemFile, setNewItemFile] = useState(null);
   const [newItemUnitCount, setNewItemUnitCount] = useState(1);
-  const [isSavingItem, setIsSavingItem] = useState(false);
-  const [showAddItemForm, setShowAddItemForm] = useState(false);
 
   // Member additions
   const [newMemName, setNewMemName] = useState("");
@@ -116,7 +107,6 @@ export default function AdminPage() {
   const handleAddNewItemNav = () => {
     setActiveTab("items");
     setSearchQuery("");
-    setShowAddItemForm(true);
     if (itemCategoryFilter === "all" && categories.length > 0) {
       setItemCategoryFilter(categories[0].id);
     }
@@ -203,76 +193,8 @@ export default function AdminPage() {
       setNewItemSubCategory("");
       setNewItemFile(null);
       setNewItemUnitCount(1);
-      setShowAddItemForm(false);
     } catch (err) {
       alert("Failed to add item: " + err.message);
-    }
-  };
-
-  const handleUpdateItem = async (form) => {
-    const {
-      id,
-      name,
-      title,
-      description,
-      categoryId,
-      subCategoryId,
-      unit_count,
-      isAvailable,
-      imageEmoji,
-      imageFile,
-    } = form;
-
-    const existing = items.find((i) => i.id === id);
-    if (!existing) return;
-
-    setIsSavingItem(true);
-    try {
-      let imagePath = existing.image;
-
-      if (imageFile) {
-        const compressedFile = await compressImage(imageFile);
-        const formData = new FormData();
-        formData.append("image", compressedFile);
-
-        const token = localStorage.getItem("admin_token");
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload image");
-        }
-
-        const uploadData = await uploadRes.json();
-        imagePath = uploadData.path;
-      } else if (existing.image && String(existing.image).startsWith("/uploads")) {
-        imagePath = imageEmoji === "✨" ? existing.image : imageEmoji;
-      } else {
-        imagePath = imageEmoji;
-      }
-
-      const updatedItem = await put(`/items/${id}`, {
-        name,
-        title: title || name,
-        description,
-        categoryId,
-        subCategoryId,
-        unit_count,
-        isAvailable,
-        image: imagePath,
-      });
-
-      setItems(items.map((i) => (i.id === id ? updatedItem : i)));
-    } catch (err) {
-      alert("Failed to update item: " + err.message);
-      throw err;
-    } finally {
-      setIsSavingItem(false);
     }
   };
 
@@ -364,7 +286,6 @@ export default function AdminPage() {
       item.subCategoryId,
       item.categoryId,
       categories.find((c) => c.id === item.categoryId)?.label,
-      getOccasionLabel(item.subCategoryId),
     ]
       .map(normalize)
       .filter(Boolean)
@@ -464,14 +385,8 @@ export default function AdminPage() {
               items={items}
               itemCategoryFilter={itemCategoryFilter}
               setItemCategoryFilter={setItemCategoryFilter}
-              itemSortOrder={itemSortOrder}
-              setItemSortOrder={setItemSortOrder}
               handleToggleAvailability={handleToggleAvailability}
               handleDeleteItem={handleDeleteItem}
-              handleUpdateItem={handleUpdateItem}
-              isSavingItem={isSavingItem}
-              showAddItemForm={showAddItemForm}
-              setShowAddItemForm={setShowAddItemForm}
               handleAddItem={handleAddItem}
               newItemSN={newItemSN}
               setNewItemSN={setNewItemSN}
