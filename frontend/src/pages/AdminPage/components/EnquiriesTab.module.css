@@ -141,9 +141,9 @@
 }
 
 .colAction {
-  width: 120px;
-  min-width: 120px;
-  max-width: 120px;
+  width: 108px;
+  min-width: 108px;
+  max-width: 108px;
 }
 
 .table thead th.colDate,
@@ -179,9 +179,6 @@
 .actionHead,
 .actionCell {
   text-align: center;
-  overflow-wrap: normal;
-  word-break: normal;
-  white-space: nowrap;
 }
 
 .dateText {
@@ -269,8 +266,6 @@
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
-  white-space: nowrap;
-  flex-shrink: 0;
   cursor: pointer;
   transition: background-color 0.18s var(--ease), transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
   box-shadow: 0 2px 8px rgba(47, 27, 26, 0.12);
