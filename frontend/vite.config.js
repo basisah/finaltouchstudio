@@ -14,9 +14,9 @@ export default defineConfig({
       interval: 300,
     },
     proxy: {
-      // Local dev: localhost. Docker: set VITE_PROXY_TARGET=http://backend:4000
+      // Proxy /api calls to the backend container
       "/api": {
-        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
+        target: "http://backend:4000",
         changeOrigin: true,
       },
       // Proxy /uploads calls to the backend container

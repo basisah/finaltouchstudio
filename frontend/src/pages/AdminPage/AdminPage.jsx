@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
 import { get, post, put, del } from "../../api/client";
-import { getEnquiries, markAllEnquiriesRead } from "../../api/bookings.api";
 import { compressImage } from "../../utils/imageCompressor";
 
 // Modular Imports
 import {
+  initialCategories,
+  initialItems,
+  initialEnquiries,
   initialMembers,
   initialPayments,
 } from "./mockData";
@@ -27,7 +29,7 @@ export default function AdminPage() {
   // Core Dashboard State (bootstrapped from DB and mockData file)
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
-  const [enquiries, setEnquiries] = useState([]);
+  const [enquiries, setEnquiries] = useState(initialEnquiries);
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
 
@@ -92,22 +94,6 @@ export default function AdminPage() {
     localStorage.removeItem("admin_token");
     navigate("/");
   };
-
-  const fetchEnquiries = async () => {
-    const token = localStorage.getItem("admin_token");
-    if (!token || token === "mock_khaled_admin_token") return;
-
-    try {
-      const data = await getEnquiries();
-      setEnquiries(data);
-    } catch (err) {
-      console.error("Failed to fetch enquiries:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchEnquiries();
-  }, []);
 
   // Add Category
   const handleAddCategory = (e) => {
@@ -278,13 +264,8 @@ export default function AdminPage() {
   };
 
   // Mark all enquiries as read
-  const handleMarkAllRead = async () => {
-    try {
-      await markAllEnquiriesRead();
-      setEnquiries(enquiries.map((e) => ({ ...e, read: true })));
-    } catch (err) {
-      console.error("Failed to mark enquiries as read:", err);
-    }
+  const handleMarkAllRead = () => {
+    setEnquiries(enquiries.map((e) => ({ ...e, read: true })));
   };
 
   // Filters & Counts
