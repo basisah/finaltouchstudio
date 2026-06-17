@@ -130,6 +130,30 @@ router.post("/contact", async (req, res) => {
   }
 });
 
+router.get("/contact", auth, async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Access denied. Admin role required." });
+  }
+
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        name,
+        email,
+        occasion,
+        message,
+        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS date
+      FROM enquiries
+      ORDER BY created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching enquiries:", err);
+    res.status(500).json({ error: "Failed to fetch enquiries" });
+  }
+});
+
 // ==========================================
 // 3. CART SYSTEM ENDPOINTS (Authenticated)
 // ==========================================
