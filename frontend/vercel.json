@@ -1,6 +1,5 @@
 {
-  "installCommand": "npm ci",
-  "buildCommand": "rm -rf vendor-backend && mkdir -p vendor-backend && cp -r ../backend/src ../backend/package.json ../backend/package-lock.json vendor-backend/ && npm ci --prefix vendor-backend --omit=dev && npm run build",
+  "installCommand": "npm ci && npm ci --prefix ../backend",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -14,7 +13,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "vendor-backend/**"
+      "includeFiles": "../backend/**"
     }
   }
 }
