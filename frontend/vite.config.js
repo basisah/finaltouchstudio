@@ -19,9 +19,8 @@ export default defineConfig({
         target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
         changeOrigin: true,
       },
-      // Proxy /uploads calls to the backend container
       "/uploads": {
-        target: "http://backend:4000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
         changeOrigin: true,
       },
     },
