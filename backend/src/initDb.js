@@ -131,6 +131,26 @@ async function initializeDatabase() {
       FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL
     );`);
 
+    const orderColumnMigrations = [
+      "ALTER TABLE orders ADD COLUMN user_id INT NULL",
+      "ALTER TABLE orders ADD COLUMN customer_email VARCHAR(255) NULL",
+      "ALTER TABLE orders ADD COLUMN customer_phone VARCHAR(255) NULL",
+      "ALTER TABLE orders ADD COLUMN event_date DATE NULL",
+      "ALTER TABLE orders ADD COLUMN rental_date DATE NULL",
+      "ALTER TABLE orders ADD COLUMN fulfillment_type ENUM('delivery', 'pickup') NOT NULL DEFAULT 'pickup'",
+      "ALTER TABLE orders ADD COLUMN delivery_fee DECIMAL(10, 2) DEFAULT 0.00",
+      "ALTER TABLE orders ADD COLUMN venue_address TEXT NULL",
+      "ALTER TABLE orders ADD COLUMN special_notes TEXT NULL",
+      "ALTER TABLE orders ADD COLUMN status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending'",
+    ];
+    for (const sql of orderColumnMigrations) {
+      try {
+        await db.query(sql);
+      } catch {
+        // column already exists
+      }
+    }
+
     const orderItemColumnMigrations = [
       "ALTER TABLE order_items ADD COLUMN pickup_date DATE NULL",
       "ALTER TABLE order_items ADD COLUMN return_date DATE NULL",
