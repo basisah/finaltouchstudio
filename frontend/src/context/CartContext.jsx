@@ -12,9 +12,33 @@ export function CartProvider({ children }) {
     }
   });
 
+  const [fulfillmentType, setFulfillmentType] = useState(() => {
+    try {
+      return localStorage.getItem("ft_fulfillment_type") || "pickup";
+    } catch {
+      return "pickup";
+    }
+  });
+
+  const [postalCode, setPostalCode] = useState(() => {
+    try {
+      return localStorage.getItem("ft_postal_code") || "";
+    } catch {
+      return "";
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem("ft_cart", JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem("ft_fulfillment_type", fulfillmentType);
+  }, [fulfillmentType]);
+
+  useEffect(() => {
+    localStorage.setItem("ft_postal_code", postalCode);
+  }, [postalCode]);
 
   const addToCart = (item, pickupDate, returnDate, quantity) => {
     setCart((prev) => [
@@ -38,7 +62,7 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (cartItemId, delta) => {
-    setCart((prev) => 
+    setCart((prev) =>
       prev
         .map((c) => {
           if (c.id === cartItemId) {
@@ -54,8 +78,28 @@ export function CartProvider({ children }) {
     );
   };
 
+  const setCartItemQuantity = (cartItemId, quantity) => {
+    const qty = Math.max(1, parseInt(quantity, 10) || 1);
+    setCart((prev) =>
+      prev.map((c) => (c.id === cartItemId ? { ...c, quantity: qty } : c))
+    );
+  };
+
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        setCartItemQuantity,
+        clearCart,
+        fulfillmentType,
+        setFulfillmentType,
+        postalCode,
+        setPostalCode,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
