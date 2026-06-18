@@ -5,6 +5,7 @@ import { INVENTORY_CATEGORIES } from "../../constants/inventory";
 import { getSortedCategories } from "../../utils/categoryHelper";
 import { get } from "../../api/client";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
+import SearchBar from "../../components/SearchBar/SearchBar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import styles from "./ItemsPage.module.css";
@@ -211,8 +212,8 @@ export default function ItemsPage() {
   const [toastMsg, setToastMsg] = useState("");
   const [dbItems, setDbItems] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState("");
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState(null);
 
   useEffect(() => {
     // Fetch items
@@ -247,6 +248,7 @@ export default function ItemsPage() {
 
     if (catId) {
       setActiveCategoryId(catId);
+      setActiveCategoryFilter(catId);
       // 1. Immediately set the active subcategory so the DOM is rendered in its expanded state
       if (subcatId) {
         setActiveSubcats(prev => ({
@@ -290,6 +292,7 @@ export default function ItemsPage() {
         }
       }
     } else {
+      setActiveCategoryFilter(null);
       // Default active tab selection if no query param is present and not already active
       if (categories.length > 0 && !activeCategoryId) {
         setActiveCategoryId(categories[0].id);
@@ -298,6 +301,8 @@ export default function ItemsPage() {
   }, [location.search, dbItems, categories, activeCategoryId]);
 
   useEffect(() => {
+    if (activeCategoryFilter) return;
+
     const handleScroll = () => {
       let currentActive = activeCategoryId;
       let minDistance = Infinity;
@@ -321,7 +326,7 @@ export default function ItemsPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [categories, activeCategoryId]);
+  }, [categories, activeCategoryId, activeCategoryFilter]);
 
 
 
@@ -367,6 +372,14 @@ export default function ItemsPage() {
     }
   };
 
+  const handleToggleCategory = (catId) => {
+    if (activeCategoryFilter === catId) {
+      navigate("/items");
+    } else {
+      navigate(catId ? `/items?category=${catId}` : "/items");
+    }
+  };
+
   return (
     <div className={styles.page}>
       <Navbar />
@@ -395,6 +408,10 @@ export default function ItemsPage() {
                 <span className={styles.metricValue}>High</span>
                 <span className={styles.metricLabel}>Prop Demand</span>
               </div>
+              <div className={styles.showcaseMetricBlock}>
+                <span className={styles.metricValue}>{dbItems.length || "0"}</span>
+                <span className={styles.metricLabel}>Total Props</span>
+              </div>
             </div>
           </div>
           <div className={styles.showcaseVisualCol}>
@@ -410,17 +427,45 @@ export default function ItemsPage() {
 
         {/* Centered Search Bar */}
         <div className={styles.searchBarWrapper}>
-          <input
-            type="text"
-            className={styles.searchInput3d}
-            placeholder="Type to search props..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ maxWidth: "600px" }}
-          />
+          <SearchBar items={dbItems} />
         </div>
 
-        {categories.map((category) => {
+        {/* Category Toggle Row */}
+        <div className={styles.categoriesToggleRow}>
+          <button
+            type="button"
+            className={`${styles.categoryTogglePill} ${!activeCategoryFilter ? styles.activePill : ""}`}
+            onClick={() => handleToggleCategory(null)}
+            style={{ "--pill-color": "#bfa07a" }}
+          >
+            <span className={styles.pillEmoji}>🌟</span>
+            All Props
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.categoryTogglePill} ${activeCategoryFilter === cat.id ? styles.activePill : ""}`}
+              onClick={() => handleToggleCategory(cat.id)}
+              style={{ "--pill-color": cat.color || "#9F507C" }}
+            >
+              {categoryIcons[cat.emoji] || categoryIcons[cat.id] ? (
+                <img
+                  src={categoryIcons[cat.emoji] || categoryIcons[cat.id]}
+                  alt=""
+                  className={styles.pillIcon}
+                />
+              ) : (
+                <span className={styles.pillEmoji}>{cat.emoji || "✨"}</span>
+              )}
+              {cat.label.split(" (")[0]}
+            </button>
+          ))}
+        </div>
+
+        {categories
+          .filter((cat) => !activeCategoryFilter || cat.id === activeCategoryFilter)
+          .map((category) => {
           // Dynamic subcategories calculation
           const subcategories = (() => {
             if (category.subcategories && category.subcategories.length > 0) {
@@ -515,101 +560,107 @@ export default function ItemsPage() {
                   </div>
 
                   {/* Items Grid */}
-                  <div className={styles.productGrid}>
-                    {dbItems
-                      .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId)
-                      .filter((item) => {
-                        if (!searchQuery.trim()) return true;
-                        const q = searchQuery.toLowerCase();
-                        return (
-                          item.title.toLowerCase().includes(q) ||
-                          (item.description && item.description.toLowerCase().includes(q))
-                        );
-                      })
-                      .map((item) => {
-                        const cartItem = getCartItem(item.id);
-                        return (
-                          <div
-                            key={item.id}
-                            className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
-                            onClick={() => window.open(`/item/${item.id}`, "_blank")}
-                          >
-                            <button
-                              type="button"
-                              className={styles.infoBtn3d}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(`/item/${item.id}`, "_blank");
-                              }}
-                              title="View details"
+                  {(() => {
+                    const filteredItems = dbItems
+                      .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId);
+
+                    if (filteredItems.length === 0) {
+                      return (
+                        <div className={styles.emptySubcatState}>
+                          <span className={styles.emptyIcon}>✨</span>
+                          <p className={styles.emptyText}>No props available in this category yet.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className={styles.productGrid}>
+                        {filteredItems.map((item) => {
+                          const cartItem = getCartItem(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
+                              onClick={() => window.open(`/item/${item.id}`, "_blank")}
                             >
-                              <span className={styles.infoText}>see item</span>
-                              <span className={styles.infoIcon}>ⓘ</span>
-                            </button>
-                            <div className={styles.productIconContainer3d}>
-                               {item.image && item.image.startsWith("/uploads") ? (
-                                 <img 
-                                   src={item.image} 
-                                   alt={item.title} 
-                                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
-                                 />
-                               ) : (
-                                 <div className={styles.productIconWrapper}>
-                                   {getSvgIcon(item.title)}
-                                 </div>
-                               )}
-                             </div>
-                            
-                            <div className={styles.productDetails3d}>
-                              <h4 className={styles.productTitle}>{item.title}</h4>
+                              <button
+                                type="button"
+                                className={styles.infoBtn3d}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`/item/${item.id}`, "_blank");
+                                }}
+                                title="View details"
+                              >
+                                <span className={styles.infoText}>see item</span>
+                                <span className={styles.infoIcon}>ⓘ</span>
+                              </button>
+                              <div className={styles.productIconContainer3d}>
+                                 {item.image && item.image.startsWith("/uploads") ? (
+                                   <img 
+                                     src={item.image} 
+                                     alt={item.title} 
+                                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
+                                   />
+                                 ) : (
+                                   <div className={styles.productIconWrapper}>
+                                     {getSvgIcon(item.title)}
+                                   </div>
+                                 )}
+                               </div>
                               
-                              <div className={styles.productFooter}>
-                                <span className={styles.productPrice}>
-                                  ${parseFloat(item.price || 0).toFixed(2)} CAD <span className={styles.priceUnit}>/day</span>
-                                </span>
-                                {cartItem ? (
-                                  <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
+                              <div className={styles.productDetails3d}>
+                                <h4 className={styles.productTitle}>{item.title}</h4>
+                                
+                                <div className={styles.productFooter}>
+                                  <span className={styles.productPrice}>
+                                    ${parseFloat(item.price || 0).toFixed(2)} CAD <span className={styles.priceUnit}>/day</span>
+                                  </span>
+                                  {cartItem ? (
+                                    <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        type="button"
+                                        className={styles.qtyControlBtn}
+                                        onClick={() => updateQuantity(cartItem.id, -1)}
+                                        title="Decrease quantity"
+                                      >
+                                        −
+                                      </button>
+                                      <span className={styles.qtyValue}>{cartItem.quantity || 1}</span>
+                                      <button
+                                        type="button"
+                                        className={styles.qtyControlBtn}
+                                        onClick={() => updateQuantity(cartItem.id, 1)}
+                                        title="Increase quantity"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  ) : (
                                     <button
                                       type="button"
-                                      className={styles.qtyControlBtn}
-                                      onClick={() => updateQuantity(cartItem.id, -1)}
-                                      title="Decrease quantity"
+                                      className={styles.productAddBtn}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenItem(item);
+                                      }}
+                                      title="Add to cart"
                                     >
-                                      −
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                      </svg>
+                                      Rent
                                     </button>
-                                    <span className={styles.qtyValue}>{cartItem.quantity || 1}</span>
-                                    <button
-                                      type="button"
-                                      className={styles.qtyControlBtn}
-                                      onClick={() => updateQuantity(cartItem.id, 1)}
-                                      title="Increase quantity"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className={styles.productAddBtn}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenItem(item);
-                                    }}
-                                    title="Add to cart"
-                                  >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    </svg>
-                                    Rent
-                                  </button>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                  </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                   {/* Bottom: Inactive other subcategories */}
                   <div className={styles.otherSubcatsWrapper}>

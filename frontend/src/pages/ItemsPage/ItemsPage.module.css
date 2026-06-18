@@ -1134,10 +1134,10 @@
   background: var(--brand-lavender);
   border: 1px solid rgba(129, 87, 164, 0.12);
   border-radius: 28px;
-  padding: 36px;
+  padding: 24px;
   box-shadow: 12px 12px 28px var(--border-shadow), -12px -12px 28px #ffffff;
   position: relative;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   scroll-margin-top: 110px;
 }
 
@@ -1247,7 +1247,7 @@
 .expandedSection {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -1256,8 +1256,8 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 2px solid var(--border-shadow);
-  padding-bottom: 16px;
-  margin-bottom: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -1291,8 +1291,8 @@
 }
 
 .otherSubcatsWrapper {
-  margin-top: 36px;
-  padding-top: 28px;
+  margin-top: 24px;
+  padding-top: 16px;
   border-top: 1px dashed var(--border-shadow);
 }
 
@@ -1301,7 +1301,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   text-align: center;
 }
 
@@ -1657,5 +1657,123 @@
 .gridItem3d:hover .transparentPngImg {
   filter: drop-shadow(0px 12px 20px rgba(0, 0, 0, 0.6));
 }
+
+/* ── Category Toggles ── */
+.categoriesToggleRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 auto 20px;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar for clean look */
+  -ms-overflow-style: none;
+}
+
+.categoriesToggleRow::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Safari/Chrome */
+}
+
+@media (max-width: 768px) {
+  .categoriesToggleRow {
+    justify-content: flex-start; /* Left align on mobile for scrolling */
+    padding: 10px 16px;
+  }
+}
+
+.categoryTogglePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    4px 4px 10px rgba(73, 34, 91, 0.02), 
+    -4px -4px 10px #ffffff;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  outline: none;
+}
+
+.categoryTogglePill:hover {
+  transform: translateY(-2px);
+  color: var(--text-main);
+  border-color: var(--pill-color, var(--btn-primary));
+  box-shadow: 
+    6px 6px 14px rgba(73, 34, 91, 0.05), 
+    -6px -6px 14px #ffffff;
+}
+
+.activePill {
+  background: linear-gradient(135deg, var(--pill-color, var(--btn-primary)), var(--pill-color, var(--btn-hover))) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 
+    inset 2px 2px 5px rgba(0, 0, 0, 0.15), 
+    4px 6px 16px rgba(165, 106, 189, 0.22) !important;
+}
+
+.pillIcon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.15));
+  transition: transform 0.25s ease;
+}
+
+.categoryTogglePill:hover .pillIcon {
+  transform: scale(1.15) rotate(4deg);
+}
+
+.activePill .pillIcon {
+  filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.25)) brightness(1.2);
+}
+
+.pillEmoji {
+  font-size: 1.1rem;
+}
+
+/* ── Empty State Styling ── */
+.emptySubcatState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px dashed rgba(165, 106, 189, 0.25);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: inset 2px 2px 5px rgba(73, 34, 91, 0.01), inset -2px -2px 5px #ffffff;
+  margin: 10px 0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.emptyIcon {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+}
+
+.emptyText {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+
 
 

@@ -182,6 +182,17 @@ export default function ItemDetailPage() {
     );
   }
 
+  // Parse gallery images
+  const gallery = (() => {
+    if (!item.gallery_images) return [];
+    try {
+      return typeof item.gallery_images === "string" ? JSON.parse(item.gallery_images) : item.gallery_images;
+    } catch (e) {
+      return [];
+    }
+  })();
+  const allImages = [item.image, ...gallery].filter(Boolean);
+
   // Generate specifications depending on item details
   const specDimensions = item.categoryId === "birthday" ? "6ft W x 7.5ft H" : item.categoryId === "marriage" ? "8ft W x 9ft H" : "Standard Fit";
   const specMaterial = item.title.toLowerCase().includes("chair") || item.title.toLowerCase().includes("sofa") ? "Premium Wood & Velvet" : item.title.toLowerCase().includes("flower") || item.title.toLowerCase().includes("floral") ? "Silk Blossoms" : "Acrylic / Coated Steel";
@@ -201,8 +212,8 @@ export default function ItemDetailPage() {
           {/* Left Side: Image display and thumbnails */}
           <div className={styles.imageCol}>
             <div className={styles.mainImageWrapper}>
-              {item.image && item.image.startsWith("/uploads") ? (
-                <img src={item.image} alt={item.title} className={styles.mainImage} />
+              {(selectedPhoto || item.image) && (selectedPhoto || item.image).startsWith("/uploads") ? (
+                <img src={selectedPhoto || item.image} alt={item.title} className={styles.mainImage} />
               ) : (
                 <div className={styles.svgFallback}>
                   {getSvgIcon(item.title)}
@@ -213,22 +224,19 @@ export default function ItemDetailPage() {
 
             {/* Sub-images thumbnail gallery */}
             <div className={styles.thumbnailRow}>
-              <div className={`${styles.thumb} ${styles.thumbActive}`}>
-                {item.image && item.image.startsWith("/uploads") ? (
-                  <img src={item.image} alt="Thumbnail 1" />
-                ) : (
-                  <span>✨</span>
-                )}
-              </div>
-              <div className={styles.thumb}>
-                <span>💡</span>
-              </div>
-              <div className={styles.thumb}>
-                <span>🌸</span>
-              </div>
-              <div className={styles.thumb}>
-                <span>👑</span>
-              </div>
+              {allImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className={`${styles.thumb} ${(selectedPhoto === img || (!selectedPhoto && idx === 0)) ? styles.thumbActive : ""}`}
+                  onClick={() => setSelectedPhoto(img)}
+                >
+                  {img.startsWith("/uploads") ? (
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                  ) : (
+                    <span>✨</span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -249,7 +257,7 @@ export default function ItemDetailPage() {
 
             <div className={styles.priceContainer}>
               <div className={styles.priceRow}>
-                <span className={styles.price}>$25.00</span>
+                <span className={styles.price}>${parseFloat(item.price || 0).toFixed(2)}</span>
                 <span className={styles.unit}>/ day</span>
                 <span className={styles.discountBadge}>Special Event Rate</span>
               </div>

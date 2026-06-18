@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES } from "../../../constants/categories";
+import { get } from "../../../api/client";
 import HeroImage from "./HeroImage";
 import HeroTitle from "./HeroTitle";
 import styles from "./HeroSection.module.css";
@@ -19,20 +20,134 @@ const categoryImages = {
 /** Inline search bar (clean and less text) */
 function HeroSearchBar() {
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [dbItems, setDbItems] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
+  const wrapperRef = useRef(null);
+
+  // Load items and categories
+  useEffect(() => {
+    get("/items")
+      .then((data) => setDbItems(data || []))
+      .catch((err) => console.error("Error loading items:", err));
+      
+    get("/categories")
+      .then((data) => setDbCategories(data || []))
+      .catch((err) => console.error("Error loading categories:", err));
+  }, []);
+
+  // Click outside listener
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter categories and items based on query
+  const filteredCategories = useMemo(() => {
+    if (!query.trim()) {
+      return dbCategories.slice(0, 2); // 2 categories on top
+    }
+    const q = query.toLowerCase();
+    return dbCategories.filter((cat) => cat.label.toLowerCase().includes(q));
+  }, [query, dbCategories]);
+
+  const filteredItems = useMemo(() => {
+    if (!query.trim()) {
+      return dbItems.slice(0, 5); // 5 items as start
+    }
+    const q = query.toLowerCase();
+    return dbItems.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        (item.description && item.description.toLowerCase().includes(q))
+    );
+  }, [query, dbItems]);
 
   return (
-    <form className={styles.searchBar} onSubmit={(e) => e.preventDefault()}>
-      <input
-        type="text"
-        className={styles.sInputSimple}
-        placeholder="Search setups, stages, occasions..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <button type="submit" className={styles.sBtnSimple}>
-        Search
-      </button>
-    </form>
+    <div className={styles.heroSearchContainer} ref={wrapperRef}>
+      <form className={styles.searchBar} onSubmit={(e) => e.preventDefault()}>
+        <input
+          type="text"
+          className={styles.sInputSimple}
+          placeholder="Search setups, stages, occasions..."
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+        />
+        <button type="submit" className={styles.sBtnSimple}>
+          Search
+        </button>
+      </form>
+
+      {/* Interactive Dropdown Window */}
+      {isOpen && (
+        <div className={styles.dropdownWindow}>
+          {filteredCategories.length === 0 && filteredItems.length === 0 ? (
+            <div className={styles.noResults}>
+              <span>✨</span> No results found
+            </div>
+          ) : (
+            <div className={styles.resultsList}>
+              {/* Categories Section */}
+              {filteredCategories.length > 0 && (
+                <div className={styles.sectionGroup}>
+                  <div className={styles.sectionHeading}>Occasions</div>
+                  {filteredCategories.map((cat) => (
+                    <Link
+                      key={cat.id}
+                      to={`/items?category=${cat.id}`}
+                      className={styles.resultRow}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span className={styles.categoryEmoji}>{cat.emoji || "🎉"}</span>
+                      <span className={styles.categoryLabel}>{cat.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Items Section */}
+              {filteredItems.length > 0 && (
+                <div className={styles.sectionGroup}>
+                  <div className={styles.sectionHeading}>Props & Rentals</div>
+                  {filteredItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={`/item/${item.id}`}
+                      className={styles.resultRow}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className={styles.itemLeft}>
+                        {item.image && item.image.startsWith("/uploads") ? (
+                          <img src={item.image} alt="" className={styles.itemThumb} />
+                        ) : (
+                          <span className={styles.itemEmoji}>✨</span>
+                        )}
+                        <span className={styles.itemTitle}>{item.title}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "2px" }}>
+                        <span className={styles.itemPrice}>
+                          ${parseFloat(item.price || 0).toFixed(2)}
+                        </span>
+                        <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)" }}>/day</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -55,9 +170,6 @@ export default function HeroSection() {
         <HeroTitle />
         <div className={styles.searchRow}>
           <HeroSearchBar />
-          <a href="#contact" className={styles.btnRoundBook}>
-            ✦ Book Consultation
-          </a>
         </div>
       </div>
 
