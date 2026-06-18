@@ -9,21 +9,20 @@ import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import styles from "./ItemsPage.module.css";
 
-// Import colorful flaticon icons
-import birthdayIcon from "../../assets/Icons/birthday-cake.png";
-import marriageIcon from "../../assets/Icons/wedding-couple.png";
-import bridalIcon from "../../assets/Icons/bridal-shower.png";
-import babyIcon from "../../assets/Icons/baby.png";
-import managerIcon from "../../assets/Icons/manager.png";
-import proposalIcon from "../../assets/Icons/ring.png";
-
 const categoryIcons = {
-  proposal: proposalIcon,
-  birthday: birthdayIcon,
-  marriage: marriageIcon,
-  holud: bridalIcon,
-  baby: babyIcon,
-  global: managerIcon,
+  baby: "/uploads/Icons/Category/baby.png",
+  "birthday-cake": "/uploads/Icons/Category/birthday-cake.png",
+  "bridal-shower": "/uploads/Icons/Category/bridal-shower.png",
+  bride: "/uploads/Icons/Category/bride.png",
+  couple: "/uploads/Icons/Category/couple.png",
+  manager: "/uploads/Icons/Category/manager.png",
+  ring: "/uploads/Icons/Category/ring.png",
+  "wedding-couple": "/uploads/Icons/Category/wedding-couple.png",
+  proposal: "/uploads/Icons/Category/ring.png",
+  birthday: "/uploads/Icons/Category/birthday-cake.png",
+  marriage: "/uploads/Icons/Category/wedding-couple.png",
+  holud: "/uploads/Icons/Category/bridal-shower.png",
+  global: "/uploads/Icons/Category/manager.png",
 };
 
 // ── SVG Icon Components ──
@@ -454,9 +453,9 @@ export default function ItemsPage() {
 
               <div className={styles.categoryHeader}>
                 <div className={styles.categoryTitleRow}>
-                  {categoryIcons[category.id] ? (
+                  {categoryIcons[category.emoji] || categoryIcons[category.id] ? (
                     <img 
-                      src={categoryIcons[category.id]} 
+                      src={categoryIcons[category.emoji] || categoryIcons[category.id]} 
                       alt="" 
                       className={styles.categoryHeaderIcon} 
                     />
@@ -477,8 +476,17 @@ export default function ItemsPage() {
                       className={styles.gridItem3d}
                       onClick={() => setActiveSubcats(prev => ({ ...prev, [category.id]: subcat.id }))}
                     >
-                      <div className={styles.circleCard3d}>
-                        <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                      <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
+                        {subcat.image ? (
+                          <img 
+                            src={subcat.image} 
+                            alt={subcat.label} 
+                            className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
+                            style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }} 
+                          />
+                        ) : (
+                          <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                        )}
                       </div>
                       <div className={styles.cardLabelWrapper}>
                         <span className={styles.cardLabel}>{subcat.label}</span>
@@ -557,7 +565,7 @@ export default function ItemsPage() {
                               
                               <div className={styles.productFooter}>
                                 <span className={styles.productPrice}>
-                                  $25.00 <span className={styles.priceUnit}>/day</span>
+                                  ${parseFloat(item.price || 0).toFixed(2)} CAD <span className={styles.priceUnit}>/day</span>
                                 </span>
                                 {cartItem ? (
                                   <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
@@ -593,7 +601,7 @@ export default function ItemsPage() {
                                       <line x1="12" y1="5" x2="12" y2="19"></line>
                                       <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
-                                    Add
+                                    Rent
                                   </button>
                                 )}
                               </div>
@@ -618,8 +626,17 @@ export default function ItemsPage() {
                               document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                             }}
                           >
-                            <div className={styles.circleCard3d}>
-                              <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                            <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
+                              {subcat.image ? (
+                                <img 
+                                  src={subcat.image} 
+                                  alt={subcat.label} 
+                                  className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
+                                  style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }} 
+                                />
+                              ) : (
+                                <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                              )}
                             </div>
                             <div className={styles.cardLabelWrapper}>
                               <span className={styles.cardLabel}>{subcat.label}</span>

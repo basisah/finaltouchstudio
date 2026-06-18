@@ -1,7 +1,7 @@
 .page {
-  background: var(--bg-main, #faf7fc);
+  background: var(--bg-main, #FAF4F2);
   min-height: 100vh;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   display: flex;
   flex-direction: column;
 }
@@ -17,19 +17,19 @@
 /* ── Breadcrumb ── */
 .breadcrumb {
   font-size: 0.82rem;
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   margin-bottom: 24px;
 }
 
 .breadcrumb a {
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .breadcrumb a:hover {
-  color: var(--btn-hover, #bd5d92);
+  color: var(--btn-hover, #471A69);
 }
 
 .breadcrumb span {
@@ -83,7 +83,7 @@
 .svgFallback {
   width: 140px;
   height: 140px;
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
   opacity: 0.85;
 }
 
@@ -96,7 +96,7 @@
   border-radius: 99px;
   font-size: 0.72rem;
   font-weight: 800;
-  color: var(--btn-hover, #bd5d92);
+  color: var(--btn-hover, #471A69);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -136,7 +136,7 @@
 }
 
 .thumbActive {
-  border-color: var(--btn-primary, #9F507C);
+  border-color: var(--btn-primary, #8157A4);
   box-shadow: 4px 4px 12px rgba(165, 106, 189, 0.15);
 }
 
@@ -158,14 +158,14 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--btn-hover, #bd5d92);
+  color: var(--btn-hover, #471A69);
 }
 
 .title {
   font-family: var(--font-serif);
   font-size: 2.2rem;
   font-weight: 800;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   line-height: 1.2;
   margin: 0;
 }
@@ -184,7 +184,7 @@
 }
 
 .ratingText {
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   font-weight: 600;
 }
 
@@ -219,19 +219,19 @@
   font-size: 2rem;
   font-weight: 800;
   font-family: var(--font-serif);
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
 }
 
 .unit {
   font-size: 0.95rem;
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   font-weight: 600;
 }
 
 .discountBadge {
   margin-left: auto;
   background: linear-gradient(135deg, #f0ebf8, #f5d3e0);
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
   padding: 4px 12px;
   border-radius: 8px;
   font-size: 0.72rem;
@@ -241,7 +241,7 @@
 
 .description {
   font-size: 0.95rem;
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   line-height: 1.6;
   margin: 0;
 }
@@ -257,7 +257,7 @@
   font-family: var(--font-serif);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   border-bottom: 2px solid rgba(165, 106, 189, 0.15);
   padding-bottom: 8px;
   margin: 0;
@@ -284,11 +284,11 @@
 }
 
 .specLabel {
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
 }
 
 .specValue {
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   font-weight: 700;
   text-transform: capitalize;
 }
@@ -309,13 +309,13 @@
   font-family: var(--font-serif);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   margin: 0;
 }
 
 .bookingSubText {
   font-size: 0.88rem;
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   line-height: 1.5;
   margin: 0;
 }
@@ -323,7 +323,7 @@
 .selectDatesBtn {
   background: #ffffff;
   border: 1px solid rgba(165, 106, 189, 0.25);
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
   border-radius: 12px;
   padding: 12px 18px;
   font-family: var(--font-sans);
@@ -339,7 +339,7 @@
 .selectDatesBtn:hover {
   transform: translateY(-1px);
   box-shadow: 6px 6px 14px rgba(165, 106, 189, 0.08);
-  border-color: var(--btn-primary, #9F507C);
+  border-color: var(--btn-primary, #8157A4);
 }
 
 .actionsRow {
@@ -370,8 +370,8 @@
 
 .cartBtn {
   background: #ffffff;
-  border: 1px solid var(--btn-primary, #9F507C);
-  color: var(--btn-primary, #9F507C);
+  border: 1px solid var(--btn-primary, #8157A4);
+  color: var(--btn-primary, #8157A4);
 }
 
 .cartBtn:hover {
@@ -380,14 +380,14 @@
 }
 
 .bookBtn {
-  background: linear-gradient(135deg, var(--btn-primary, #9F507C), var(--btn-hover, #bd5d92));
+  background: linear-gradient(135deg, var(--btn-primary, #8157A4), var(--btn-hover, #471A69));
   border: 1px solid transparent;
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(165, 106, 189, 0.25);
 }
 
 .bookBtn:hover {
-  background: linear-gradient(135deg, var(--btn-hover, #bd5d92), #9c4174);
+  background: linear-gradient(135deg, var(--btn-hover, #471A69), #370F52);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(165, 106, 189, 0.35);
 }
@@ -397,7 +397,7 @@
   background: transparent;
   border: none;
   font-size: 0.88rem;
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   font-weight: 600;
   cursor: pointer;
   align-self: flex-start;
@@ -407,7 +407,7 @@
 }
 
 .backLink:hover {
-  color: var(--btn-primary, #9F507C);
+  color: var(--btn-primary, #8157A4);
 }
 
 /* ── Floating Toast ── */
@@ -417,7 +417,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: #ffffff;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
   padding: 14px 28px;
   border-radius: 99px;
   font-size: 13.5px;
@@ -437,7 +437,7 @@
 /* ── Spinner / States ── */
 .loadingContainer,
 .errorContainer {
-  background: var(--bg-main, #faf7fc);
+  background: var(--bg-main, #FAF4F2);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -458,7 +458,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid rgba(165, 106, 189, 0.15);
-  border-left-color: var(--btn-primary, #9F507C);
+  border-left-color: var(--btn-primary, #8157A4);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -472,16 +472,16 @@
   font-family: var(--font-serif);
   font-size: 1.8rem;
   margin-bottom: 12px;
-  color: var(--text-main, #332244);
+  color: var(--text-main, #471A69);
 }
 
 .errorBox p {
-  color: var(--text-muted, #776688);
+  color: var(--text-muted, #6E6470);
   margin-bottom: 24px;
 }
 
 .backBtn {
-  background: var(--btn-primary, #9F507C);
+  background: var(--btn-primary, #8157A4);
   border: none;
   color: #ffffff;
   padding: 10px 24px;
@@ -492,5 +492,5 @@
 }
 
 .backBtn:hover {
-  background: var(--btn-hover, #bd5d92);
+  background: var(--btn-hover, #471A69);
 }

@@ -2,6 +2,31 @@ import React, { useState } from "react";
 import styles from "../AdminPage.module.css";
 import logoImg from "../../../assets/Logo/FinalTouchStudiosLogo.png";
 
+import babyIcon from "../../../assets/Icons/baby.png";
+import birthdayIcon from "../../../assets/Icons/birthday-cake.png";
+import bridalIcon from "../../../assets/Icons/bridal-shower.png";
+import brideIcon from "../../../assets/Icons/bride.png";
+import coupleIcon from "../../../assets/Icons/couple.png";
+import managerIcon from "../../../assets/Icons/manager.png";
+import proposalIcon from "../../../assets/Icons/ring.png";
+import marriageIcon from "../../../assets/Icons/wedding-couple.png";
+
+const categoryIcons = {
+  baby: babyIcon,
+  "birthday-cake": birthdayIcon,
+  "bridal-shower": bridalIcon,
+  bride: brideIcon,
+  couple: coupleIcon,
+  manager: managerIcon,
+  ring: proposalIcon,
+  "wedding-couple": marriageIcon,
+  proposal: proposalIcon,
+  birthday: birthdayIcon,
+  marriage: marriageIcon,
+  holud: bridalIcon,
+  global: managerIcon,
+};
+
 export default function Sidebar({
   categories,
   items,
@@ -61,7 +86,17 @@ export default function Sidebar({
                   if (setIsSidebarOpen) setIsSidebarOpen(false);
                 }}
               >
-                <span className={styles.btnEmoji}>{cat.emoji}</span>
+                <span className={styles.btnEmoji} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px" }}>
+                  {categoryIcons[cat.emoji] || categoryIcons[cat.id] ? (
+                    <img 
+                      src={categoryIcons[cat.emoji] || categoryIcons[cat.id]} 
+                      alt="" 
+                      style={{ width: "20px", height: "20px", objectFit: "contain", filter: activeTab === cat.id ? "brightness(0) invert(1)" : "none" }} 
+                    />
+                  ) : (
+                    cat.emoji
+                  )}
+                </span>
                 <span className={styles.btnLabel}>{cat.label}</span>
                 <span className={styles.btnCount}>
                   {items.filter((item) => item.categoryId === cat.id).length}

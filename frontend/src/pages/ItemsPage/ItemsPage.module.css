@@ -823,12 +823,18 @@
 }
 
 .productAddBtn {
-  background: var(--btn-primary);
-  color: #fff;
+  background: linear-gradient(135deg, #bfa07a 0%, #a88760 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 10px rgba(168, 135, 96, 0.22);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  outline: none;
 }
 
 .productAddBtn:hover {
-  background: var(--btn-hover);
+  background: linear-gradient(135deg, #cbb08d 0%, #b89770 100%);
+  box-shadow: 0 6px 16px rgba(168, 135, 96, 0.35);
+  transform: translateY(-1px);
 }
 
 .productRemoveBtn {
@@ -1125,14 +1131,62 @@
 }
 
 .categoryBlock3d {
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--brand-lavender);
+  border: 1px solid rgba(129, 87, 164, 0.12);
   border-radius: 28px;
   padding: 36px;
-  box-shadow: 16px 16px 36px rgba(73, 34, 91, 0.03), -16px -16px 36px #ffffff;
+  box-shadow: 12px 12px 28px var(--border-shadow), -12px -12px 28px #ffffff;
   position: relative;
   margin-bottom: 40px;
   scroll-margin-top: 110px;
+}
+
+.categoryBlock3d .categoryTitle {
+  color: var(--text-main);
+}
+
+.categoryBlock3d .categoryTitleDivider {
+  background: var(--text-muted);
+  opacity: 0.3;
+}
+
+.categoryBlock3d .cardLabel {
+  color: var(--text-muted);
+}
+
+.categoryBlock3d .gridItem3d:hover .cardLabel {
+  color: var(--text-main);
+}
+
+.categoryBlock3d .activeSubcatTitle {
+  color: var(--text-main);
+}
+
+.categoryBlock3d .otherSubcatsHeading {
+  color: var(--text-main);
+}
+
+.categoryBlock3d .otherSubcatsWrapper {
+  border-top: 1px dashed rgba(129, 87, 164, 0.15);
+}
+
+.categoryBlock3d .categoryBackdropOrb {
+  background: radial-gradient(circle, rgba(129, 87, 164, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+.categoryBlock3d .circleCard3d {
+  background: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    6px 8px 16px rgba(73, 34, 91, 0.03), 
+    -6px -6px 16px #ffffff;
+}
+
+.categoryBlock3d .gridItem3d:hover .circleCard3d {
+  box-shadow: 
+    8px 12px 20px rgba(73, 34, 91, 0.06), 
+    -8px -8px 20px #ffffff;
+  border-color: var(--btn-primary);
 }
 
 @media (max-width: 640px) {
@@ -1586,6 +1640,22 @@
   .cardLabel {
     font-size: 8px !important;
   }
+}
+
+/* ── Transparent PNG Subcategory Styling ── */
+.transparentPngContainer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.transparentPngImg {
+  filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.45));
+  transition: filter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gridItem3d:hover .transparentPngImg {
+  filter: drop-shadow(0px 12px 20px rgba(0, 0, 0, 0.6));
 }
 
 

@@ -10,15 +10,19 @@
 /* ── Design Tokens — Purple Luxury Palette ────────────────────────────────────── */
 :root {
   /* ── User Requested Theme Variables ── */
-  --bg-main: #f5ebfa;
+  --bg-main: #FAF4F2;
   --bg-card: #ffffff;
-  --border-shadow: #e7dbef;
+  --border-shadow: #EDE4F1;
 
-  --btn-primary: #a56abd;
-  --btn-hover: #6e3482;
+  --btn-primary: #8157A4;
+  --btn-hover: #471A69;
 
-  --text-main: #49225b;
-  --text-muted: #6e3482;
+  --text-main: #471A69;
+  --text-muted: #6E6470;
+
+  /* Accent brand variables */
+  --brand-gold: #A88760;
+  --brand-lavender: #EDE4F1;
 
   /* ── Brand colours (Spring Blossom Palette) ───────────────── */
   --clr-weathervane: #2F1B1A;

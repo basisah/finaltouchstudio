@@ -47,10 +47,11 @@ export const PERMANENT_CATEGORIES = [
 ];
 
 export function getSortedCategories(fetchedCategories = []) {
+  const orderedList = [];
   const remaining = [];
   
   // Build the permanent list in order
-  const orderedList = PERMANENT_CATEGORIES.map(tpl => {
+  PERMANENT_CATEGORIES.forEach(tpl => {
     // Find matching fetched category (matching baby-shower to baby)
     const match = fetchedCategories.find(c => 
       c.id === tpl.id || 
@@ -59,17 +60,24 @@ export function getSortedCategories(fetchedCategories = []) {
     );
     
     if (match) {
-      return {
+      let parsedSub = null;
+      if (match.subcategories) {
+        try {
+          parsedSub = typeof match.subcategories === "string" ? JSON.parse(match.subcategories) : match.subcategories;
+        } catch (e) {
+          console.error("Failed to parse subcategories JSON", e);
+        }
+      }
+      orderedList.push({
         ...tpl,
         label: match.label || tpl.label,
         emoji: match.emoji || tpl.emoji,
         color: match.color || tpl.color,
         description: match.description || tpl.description,
         image_url: match.image_url || tpl.image_url,
-        subcategories: match.subcategories && match.subcategories.length > 0 ? match.subcategories : tpl.subcategories
-      };
+        subcategories: Array.isArray(parsedSub) ? parsedSub : tpl.subcategories
+      });
     }
-    return tpl;
   });
 
   // Collect other fetched categories
@@ -81,10 +89,18 @@ export function getSortedCategories(fetchedCategories = []) {
     );
     if (!isPermanent) {
       const staticConfig = INVENTORY_CATEGORIES.find(s => s.id === c.id);
+      let parsedSub = null;
+      if (c.subcategories) {
+        try {
+          parsedSub = typeof c.subcategories === "string" ? JSON.parse(c.subcategories) : c.subcategories;
+        } catch (e) {
+          console.error("Failed to parse subcategories JSON", e);
+        }
+      }
       remaining.push({
         ...staticConfig,
         ...c,
-        subcategories: c.subcategories || staticConfig?.subcategories || []
+        subcategories: Array.isArray(parsedSub) ? parsedSub : (staticConfig?.subcategories || [])
       });
     }
   });

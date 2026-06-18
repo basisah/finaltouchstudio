@@ -4,11 +4,16 @@ const db = require("../db");
 
 // Get all items (public, supports categoryId and subCategoryId filtering)
 router.get("/", async (req, res) => {
-  const { categoryId, subCategoryId } = req.query;
+  const { categoryId, subCategoryId, all } = req.query;
   try {
     let query = "SELECT * FROM items";
     const params = [];
     const conditions = [];
+
+    // Filter out unavailable items for public users unless all=true is specified
+    if (all !== "true") {
+      conditions.push("isAvailable = 1");
+    }
 
     if (categoryId) {
       conditions.push("categoryId = ?");

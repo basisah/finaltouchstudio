@@ -26,3 +26,20 @@ export const uploadCategoryImage = async (file) => {
   const data = await res.json();
   return data.url;
 };
+
+/** Upload subcategory icon/image */
+export const uploadSubcategoryImage = async (file) => {
+  const compressedFile = await compressImage(file, 400, 400, 0.7); // Subcategory images can be smaller to save even more space!
+  const token = localStorage.getItem("admin_token");
+  const fd = new FormData();
+  fd.append("image", compressedFile);
+  
+  const res = await fetch("/api/categories/upload-subcategory-image", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  });
+  if (!res.ok) throw new Error("Subcategory image upload failed");
+  const data = await res.json();
+  return data.url;
+};

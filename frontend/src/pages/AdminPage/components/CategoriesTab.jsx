@@ -1,8 +1,20 @@
 import React, { useState, useRef } from "react";
 import styles from "../AdminPage.module.css";
 import { compressImage } from "../../../utils/imageCompressor";
+import ConfirmModal from "./ConfirmModal";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
+
+const CATEGORY_PNG_ICONS = [
+  { value: "baby", label: "Baby", src: "/uploads/Icons/Category/baby.png" },
+  { value: "birthday-cake", label: "Birthday Cake", src: "/uploads/Icons/Category/birthday-cake.png" },
+  { value: "bridal-shower", label: "Bridal Shower", src: "/uploads/Icons/Category/bridal-shower.png" },
+  { value: "bride", label: "Bride", src: "/uploads/Icons/Category/bride.png" },
+  { value: "couple", label: "Couple", src: "/uploads/Icons/Category/couple.png" },
+  { value: "manager", label: "Manager", src: "/uploads/Icons/Category/manager.png" },
+  { value: "ring", label: "Ring", src: "/uploads/Icons/Category/ring.png" },
+  { value: "wedding-couple", label: "Wedding Couple", src: "/uploads/Icons/Category/wedding-couple.png" },
+];
 
 const EMOJI_OPTIONS = ["🎂","💒","🌼","🍼","✨","🎉","💍","🌸","👰","🥳","🎈","🏮","🎓","❤️","🌺","🎪"];
 const COLOR_OPTIONS = ["#B8729A","#9F507C","#D97706","#8B5CF6","#542141","#EC4899","#6366F1","#10B981","#F59E0B","#EF4444","#06B6D4","#84CC16"];
@@ -18,6 +30,12 @@ export default function CategoriesTab({ categories, onRefresh }) {
   const [editImageFile, setEditImageFile] = useState(null);
   const newFileRef = useRef();
   const editFileRef = useRef();
+
+  // Confirm Modal States
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const token = localStorage.getItem("admin_token");
   const authHeaders = { Authorization: `Bearer ${token}` };
@@ -73,17 +91,67 @@ export default function CategoriesTab({ categories, onRefresh }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(`Delete category "${id}"? This will not delete its items.`)) return;
+  const triggerDelete = (id) => {
+    setDeleteId(id);
+    setDeleteError("");
+    setDeleteLoading(false);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (password) => {
+    setDeleteLoading(true);
+    setDeleteError("");
+    const id = deleteId;
+
     try {
+      // 1. Decode token to extract admin username
+      const token = localStorage.getItem("admin_token");
+      let username = "admin"; // Default fallback
+      if (token) {
+        try {
+          const base64Url = token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            window.atob(base64)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+          const payload = JSON.parse(jsonPayload);
+          if (payload && payload.username) {
+            username = payload.username;
+          }
+        } catch (e) {
+          console.error("Error decoding token for verification:", e);
+        }
+      }
+
+      // 2. Call admin auth login to verify the password
+      const verifyRes = await fetch(`${BASE_URL}/api/admin/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!verifyRes.ok) {
+        setDeleteError("Incorrect admin password.");
+        setDeleteLoading(false);
+        return;
+      }
+
+      // 3. Password verified! Execute delete request
       const res = await fetch(`${BASE_URL}/api/categories/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Failed to delete category");
+      
+      setDeleteModalOpen(false);
       onRefresh();
     } catch (err) {
-      alert("Error: " + err.message);
+      setDeleteError(err.message);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -161,12 +229,6 @@ export default function CategoriesTab({ categories, onRefresh }) {
 
             <div className={styles.catEditorRow}>
               <div className={styles.catEditorField}>
-                <label>Emoji</label>
-                <select className={styles.catEditorInput} value={newForm.emoji} onChange={e => setNewForm(p => ({ ...p, emoji: e.target.value }))}>
-                  {EMOJI_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-                </select>
-              </div>
-              <div className={styles.catEditorField}>
                 <label>Color</label>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
                   {COLOR_OPTIONS.map(c => (
@@ -181,6 +243,91 @@ export default function CategoriesTab({ categories, onRefresh }) {
                     />
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className={styles.catEditorField} style={{ marginBottom: "16px" }}>
+              <label style={{ fontWeight: 600, color: "var(--text-muted)", fontSize: "0.82rem" }}>Select Icon ({newForm.emoji})</label>
+              <div style={{ 
+                display: "grid", 
+                gridTemplateRows: "repeat(2, auto)", 
+                gridAutoFlow: "column",
+                gap: "8px 12px", 
+                overflowX: "auto", 
+                paddingBottom: "8px",
+                maxWidth: "100%",
+                border: "1px solid var(--border-shadow, rgba(0,0,0,0.1))",
+                borderRadius: "8px",
+                padding: "10px",
+                background: "rgba(0,0,0,0.01)"
+              }}>
+                {/* PNG Icons */}
+                {CATEGORY_PNG_ICONS.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setNewForm(p => ({ ...p, emoji: item.value }))}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: newForm.emoji === item.value ? "var(--btn-primary)" : "transparent",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      padding: "6px 10px",
+                      flexShrink: 0,
+                      minWidth: "64px"
+                    }}
+                  >
+                    <img 
+                      src={item.src} 
+                      alt={item.label} 
+                      style={{ width: "24px", height: "24px", objectFit: "contain", filter: newForm.emoji === item.value ? "brightness(0) invert(1)" : "none" }} 
+                    />
+                    <span style={{ 
+                      fontSize: "0.6rem", 
+                      color: newForm.emoji === item.value ? "white" : "var(--text-muted)",
+                      fontWeight: 600,
+                      whiteSpace: "nowrap"
+                    }}>
+                      {item.label}
+                    </span>
+                  </button>
+                ))}
+
+                {/* Standard Emojis */}
+                {EMOJI_OPTIONS.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setNewForm(p => ({ ...p, emoji: e }))}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: newForm.emoji === e ? "var(--btn-primary)" : "transparent",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      padding: "6px 10px",
+                      flexShrink: 0,
+                      minWidth: "64px"
+                    }}
+                  >
+                    <span style={{ fontSize: "1.2rem" }}>{e}</span>
+                    <span style={{ 
+                      fontSize: "0.6rem", 
+                      color: newForm.emoji === e ? "white" : "var(--text-muted)",
+                      fontWeight: 600,
+                      whiteSpace: "nowrap"
+                    }}>
+                      Emoji
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -240,9 +387,7 @@ export default function CategoriesTab({ categories, onRefresh }) {
                     </p>
                     <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
                       <button className={styles.editBtn} onClick={() => startEdit(cat)}>✏️ Edit</button>
-                      {!["proposal", "holud", "marriage", "baby", "baby-shower", "birthday"].includes(cat.id) && (
-                        <button className={styles.deleteBtn} onClick={() => handleDelete(cat.id)}>🗑️ Delete</button>
-                      )}
+                      <button className={styles.deleteBtn} onClick={() => triggerDelete(cat.id)}>🗑️ Delete</button>
                     </div>
                   </div>
                   <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: cat.color, flexShrink: 0 }} />
@@ -257,11 +402,90 @@ export default function CategoriesTab({ categories, onRefresh }) {
                       <label>Label</label>
                       <input className={styles.catEditorInput} value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} />
                     </div>
-                    <div className={styles.catEditorField}>
-                      <label>Emoji</label>
-                      <select className={styles.catEditorInput} value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))}>
-                        {EMOJI_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-                      </select>
+                  </div>
+
+                  <div className={styles.catEditorField} style={{ marginBottom: "16px" }}>
+                    <label style={{ fontWeight: 600, color: "var(--text-muted)", fontSize: "0.82rem" }}>Select Icon ({form.emoji})</label>
+                    <div style={{ 
+                      display: "grid", 
+                      gridTemplateRows: "repeat(2, auto)", 
+                      gridAutoFlow: "column",
+                      gap: "8px 12px", 
+                      overflowX: "auto", 
+                      paddingBottom: "8px",
+                      maxWidth: "100%",
+                      border: "1px solid var(--border-shadow, rgba(0,0,0,0.1))",
+                      borderRadius: "8px",
+                      padding: "10px",
+                      background: "rgba(0,0,0,0.01)"
+                    }}>
+                      {/* PNG Icons */}
+                      {CATEGORY_PNG_ICONS.map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => setForm(p => ({ ...p, emoji: item.value }))}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "4px",
+                            background: form.emoji === item.value ? "var(--btn-primary)" : "transparent",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            padding: "6px 10px",
+                            flexShrink: 0,
+                            minWidth: "64px"
+                          }}
+                        >
+                          <img 
+                            src={item.src} 
+                            alt={item.label} 
+                            style={{ width: "24px", height: "24px", objectFit: "contain", filter: form.emoji === item.value ? "brightness(0) invert(1)" : "none" }} 
+                          />
+                          <span style={{ 
+                            fontSize: "0.6rem", 
+                            color: form.emoji === item.value ? "white" : "var(--text-muted)",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap"
+                          }}>
+                            {item.label}
+                          </span>
+                        </button>
+                      ))}
+
+                      {/* Standard Emojis */}
+                      {EMOJI_OPTIONS.map((e) => (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => setForm(p => ({ ...p, emoji: e }))}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "4px",
+                            background: form.emoji === e ? "var(--btn-primary)" : "transparent",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            padding: "6px 10px",
+                            flexShrink: 0,
+                            minWidth: "64px"
+                          }}
+                        >
+                          <span style={{ fontSize: "1.2rem" }}>{e}</span>
+                          <span style={{ 
+                            fontSize: "0.6rem", 
+                            color: form.emoji === e ? "white" : "var(--text-muted)",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap"
+                          }}>
+                            Emoji
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -314,6 +538,20 @@ export default function CategoriesTab({ categories, onRefresh }) {
           );
         })}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="🗑️ Delete Category"
+        message={deleteId && ["proposal", "holud", "marriage", "baby", "baby-shower", "birthday"].includes(deleteId)
+          ? `WARNING: "${deleteId}" is a system-predefined category. Deleting it may impact layout stability. Proceed? This action requires your admin password.`
+          : `Are you sure you want to delete category "${deleteId}"? This action requires your admin password.`}
+        requirePassword={true}
+        confirmText="Verify & Delete"
+        errorMessage={deleteError}
+        isLoading={deleteLoading}
+      />
     </div>
   );
 }

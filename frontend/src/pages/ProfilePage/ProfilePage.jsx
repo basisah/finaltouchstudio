@@ -32,8 +32,9 @@ export default function ProfilePage() {
       });
 
       if (!res.ok) {
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 404) {
           localStorage.removeItem("user_token");
+          localStorage.removeItem("admin_token");
           localStorage.removeItem("user_info");
           navigate("/login");
           return;

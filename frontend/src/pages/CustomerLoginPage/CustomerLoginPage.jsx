@@ -82,8 +82,10 @@ export default function CustomerLoginPage() {
   };
 
   useEffect(() => {
+    let initialized = false;
+
     const initGoogleButton = () => {
-      if (window.google) {
+      if (window.google && !initialized) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1000000000000-dummyid.apps.googleusercontent.com",
           callback: handleGoogleCallback,
@@ -92,14 +94,17 @@ export default function CustomerLoginPage() {
           document.getElementById("customerGoogleSignInBtn"),
           { theme: "outline", size: "large", width: "356" }
         );
+        initialized = true;
+        return true;
       }
+      return false;
     };
 
-    initGoogleButton();
+    const success = initGoogleButton();
+    if (success) return;
 
     const timer = setInterval(() => {
-      if (window.google) {
-        initGoogleButton();
+      if (initGoogleButton()) {
         clearInterval(timer);
       }
     }, 500);

@@ -6,6 +6,9 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",      // Bind to all interfaces so Docker can expose it
     port: 3000,
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
     hmr: {
       clientPort: 8080,   // Must match the HOST port so browser WS connects correctly through Docker
     },

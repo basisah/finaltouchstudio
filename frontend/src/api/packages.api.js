@@ -7,4 +7,4 @@ export const getPackages = () => get("/packages");
 export const getPackage = (id) => get(`/packages/${id}`);
 
 /** Fetch all items in inventory catalog */
-export const getItems = () => get("/items");
+export const getItems = () => get("/items?all=true");

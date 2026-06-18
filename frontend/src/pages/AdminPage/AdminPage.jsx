@@ -51,7 +51,7 @@ export default function AdminPage() {
       })
       .catch((err) => console.error("Error loading admin categories:", err));
 
-    get("/items")
+    get("/items?all=true")
       .then((data) => setItems(data))
       .catch((err) => console.error("Error loading admin items:", err));
   };
@@ -117,7 +117,7 @@ export default function AdminPage() {
     const newPayment = {
       id: `TXN-${Math.floor(9000 + Math.random() * 1000)}`,
       memberName: newPayMember,
-      amount: `${newPayAmount} BDT`,
+      amount: `${newPayAmount} CAD`,
       date: new Date().toISOString().split("T")[0],
       method: newPayMethod,
       status: "Completed",

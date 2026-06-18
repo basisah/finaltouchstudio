@@ -16,7 +16,7 @@ const isAdmin = (req, res, next) => {
 };
 
 // Configure Multer storage
-const uploadDir = path.join(__dirname, "../../../uploads");
+const uploadDir = path.join(__dirname, "../../../uploads/items");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -38,7 +38,7 @@ router.post("/upload", auth, isAdmin, upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
-  const fileUrl = `/uploads/${req.file.filename}`;
+  const fileUrl = `/uploads/items/${req.file.filename}`;
   res.status(201).json({ path: fileUrl });
 });
 // Create item

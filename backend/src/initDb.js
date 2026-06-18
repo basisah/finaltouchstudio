@@ -1,4 +1,6 @@
 const db = require("./db");
+const fs = require("fs");
+const path = require("path");
 
 async function initializeDatabase() {
   console.log("🛠️ Syncing database schemas...");
@@ -42,7 +44,7 @@ async function initializeDatabase() {
     await db.query(`CREATE TABLE IF NOT EXISTS categories (
       id VARCHAR(50) PRIMARY KEY,
       label VARCHAR(255) NOT NULL,
-      emoji VARCHAR(10) DEFAULT '🎉',
+      emoji VARCHAR(100) DEFAULT '🎉',
       color VARCHAR(20) DEFAULT '#B8729A',
       description TEXT,
       image_url VARCHAR(255),
@@ -50,6 +52,22 @@ async function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`);
+
+    // Ensure emoji column can hold longer strings (in case table already exists)
+    try {
+      await db.query("ALTER TABLE categories MODIFY COLUMN emoji VARCHAR(100) DEFAULT '🎉'");
+      console.log("Ensured column 'emoji' in 'categories' is VARCHAR(100).");
+    } catch (err) {
+      // Log or ignore
+    }
+
+    // Ensure subcategories column exists in categories table
+    try {
+      await db.query("ALTER TABLE categories ADD COLUMN subcategories TEXT DEFAULT NULL");
+      console.log("Added column 'subcategories' to 'categories' table.");
+    } catch (err) {
+      // Column may already exist
+    }
 
     // 3. Create active rental inventory hardware ledger
     await db.query(`CREATE TABLE IF NOT EXISTS items (
@@ -218,11 +236,11 @@ async function initializeDatabase() {
 
     // 10. Seed/Upsert permanent categories to guarantee their presence and sorting
     const permanentCats = [
-      ["proposal", "Proposal", "💍", "#8B5CF6", "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.", 1],
-      ["holud", "Holud", "🌼", "#D97706", "Traditional Gaye Holud & Mehndi night stage setups with vibrant colors.", 2],
-      ["marriage", "Marriage", "💒", "#9F507C", "Exquisite wedding, holud & reception stages blending modern and traditional luxury.", 3],
-      ["baby", "Baby Shower", "🍼", "#A78BFA", "Cute, colorful & magical themes for celebrating your little one.", 4],
-      ["birthday", "Birthday", "🎂", "#B8729A", "Bespoke balloon walls, kids themes & customized stage setups for your special day.", 5]
+      ["proposal", "Proposal", "ring", "#8B5CF6", "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.", 1],
+      ["holud", "Holud", "bridal-shower", "#D97706", "Traditional Gaye Holud & Mehndi night stage setups with vibrant colors.", 2],
+      ["marriage", "Marriage", "wedding-couple", "#9F507C", "Exquisite wedding, holud & reception stages blending modern and traditional luxury.", 3],
+      ["baby", "Baby Shower", "baby", "#A78BFA", "Cute, colorful & magical themes for celebrating your little one.", 4],
+      ["birthday", "Birthday", "birthday-cake", "#B8729A", "Bespoke balloon walls, kids themes & customized stage setups for your special day.", 5]
     ];
 
     for (const [id, label, emoji, color, description, display_order] of permanentCats) {
@@ -233,9 +251,161 @@ async function initializeDatabase() {
     }
     console.log("✅ Seeded/Updated permanent categories display order.");
 
+    // Organize uploads and database paths
+    await organizeUploadsAndDatabase();
+
     console.log("🚀 Database schema verification complete!");
   } catch (error) {
     console.error("❌ Database initialization failed:", error);
+  }
+}
+
+async function organizeUploadsAndDatabase() {
+  console.log("📂 Organizing uploads directory and migrating database image paths...");
+  try {
+    const uploadsDir = path.join(__dirname, "../uploads");
+    const itemsDir = path.join(uploadsDir, "items");
+    const categoriesDir = path.join(uploadsDir, "categories");
+    const subcategoriesDir = path.join(uploadsDir, "subcategories");
+
+    // Ensure target directories exist
+    if (!fs.existsSync(itemsDir)) fs.mkdirSync(itemsDir, { recursive: true });
+    if (!fs.existsSync(categoriesDir)) fs.mkdirSync(categoriesDir, { recursive: true });
+    if (!fs.existsSync(subcategoriesDir)) fs.mkdirSync(subcategoriesDir, { recursive: true });
+
+    // 1. Move old files from root uploads/ to specific folders
+    if (fs.existsSync(uploadsDir)) {
+      const files = fs.readdirSync(uploadsDir);
+      for (const file of files) {
+        const fullPath = path.join(uploadsDir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isFile()) {
+          let destDir = itemsDir;
+          if (file.startsWith("category-")) {
+            destDir = categoriesDir;
+          } else if (file.startsWith("subcategory-")) {
+            destDir = subcategoriesDir;
+          } else if (file.startsWith("image-")) {
+            destDir = itemsDir;
+          } else {
+            // Keep other files where they are
+            continue;
+          }
+          const destPath = path.join(destDir, file);
+          try {
+            fs.renameSync(fullPath, destPath);
+            console.log(`Moved ${file} to ${destDir}`);
+          } catch (renameErr) {
+            console.error(`Failed to move file ${file}:`, renameErr);
+          }
+        }
+      }
+    }
+
+    // 2. Query items to update their image paths
+    const [items] = await db.query("SELECT id, image, gallery_images FROM items");
+    for (const item of items) {
+      let updated = false;
+      let newImage = item.image;
+      let newGallery = item.gallery_images;
+
+      // Update main image
+      if (item.image && item.image.startsWith("/uploads/image-")) {
+        newImage = item.image.replace("/uploads/image-", "/uploads/items/image-");
+        updated = true;
+      } else if (item.image && item.image.startsWith("/uploads/category-")) {
+        newImage = item.image.replace("/uploads/category-", "/uploads/categories/category-");
+        updated = true;
+      } else if (item.image && item.image.startsWith("/uploads/subcategory-")) {
+        newImage = item.image.replace("/uploads/subcategory-", "/uploads/subcategories/subcategory-");
+        updated = true;
+      }
+
+      // Update gallery images
+      if (item.gallery_images) {
+        try {
+          const gallery = typeof item.gallery_images === "string" ? JSON.parse(item.gallery_images) : item.gallery_images;
+          if (Array.isArray(gallery)) {
+            const newGalleryArr = gallery.map(img => {
+              if (img && img.startsWith("/uploads/image-")) {
+                updated = true;
+                return img.replace("/uploads/image-", "/uploads/items/image-");
+              }
+              if (img && img.startsWith("/uploads/category-")) {
+                updated = true;
+                return img.replace("/uploads/category-", "/uploads/categories/category-");
+              }
+              if (img && img.startsWith("/uploads/subcategory-")) {
+                updated = true;
+                return img.replace("/uploads/subcategory-", "/uploads/subcategories/subcategory-");
+              }
+              return img;
+            });
+            if (updated) {
+              newGallery = JSON.stringify(newGalleryArr);
+            }
+          }
+        } catch (parseErr) {
+          console.error(`Failed to parse gallery_images for item ${item.id}:`, parseErr);
+        }
+      }
+
+      if (updated) {
+        await db.query("UPDATE items SET image = ?, gallery_images = ? WHERE id = ?", [newImage, newGallery, item.id]);
+        console.log(`Updated paths for item: ${item.id}`);
+      }
+    }
+
+    // 3. Query categories to update their cover images and subcategory images
+    const [categories] = await db.query("SELECT id, image_url, subcategories FROM categories");
+    for (const cat of categories) {
+      let updated = false;
+      let newImageUrl = cat.image_url;
+      let newSubcategories = cat.subcategories;
+
+      if (cat.image_url && cat.image_url.startsWith("/uploads/category-")) {
+        newImageUrl = cat.image_url.replace("/uploads/category-", "/uploads/categories/category-");
+        updated = true;
+      } else if (cat.image_url && cat.image_url.startsWith("/uploads/image-")) {
+        newImageUrl = cat.image_url.replace("/uploads/image-", "/uploads/categories/image-");
+        updated = true;
+      }
+
+      if (cat.subcategories) {
+        try {
+          const subs = typeof cat.subcategories === "string" ? JSON.parse(cat.subcategories) : cat.subcategories;
+          if (Array.isArray(subs)) {
+            const newSubsArr = subs.map(sub => {
+              if (sub.image) {
+                if (sub.image.startsWith("/uploads/subcategory-")) {
+                  updated = true;
+                  return { ...sub, image: sub.image.replace("/uploads/subcategory-", "/uploads/subcategories/subcategory-") };
+                }
+                if (sub.image.startsWith("/uploads/image-")) {
+                  updated = true;
+                  return { ...sub, image: sub.image.replace("/uploads/image-", "/uploads/subcategories/image-") };
+                }
+              }
+              return sub;
+            });
+            if (updated) {
+              newSubcategories = JSON.stringify(newSubsArr);
+            }
+          }
+        } catch (parseErr) {
+          console.error(`Failed to parse subcategories for category ${cat.id}:`, parseErr);
+        }
+      }
+
+      if (updated) {
+        await db.query("UPDATE categories SET image_url = ?, subcategories = ? WHERE id = ?", [newImageUrl, newSubcategories, cat.id]);
+        console.log(`Updated paths for category: ${cat.id}`);
+      }
+    }
+
+    console.log("✅ Uploads folder and database paths organized successfully!");
+  } catch (err) {
+    console.error("❌ Failed to organize uploads and database:", err);
   }
 }
 

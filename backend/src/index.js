@@ -43,6 +43,10 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use("/uploads", express.static(uploadDir));
 
+// Expose static assets/icons folder
+const iconsDir = path.join(__dirname, "Assets/Icons");
+app.use("/uploads/Icons", express.static(iconsDir));
+
 // Initialize database tables and seed data
 initializeDatabase();
 

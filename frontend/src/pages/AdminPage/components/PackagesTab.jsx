@@ -3,6 +3,7 @@ import styles from "../AdminPage.module.css";
 import { getPackages, getItems } from "../../../api/packages.api";
 import { createPackage, updatePackage, deletePackage } from "../../../api/admin/packages.api";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
+import ConfirmModal from "./ConfirmModal";
 
 export default function PackagesTab() {
   const [packages, setPackages] = useState([]);
@@ -17,6 +18,10 @@ export default function PackagesTab() {
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState("birthday");
   const [selectedItemIds, setSelectedItemIds] = useState([]);
+
+  // Confirm Modal state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletePkgId, setDeletePkgId] = useState(null);
 
   // Categories mapping for easy display
   const categoriesList = [
@@ -64,14 +69,18 @@ export default function PackagesTab() {
     setIsModalOpen(true);
   };
 
-  const handleDeletePkg = async (pkgId) => {
-    if (window.confirm("Are you sure you want to delete this package?")) {
-      try {
-        await deletePackage(pkgId);
-        fetchDashboardData();
-      } catch (err) {
-        alert("Failed to delete package: " + err.message);
-      }
+  const triggerDeletePkg = (pkgId) => {
+    setDeletePkgId(pkgId);
+    setConfirmOpen(true);
+  };
+
+  const handleExecuteDeletePkg = async () => {
+    try {
+      await deletePackage(deletePkgId);
+      setConfirmOpen(false);
+      fetchDashboardData();
+    } catch (err) {
+      alert("Failed to delete package: " + err.message);
     }
   };
 
@@ -194,7 +203,7 @@ export default function PackagesTab() {
                           <button
                             className={styles.deleteItemBtn}
                             style={{ margin: 0, padding: "6px 12px" }}
-                            onClick={() => handleDeletePkg(pkg.id)}
+                            onClick={() => triggerDeletePkg(pkg.id)}
                           >
                             🗑️ Delete
                           </button>
@@ -360,6 +369,15 @@ export default function PackagesTab() {
           </div>
         </div>
       )}
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleExecuteDeletePkg}
+        title="🗑️ Delete Package"
+        message="Are you sure you want to delete this package permanently? This action cannot be undone."
+        confirmText="Confirm Delete"
+      />
     </div>
   );
 }
