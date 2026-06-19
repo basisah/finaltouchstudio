@@ -195,8 +195,32 @@ async function initializeDatabase() {
     } catch {
       // index already removed or never existed
     }
+    //9*. Create payments table to track payment attempts and statuses linked to orders  
+    await db.query(`CREATE TABLE IF NOT EXISTS payments (
+      id             INT AUTO_INCREMENT PRIMARY KEY,
+      order_id       INT NOT NULL,
+      method         ENUM('etransfer','card','paypal')                 NOT NULL DEFAULT 'etransfer',
+      amount_cents   INT                                               NOT NULL,
+      type           ENUM('full','deposit','balance')                  NOT NULL DEFAULT 'full',
+      status         ENUM('awaiting','received','refunded','failed')   NOT NULL DEFAULT 'awaiting',
+      reference_note VARCHAR(255) NULL,
+      confirmed_by   INT NULL,
+      confirmed_at   TIMESTAMP NULL,
+      created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id)     REFERENCES orders(id) ON DELETE CASCADE,
+      FOREIGN KEY (confirmed_by) REFERENCES users(id)  ON DELETE SET NULL
+    );`);
 
-    // 9. Create unauthenticated site-wide customer contact enquiry forms collector
+    try {
+      await db.query(`ALTER TABLE orders
+        ADD COLUMN payment_status
+        ENUM('unpaid','deposit_paid','paid_in_full','refunded')
+        NOT NULL DEFAULT 'unpaid'`);
+    } catch {
+      // column already exists
+    }
+
+    // 10. Create unauthenticated site-wide customer contact enquiry forms collector
     await db.query(`CREATE TABLE IF NOT EXISTS enquiries (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -220,7 +244,8 @@ async function initializeDatabase() {
       // column already removed or never existed
     }
 
-    // 10. Seed/Upsert permanent categories to guarantee their presence and sorting
+
+    // 11. Seed/Upsert permanent categories to guarantee their presence and sorting
     const permanentCats = [
       ["proposal", "Proposal", "💍", "#8B5CF6", "Fairy lights, romantic floral arches & beautiful signs to make your moment perfect.", 1],
       ["holud", "Holud", "🌼", "#D97706", "Traditional Gaye Holud & Mehndi night stage setups with vibrant colors.", 2],
