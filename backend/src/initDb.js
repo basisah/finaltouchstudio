@@ -170,12 +170,31 @@ async function initializeDatabase() {
       item_id VARCHAR(50) NULL,
       package_id INT NULL,
       quantity INT DEFAULT 1,
+      pickup_date DATE NULL,
+      return_date DATE NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_user_item (user_id, item_id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
       FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
     );`);
+
+    const userCartColumnMigrations = [
+      "ALTER TABLE user_cart ADD COLUMN pickup_date DATE NULL",
+      "ALTER TABLE user_cart ADD COLUMN return_date DATE NULL",
+    ];
+    for (const sql of userCartColumnMigrations) {
+      try {
+        await db.query(sql);
+      } catch {
+        // column already exists
+      }
+    }
+
+    try {
+      await db.query("ALTER TABLE user_cart DROP INDEX unique_user_item");
+    } catch {
+      // index already removed or never existed
+    }
 
     // 9. Create unauthenticated site-wide customer contact enquiry forms collector
     await db.query(`CREATE TABLE IF NOT EXISTS enquiries (

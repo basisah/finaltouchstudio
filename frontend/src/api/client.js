@@ -17,7 +17,8 @@ export function getUploadsBaseUrl() {
 }
 
 async function request(method, path, body) {
-  const token = localStorage.getItem('admin_token');
+  const token =
+    localStorage.getItem('user_token') || localStorage.getItem('admin_token');
   const options = {
     method,
     headers: {

@@ -7,6 +7,8 @@ import {
   getDeliveryStatus,
   isDeliveryAllowed,
 } from "../../utils/saskatoonDelivery";
+import { isLoggedIn } from "../../utils/auth";
+import { submitOrder } from "../../api/bookings.api";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import styles from "./CartCheckoutPage.module.css";
@@ -36,6 +38,7 @@ export default function CartCheckoutPage() {
   const [hasShippingInfo, setHasShippingInfo] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [shippingPostalCode, setShippingPostalCode] = useState(postalCode);
@@ -60,6 +63,19 @@ export default function CartCheckoutPage() {
     setShippingPostalCode(postalCode);
   }, [postalCode]);
 
+  useEffect(() => {
+    if (!isLoggedIn()) return;
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+      if (userInfo.email) setEmail(userInfo.email);
+      if (userInfo.name) {
+        const parts = userInfo.name.trim().split(/\s+/);
+        setFirstName(parts[0] || "");
+        setLastName(parts.slice(1).join(" ") || "");
+      }
+    } catch (_) {}
+  }, []);
+
   const subtotal = cart.reduce(
     (total, c) => total + (c.quantity || 1) * MOCK_PRICE_PER_ITEM,
     0
@@ -80,7 +96,7 @@ export default function CartCheckoutPage() {
       );
       return;
     }
-    if (!firstName || !lastName || !city || !phone) {
+    if (!firstName || !lastName || !city || !phone || !email) {
       alert("Please fill in all requested contact fields.");
       return;
     }
@@ -107,13 +123,6 @@ export default function CartCheckoutPage() {
       return;
     }
 
-    const token = localStorage.getItem("user_token") || localStorage.getItem("admin_token");
-    if (!token) {
-      alert("Please sign in or register to place your reservation order.");
-      navigate("/login?redirect=/cart/checkout");
-      return;
-    }
-
     try {
       const firstCartItem = cart[0];
       const rental_date = firstCartItem?.pickupDate
@@ -135,44 +144,27 @@ export default function CartCheckoutPage() {
           : event_date,
       }));
 
-      let customerEmail = `${firstName.toLowerCase()}@example.com`;
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-        if (userInfo.email) customerEmail = userInfo.email;
-      } catch (_) {}
+      const customerEmail = email.trim();
 
       const venueAddress =
         fulfillmentType === "pickup"
           ? "Final Touch Studio — Saskatoon (pickup)"
           : `${address}, ${city}, ${shippingPostalCode}`;
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          customer_name: `${firstName} ${lastName}`,
-          customer_email: customerEmail,
-          customer_phone: phone,
-          event_date: event_date,
-          rental_date: rental_date,
-          fulfillment_type: fulfillmentType,
-          delivery_fee: deliveryFee,
-          venue_address: venueAddress,
-          special_notes: `Payment method: ${paymentMethod}`,
-          total_amount: totalAmount,
-          items: itemsPayload,
-        }),
+      const data = await submitOrder({
+        customer_name: `${firstName} ${lastName}`,
+        customer_email: customerEmail,
+        customer_phone: phone,
+        event_date: event_date,
+        rental_date: rental_date,
+        fulfillment_type: fulfillmentType,
+        delivery_fee: deliveryFee,
+        venue_address: venueAddress,
+        special_notes: `Payment method: ${paymentMethod}`,
+        total_amount: totalAmount,
+        items: itemsPayload,
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Checkout failed");
-      }
-
-      const data = await res.json();
       setBookingRef(`FT-${data.orderId}`);
       setIsCompleted(true);
       clearCart();
@@ -274,6 +266,10 @@ export default function CartCheckoutPage() {
                     <label>Last Name</label>
                     <input type="text" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                   </div>
+                  <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
+                    <label>Email Address</label>
+                    <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
                   {fulfillmentType === "delivery" && (
                     <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                       <label>Address</label>
@@ -325,6 +321,7 @@ export default function CartCheckoutPage() {
                   <p style={{ fontWeight: "600", marginBottom: "4px" }}>
                     {firstName} {lastName}
                   </p>
+                  <p>{email}</p>
                   {fulfillmentType === "delivery" && <p>{address}</p>}
                   <p>
                     {city}, {stateRegion} {fulfillmentType === "delivery" ? shippingPostalCode : ""}

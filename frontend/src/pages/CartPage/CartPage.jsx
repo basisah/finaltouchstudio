@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { getItemStockQuantity } from "../../utils/itemStock";
@@ -6,8 +7,10 @@ import {
   getDeliveryStatus,
   isDeliveryAllowed,
 } from "../../utils/saskatoonDelivery";
+import { isLoggedIn } from "../../utils/auth";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
+import CheckoutAuthModal from "../../components/CheckoutAuthModal/CheckoutAuthModal";
 import styles from "./CartPage.module.css";
 
 const MOCK_PRICE_PER_ITEM = 25;
@@ -58,6 +61,7 @@ export default function CartPage() {
     setPostalCode,
   } = useCart();
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const subtotal = cart.reduce(
     (total, c) => total + (c.quantity || 1) * MOCK_PRICE_PER_ITEM,
@@ -92,6 +96,21 @@ export default function CartPage() {
       return;
     }
 
+    if (isLoggedIn()) {
+      navigate("/cart/checkout");
+      return;
+    }
+
+    setShowAuthModal(true);
+  };
+
+  const handleSignIn = () => {
+    setShowAuthModal(false);
+    navigate("/login", { state: { from: "/cart/checkout" } });
+  };
+
+  const handleGuestCheckout = () => {
+    setShowAuthModal(false);
     navigate("/cart/checkout");
   };
 
@@ -319,6 +338,14 @@ export default function CartPage() {
           </>
         )}
       </main>
+
+      {showAuthModal && (
+        <CheckoutAuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSignIn={handleSignIn}
+          onGuest={handleGuestCheckout}
+        />
+      )}
 
       <Footer />
     </div>
