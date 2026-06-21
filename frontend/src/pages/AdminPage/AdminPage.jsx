@@ -23,6 +23,7 @@ import EnquiriesTab from "./components/EnquiriesTab";
 import GlobalSearchTab from "./components/GlobalSearchTab";
 import PackagesTab from "./components/PackagesTab";
 import CategoriesTab from "./components/CategoriesTab";
+import RentsTab from "./components/RentsTab";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function AdminPage() {
   // Core Dashboard State (bootstrapped from DB and mockData file)
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [enquiries, setEnquiries] = useState(initialEnquiries);
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
@@ -54,6 +56,10 @@ export default function AdminPage() {
     get("/items?all=true")
       .then((data) => setItems(data))
       .catch((err) => console.error("Error loading admin items:", err));
+
+    get("/admin/orders")
+      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Error loading admin orders:", err));
   };
 
   useEffect(() => {
@@ -182,6 +188,7 @@ export default function AdminPage() {
         items={items}
         members={members}
         payments={payments}
+        ordersCount={orders.length}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onTriggerAddCategory={onTriggerAddCategory}
@@ -212,7 +219,7 @@ export default function AdminPage() {
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <section className={styles.contentBody}>
+        <section className={activeTab === "rents" ? styles.contentBodyFullscreen : styles.contentBody}>
           {/* A. Global Search View Overlay */}
           {searchQuery.trim() !== "" && (
             <GlobalSearchTab
@@ -280,6 +287,11 @@ export default function AdminPage() {
           {/* H. Categories Management Tab */}
           {activeTab === "categories" && searchQuery.trim() === "" && (
             <CategoriesTab categories={categories} onRefresh={refreshData} />
+          )}
+
+          {/* L. Rents / Orders Information Desk */}
+          {activeTab === "rents" && searchQuery.trim() === "" && (
+            <RentsTab />
           )}
 
           {/* I. General Settings Tab */}

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage/AboutPage";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import LoginPage from "./pages/AdminPage/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -20,6 +21,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/items" element={<ItemsPage />} />
           <Route path="/item/:id" element={<ItemDetailPage />} />
           <Route path="/package/:id" element={<PackageDetail />} />

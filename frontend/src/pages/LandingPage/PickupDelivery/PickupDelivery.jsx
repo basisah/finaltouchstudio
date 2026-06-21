@@ -28,7 +28,6 @@ export default function PickupDelivery() {
   return (
     <section id="delivery" className={styles.section} aria-label="Pickup and delivery options">
       <div className={styles.inner}>
-        <p className={styles.eyebrow}>Convenient Logistics</p>
         <h2 className={styles.heading}>Pickup or Delivery — Your Choice</h2>
         <p className={styles.subheading}>
           We make getting your decorations as stress-free as the event itself.

@@ -12,6 +12,7 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const initializeDatabase = require("./initDb");  // Database setup script initDb.js
+const db = require("./db");
 
 // Routes
 const packageRoutes = require("./routes/packageRoutes");
@@ -67,6 +68,28 @@ app.use("/api/packages", adminPackages);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Stats API
+app.get("/api/stats", async (req, res) => {
+  try {
+    const [itemRows] = await db.query("SELECT COUNT(*) AS totalItems FROM items");
+    const [userRows] = await db.query("SELECT COUNT(*) AS totalUsers FROM users");
+    const [orderRows] = await db.query("SELECT COUNT(*) AS totalOrders FROM orders");
+    
+    const totalItems = itemRows[0] ? itemRows[0].totalItems : 0;
+    const totalUsers = userRows[0] ? userRows[0].totalUsers : 0;
+    const totalOrders = orderRows[0] ? orderRows[0].totalOrders : 0;
+
+    res.json({
+      totalItems: Number(totalItems),
+      totalUsers: Number(totalUsers),
+      totalOrders: Number(totalOrders),
+    });
+  } catch (err) {
+    console.error("Error fetching stats:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
+  }
 });
 
 module.exports = app;

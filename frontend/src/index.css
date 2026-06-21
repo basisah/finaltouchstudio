@@ -76,7 +76,9 @@
   /* eyebrow script accents */
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   /* festive headings */
-  --font-sans: 'Inter', -apple-system, sans-serif;
+  --font-heading: 'Outfit', 'Inter', -apple-system, sans-serif;
+  /* clean modern headings — all pages */
+  --font-sans: 'Outfit', 'Inter', -apple-system, sans-serif;
   /* body */
 }
 
@@ -89,14 +91,18 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: var(--clr-weathervane);
-  /* dark base — sections paint over this */
-  color: var(--txt-primary);
+  background: var(--bg-main);
+  color: var(--text-main);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  /* belt-and-suspenders: no horizontal scroll on mobile */
   width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 img {
@@ -125,7 +131,7 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--clr-mulberry-mix);
+  background: var(--btn-primary);
   border-radius: 99px;
 }
 

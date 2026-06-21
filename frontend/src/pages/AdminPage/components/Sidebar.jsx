@@ -32,6 +32,7 @@ export default function Sidebar({
   items,
   members,
   payments,
+  ordersCount,
   activeTab,
   setActiveTab,
   onTriggerAddCategory,
@@ -58,6 +59,33 @@ export default function Sidebar({
 
       {/* Navigation - Scrollable Content */}
       <nav className={styles.navigation}>
+
+        {/* ─── RENTS Section ───────────────────────────────── */}
+        <div className={styles.sectionHeaderRow}>
+          <p className={styles.navLabel}>Rents</p>
+        </div>
+        <ul className={styles.catList}>
+          <li>
+            <button
+              className={`${styles.navBtn} ${styles.navBtnRents} ${activeTab === "rents" ? styles.activeRents : ""}`}
+              onClick={() => {
+                setActiveTab("rents");
+                setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
+            >
+              <span className={styles.btnEmoji}>🧾</span>
+              <span className={styles.btnLabel}>Rents</span>
+              {ordersCount > 0 && (
+                <span className={`${styles.btnCount} ${styles.btnCountRents}`}>{ordersCount}</span>
+              )}
+            </button>
+          </li>
+        </ul>
+
+        <div className={styles.divider} />
+
+        {/* ─── Categories Section ──────────────────────────── */}
         {/* Categories Header & Controls */}
         <div className={styles.sectionHeaderRow}>
           <p className={styles.navLabel}>Categories</p>

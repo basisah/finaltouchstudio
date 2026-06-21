@@ -30,7 +30,7 @@ function HeroSearchBar() {
     get("/items")
       .then((data) => setDbItems(data || []))
       .catch((err) => console.error("Error loading items:", err));
-      
+
     get("/categories")
       .then((data) => setDbCategories(data || []))
       .catch((err) => console.error("Error loading categories:", err));
@@ -82,8 +82,11 @@ function HeroSearchBar() {
           }}
           onFocus={() => setIsOpen(true)}
         />
-        <button type="submit" className={styles.sBtnSimple}>
-          Search
+        <button type="submit" className={styles.sBtnSimple} aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: "18px", height: "18px", display: "block" }}>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
         </button>
       </form>
 
@@ -178,7 +181,7 @@ export default function HeroSection() {
         {heroCategories.map((cat) => {
           const imgUrl = categoryImages[cat.id];
 
-          let description = "Bespoke balloon walls, kids themes & stage setups.";
+          let description = "";
           if (cat.id === "proposal") {
             description = "Fairy lights, romantic floral arches & signs.";
           } else if (cat.id === "marriage") {

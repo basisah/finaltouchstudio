@@ -18,11 +18,11 @@
 
 /* Scrolled: glass dark bar */
 .navbar.scrolled {
-  background: rgba(52, 22, 42, 0.92);
+  background: rgba(129, 87, 164, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 2px 32px rgba(52,22,42,0.40);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 2px 32px rgba(71, 26, 105, 0.30);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .navbar.scrolled .inner { padding: 14px 48px; }
 
@@ -198,65 +198,65 @@
 
 /* ── Light Theme Navbar (for all pages except landing page) ── */
 .navbar.light {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-shadow);
-  box-shadow: 0 2px 10px rgba(73, 34, 91, 0.04);
+  background: var(--btn-primary);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .navbar.light .logoText {
-  color: var(--text-main);
+  color: #fff;
   text-shadow: none;
 }
 
 .navbar.light .logoAccent {
-  color: var(--btn-primary);
+  color: var(--brand-gold);
 }
 
 .navbar.light .logoMark {
-  box-shadow: 0 2px 8px var(--border-shadow);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .navbar.light .navLink {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
   text-shadow: none;
 }
 
 .navbar.light .navLink:hover,
 .navbar.light .navLink.active {
-  color: var(--text-main);
-  background: var(--bg-main);
+  color: #fff;
+  background: var(--btn-hover);
   text-shadow: none;
 }
 
 .navbar.light .mobileNavLink {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .navbar.light .mobileNavLink:hover,
 .navbar.light .mobileNavLink.active {
-  color: var(--text-main);
-  background: var(--bg-main);
+  color: #fff;
+  background: var(--btn-hover);
 }
 
 .navbar.light .iconBtn {
-  color: var(--text-main);
+  color: #fff;
   filter: none;
 }
 
 .navbar.light .iconBtn:hover {
-  color: var(--btn-primary);
+  color: var(--brand-gold);
 }
 
 .navbar.light .badge {
-  border-color: var(--bg-card);
+  border-color: var(--btn-primary);
 }
 
 .navbar.light.scrolled {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--btn-primary);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(73, 34, 91, 0.08);
-  border-bottom: 1px solid var(--border-shadow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 /* ── Desktop-only helper ──────────────────────────────────────────────────── */

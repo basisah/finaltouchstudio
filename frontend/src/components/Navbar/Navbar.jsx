@@ -9,12 +9,14 @@ import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
 const DESKTOP_NAV = [
   { label: "Items",    href: "/items"     },
   { label: "Build",    href: "/build"     },
+  { label: "About",    href: "/about"     },
 ];
 
 // Mobile: only Items + Build as text links (Cart + Profile are icons)
 const MOBILE_NAV = [
   { label: "Items", href: "/items" },
   { label: "Build", href: "/build" },
+  { label: "About", href: "/about" },
 ];
 
 export default function Navbar() {
@@ -36,6 +38,7 @@ export default function Navbar() {
   useEffect(() => {
     if (location.pathname === "/items") setActiveLink("/items");
     else if (location.pathname === "/build") setActiveLink("/build");
+    else if (location.pathname === "/about") setActiveLink("/about");
     else if (location.hash) setActiveLink(location.hash);
     else setActiveLink("#home");
   }, [location]);

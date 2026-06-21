@@ -1,7 +1,7 @@
 /* ── Footer wrapper ────────────────────────────────────────────────────────── */
 .footer {
-  background: var(--clr-weathervane);
-  color: rgba(255, 255, 255, 0.75);
+  background: var(--btn-primary);
+  color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-sans);
   position: relative;
   margin-top: auto;
@@ -39,7 +39,7 @@
   font-family: var(--font-serif);
   font-size: 13px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--brand-gold);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin: 0 0 18px;
@@ -64,7 +64,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--clr-berry-bush), var(--clr-mulberry-mix));
+  background: var(--brand-gold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +73,7 @@
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .brandName {
@@ -86,23 +86,23 @@
 .brandNameItalic {
   font-family: var(--font-display);
   font-size: 22px;
-  color: var(--clr-benifuji);
+  color: var(--brand-gold);
 }
 
 .story {
   font-size: 14px;
   line-height: 1.75;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--brand-lavender);
   margin: 0 0 16px;
   max-width: 320px;
 }
 
 .tagline {
   font-size: 13px;
-  color: var(--clr-benifuji);
+  color: var(--brand-gold);
   font-style: italic;
   margin: 0;
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 /* ── MIDDLE: Quick Links ──────────────────────────────────────────────────── */
@@ -120,7 +120,7 @@
   padding: 0;
   font-family: var(--font-sans);
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--brand-lavender);
   text-decoration: none;
   cursor: pointer;
   text-align: left;
@@ -132,7 +132,7 @@
 
 .linkList a:hover,
 .linkList button:hover {
-  color: #fff;
+  color: var(--brand-gold);
   transform: translateX(4px);
 }
 
@@ -142,7 +142,7 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   font-size: 12px;
-  color: var(--clr-benifuji);
+  color: var(--brand-gold);
 }
 
 .linkList a:hover::before,
@@ -162,18 +162,18 @@
   align-items: center;
   gap: 12px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--brand-lavender);
   text-decoration: none;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
   transition: all 0.2s ease;
 }
 
 .socialLink:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--brand-gold);
   color: #fff;
   transform: translateX(4px);
 }
@@ -182,7 +182,7 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .socialLink:hover svg {
@@ -190,17 +190,17 @@
 }
 
 /* Color tints on hover */
-.socialLink:nth-child(1):hover { border-color: rgba(59, 89, 152, 0.5); }  /* FB blue */
-.socialLink:nth-child(2):hover { border-color: rgba(225, 48, 108, 0.5); } /* IG pink */
-.socialLink:nth-child(3):hover { border-color: rgba(37, 211, 102, 0.5); } /* WA green */
-.socialLink:nth-child(4):hover { border-color: rgba(255, 255, 255, 0.3); }/* TikTok */
+.socialLink:nth-child(1):hover { border-color: var(--brand-gold); }  /* FB gold */
+.socialLink:nth-child(2):hover { border-color: var(--brand-gold); }  /* IG gold */
+.socialLink:nth-child(3):hover { border-color: var(--brand-gold); }  /* WA gold */
+.socialLink:nth-child(4):hover { border-color: var(--brand-gold); }  /* TikTok gold */
 
 /* Other info */
 .otherLinks {}
 
 /* ── Bottom Bar ───────────────────────────────────────────────────────────── */
 .bottomBar {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding: 18px 40px;
   display: flex;
   align-items: center;
@@ -208,7 +208,8 @@
   max-width: 1200px;
   margin: 0 auto;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--brand-lavender);
+  opacity: 0.8;
   letter-spacing: 0.3px;
 }
 

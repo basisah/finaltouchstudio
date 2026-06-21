@@ -2,9 +2,9 @@
 
 /* ── Footer ──────────────────────────────────────────────────────────────────── */
 .footer {
-  background: var(--clr-weathervane);
+  background: var(--btn-primary);
   padding: 48px 40px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 .footerInner {
   max-width: 1100px; margin: 0 auto;
@@ -14,13 +14,13 @@
 .footerBrand { display:flex; align-items:center; gap:10px; }
 .footerLogo {
   width:34px; height:34px; border-radius:10px;
-  background: var(--grad-mauve);
+  background: var(--brand-gold);
   display:flex; align-items:center; justify-content:center;
   font-family:var(--font-serif); font-weight:700; font-size:13px; color:#fff;
-  box-shadow: 0 4px 12px rgba(159,80,124,0.40);
+  box-shadow: 0 4px 12px rgba(168,135,96,0.30);
 }
 .footerName { font-family:var(--font-serif); font-size:18px; font-weight:700; color:#fff; }
-.footerCopy { font-size:13px; color:rgba(255,255,255,0.28); }
+.footerCopy { font-size:13px; color:rgba(255,255,255,0.50); }
 .footerLinks { display:flex; gap:20px; }
-.footerLinks a { font-size:13px; color:rgba(255,255,255,0.40); transition:color var(--transition); }
-.footerLinks a:hover { color:var(--clr-gizmo); }
+.footerLinks a { font-size:13px; color:rgba(255,255,255,0.70); transition:color var(--transition); }
+.footerLinks a:hover { color:var(--brand-gold); }

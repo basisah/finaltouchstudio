@@ -1,5 +1,5 @@
 .section {
-  background: linear-gradient(180deg, var(--clr-weathervane) 0%, #3e1f32 100%);
+  background: var(--bg-main);
   padding: 100px 40px;
   position: relative;
   overflow: hidden;
@@ -23,17 +23,29 @@
   gap: 16px;
 }
 
+.workWindow {
+  background: rgba(237, 228, 241, 0.45); /* Soft light purple window background */
+  border: 1.5px solid rgba(129, 87, 164, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  box-shadow: 
+    0 12px 36px var(--border-shadow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .sectionDivider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-shadow), transparent);
   margin: 10px 0;
 }
 
 .eyebrow {
   font-family: var(--font-display);
   font-size: 32px;
-  color: var(--clr-gizmo);
+  color: var(--btn-primary);
   margin-bottom: 4px;
   text-align: center;
 }
@@ -46,14 +58,14 @@
   font-family: var(--font-serif);
   font-size: clamp(32px, 4.5vw, 48px);
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   text-align: center;
   letter-spacing: -0.5px;
 }
 
 .sub {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   text-align: center;
   margin-bottom: 24px;
 }
@@ -70,26 +82,26 @@
 .filterBtn {
   padding: 10px 24px;
   border-radius: 99px;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--border-shadow);
+  background: var(--bg-card);
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
   transition: all var(--transition);
   cursor: pointer;
 }
 
 .filterBtn:hover {
-  border-color: var(--clr-gizmo);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--btn-primary);
+  color: var(--text-main);
+  background: var(--brand-lavender);
 }
 
 .filterActive {
-  background: var(--grad-mauve) !important;
+  background: var(--brand-gold) !important;
   border-color: transparent !important;
   color: #fff !important;
-  box-shadow: 0 4px 16px rgba(159, 80, 124, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(168, 135, 96, 0.35) !important;
 }
 
 /* ── Grid ─────────────────────────────────────────────────────────────────────── */
@@ -131,17 +143,18 @@
 .placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(82, 46, 48, 0.8) 0%, rgba(157, 90, 111, 0.4) 100%);
+  background: var(--brand-lavender);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-shadow);
 }
 
 .placeholderLabel {
   font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-main);
   text-align: center;
   padding: 8px;
 }
@@ -150,7 +163,7 @@
 .cardOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(30, 10, 20, 0.9) 0%, transparent 60%);
+  background: linear-gradient(to top, rgba(71, 26, 105, 0.9) 0%, transparent 60%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -168,7 +181,7 @@
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--clr-gizmo);
+  color: var(--brand-gold);
   margin-bottom: 4px;
 }
 
@@ -226,19 +239,19 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--border-shadow);
+  background: var(--bg-card);
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-main);
   transition: all var(--transition);
   cursor: pointer;
 }
 
 .arrow:hover {
-  background: var(--grad-mauve);
+  background: var(--brand-gold);
   border-color: transparent;
   color: #fff;
 }
@@ -260,22 +273,20 @@
 .socialCard {
   flex-shrink: 0;
   width: 260px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border-lt);
+  background: var(--bg-card);
+  border: 1px solid var(--border-shadow);
   border-radius: var(--radius-lg);
   overflow: hidden;
   scroll-snap-align: start;
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px var(--border-shadow);
 }
 
 .socialCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
-  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16px 40px var(--border-shadow);
+  border-color: var(--btn-primary);
 }
 
 .postImg {
@@ -339,26 +350,26 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--clr-gizmo);
+  color: var(--btn-primary);
 }
 
 .handle {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .postTag {
   font-size: 14px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
 }
 
 .postStats {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .platformRow2 {
@@ -376,38 +387,38 @@
   gap: 8px;
   padding: 10px 20px;
   border-radius: 99px;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid var(--border-shadow);
+  background: var(--bg-card);
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-muted);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition);
 }
 
 .platformChip:hover {
   border-color: var(--p-color);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  background: var(--brand-lavender);
   transform: translateY(-2px);
 }
 
 .followCta {
   text-align: center;
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   margin-top: 10px;
 }
 
 .followCta a {
-  color: var(--clr-gizmo);
+  color: var(--btn-primary);
   font-weight: 700;
   border-bottom: 1.5px solid transparent;
   transition: border-color var(--transition);
 }
 
 .followCta a:hover {
-  border-color: var(--clr-gizmo);
+  border-color: var(--btn-primary);
 }
 
 /* ── Responsive Overrides ──────────────────────────────────────────────────── */

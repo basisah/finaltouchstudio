@@ -46,6 +46,7 @@ export default function Footer() {
           <nav className={styles.linkList}>
             <button onClick={() => scrollTo("home")}>Home</button>
             <Link to="/items">Browse Items</Link>
+            <Link to="/about">About Us</Link>
             <button onClick={() => scrollTo("gallery")}>Gallery</button>
             <button onClick={() => scrollTo("delivery")}>Delivery Info</button>
             <button onClick={() => scrollTo("contact")}>Contact Us</button>

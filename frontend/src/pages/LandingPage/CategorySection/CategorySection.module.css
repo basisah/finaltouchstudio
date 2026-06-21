@@ -1,9 +1,5 @@
 .section {
-  background: linear-gradient(180deg, 
-    #4c1d3f 0%,    /* Rich purple blend */
-    #3c1931 50%,   /* Smooth intermediate dark purple */
-    #4a0e17 100%   /* Deep Burgundy */
-  );
+  background: var(--bg-main);
   padding: 250px 20px 60px;
   position: relative;
   overflow: hidden;
@@ -19,9 +15,9 @@
 .eyebrow {
   font-family: var(--font-display);
   font-size: 32px;
-  color: #F5D0FE;
+  color: var(--btn-primary);
   font-weight: 400;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: none;
   margin-bottom: 8px;
 }
 
@@ -29,10 +25,10 @@
   font-family: var(--font-serif);
   font-size: clamp(32px, 4.5vw, 48px);
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   text-align: center;
   letter-spacing: -0.5px;
-  text-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  text-shadow: none;
 }
 
 /* ── Timeline Rows ───────────────────────────────────────────────────────────── */
@@ -95,12 +91,12 @@
   z-index: 2;
   flex-shrink: 0;
   
-  /* Intricate multi-layered circular borders */
+  /* Intricate multi-layered circular borders matching cream/lavender theme */
   box-shadow: 
-    0 0 0 12px rgba(52, 22, 42, 0.95),
-    0 0 0 14px rgba(255, 255, 255, 0.2),
-    0 0 0 28px rgba(52, 22, 42, 0.7),
-    0 0 0 29px rgba(255, 255, 255, 0.1);
+    0 0 0 12px var(--bg-main),
+    0 0 0 14px var(--border-shadow),
+    0 0 0 28px var(--brand-lavender),
+    0 0 0 29px var(--border-shadow);
   transition: transform 0.5s var(--ease);
 }
 .row:hover .imageWrapper {
@@ -112,7 +108,7 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.15);
 }
 
 /* ── Text Content ────────────────────────────────────────────────────────────── */
@@ -141,7 +137,7 @@
   width: 48px;
   height: 48px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 10px rgba(71, 26, 105, 0.15));
   transition: transform 0.4s var(--ease, ease);
   flex-shrink: 0;
 }
@@ -153,8 +149,8 @@
   font-family: var(--font-serif);
   font-size: 48px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(20, 8, 16, 0.8);
+  color: var(--text-main);
+  text-shadow: none;
   margin: 0;
   line-height: 1.1;
 }
@@ -163,7 +159,7 @@
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 700;
-  color: #D8BCC4;
+  color: var(--text-muted);
   margin-bottom: 20px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -171,7 +167,7 @@
 
 .desc {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-muted);
   line-height: 1.6;
   margin-bottom: 32px;
 }
@@ -181,7 +177,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 700;
   text-transform: lowercase;
@@ -196,19 +192,19 @@
   cursor: pointer;
   transition: color 0.2s ease;
 }
-.linkText:hover { color: #fff; }
+.linkText:hover { color: var(--text-main); }
 
 .linkLine {
   height: 1px;
   width: 48px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--btn-primary);
 }
 
 .linkCircle {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  border: 2px solid var(--btn-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,7 +215,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--btn-primary);
 }
 
 /* ── Continuous Wavery Timeline S-Curves (SVG) ───────────────────────────── */

@@ -73,6 +73,7 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookedRanges, setBookedRanges] = useState([]);
 
   // Form states using modal
   const [showCalendar, setShowCalendar] = useState(false);
@@ -96,6 +97,17 @@ export default function ItemDetailPage() {
         console.error("Error loading item details:", err);
         setError("Could not load item details. Please check the item ID.");
         setLoading(false);
+      });
+
+    // Fetch booked date ranges for this item (for calendar availability)
+    get(`/items/${id}/booked-dates`)
+      .then((data) => {
+        if (data && Array.isArray(data.bookedRanges)) {
+          setBookedRanges(data.bookedRanges);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch booked dates:", err);
       });
   }, [id]);
 
@@ -355,6 +367,7 @@ export default function ItemDetailPage() {
           item={item}
           onClose={() => setShowCalendar(false)}
           onConfirm={handleConfirmDates}
+          bookedRanges={bookedRanges}
         />
       )}
 

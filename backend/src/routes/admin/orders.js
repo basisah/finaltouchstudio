@@ -17,11 +17,43 @@ const isAdmin = (req, res, next) => {
 // All routes here are admin-only
 router.use(auth, isAdmin);
 
-// GET all orders
+// GET all orders with their items
 router.get("/", async (req, res) => {
   try {
-    const [orders] = await db.query("SELECT * FROM orders ORDER BY created_at DESC");
-    res.json(orders);
+    const [orders] = await db.query(`
+      SELECT o.*,
+             GROUP_CONCAT(
+               CONCAT_WS('||',
+                 COALESCE(i.title, p.name, 'Unknown Item'),
+                 oi.quantity,
+                 oi.price_at_rent,
+                 COALESCE(i.image, ''),
+                 COALESCE(oi.item_id, ''),
+                 COALESCE(oi.package_id, '')
+               ) SEPARATOR ';;'
+             ) AS items_summary
+      FROM orders o
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+      LEFT JOIN items i ON oi.item_id = i.id
+      LEFT JOIN packages p ON oi.package_id = p.id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `);
+
+    // Parse the items_summary string back into structured arrays
+    const parsed = orders.map(order => {
+      const rawItems = order.items_summary || "";
+      const items = rawItems
+        ? rawItems.split(";;").map(entry => {
+            const [name, quantity, price, image, item_id, package_id] = entry.split("||");
+            return { name, quantity: Number(quantity), price: parseFloat(price), image, item_id, package_id };
+          })
+        : [];
+      const { items_summary, ...rest } = order;
+      return { ...rest, items };
+    });
+
+    res.json(parsed);
   } catch (err) {
     console.error("Error fetching orders:", err);
     res.status(500).json({ error: "Failed to fetch orders" });

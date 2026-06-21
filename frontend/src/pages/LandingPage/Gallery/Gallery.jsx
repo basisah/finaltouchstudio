@@ -70,11 +70,9 @@ export default function Gallery() {
   return (
     <section id="gallery" className={styles.section} aria-label="Our work and social proof">
       <div className={styles.inner}>
-        {/* PART 1: Past Projects */}
-        <div className={styles.subsection}>
-          <p className={styles.eyebrow}>Our Work</p>
-          <h2 className={styles.heading}>Past Projects</h2>
-          <p className={styles.sub}>Each setup is crafted with care and a passion for perfection.</p>
+        {/* PART 1: Our Work */}
+        <div className={`${styles.subsection} ${styles.workWindow}`}>
+          <h2 className={styles.heading}>Our Work</h2>
 
           {/* Filter tabs */}
           <div className={styles.filters} role="tablist">
@@ -109,76 +107,6 @@ export default function Gallery() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Dynamic section divider line */}
-        <div className={styles.sectionDivider}></div>
-
-        {/* PART 2: Loved on Social Media */}
-        <div className={styles.subsection} style={{ width: "100%" }}>
-          <div className={styles.socialHeader}>
-            <div>
-              <p className={styles.eyebrow}>Follow Our Journey</p>
-              <h2 className={styles.heading} style={{ textAlign: "left" }}>Loved on Social Media</h2>
-            </div>
-            <div className={styles.controls}>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={styles.igBtn}>
-                <IgIcon /> @finaltouchstudio
-              </a>
-              <div className={styles.arrows}>
-                <button className={styles.arrow} onClick={() => scroll(-1)} aria-label="Previous">‹</button>
-                <button className={styles.arrow} onClick={() => scroll(1)} aria-label="Next">›</button>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.track} ref={trackRef}>
-            {DEMO_POSTS.map((post, i) => {
-              const meta = PLATFORM_META[post.platform] || PLATFORM_META.instagram;
-              const { Icon } = meta;
-              return (
-                <div key={post.id} className={styles.socialCard}>
-                  {/* Post image placeholder */}
-                  <div className={styles.postImg} style={{ "--post-hue": i * 40 }}>
-                    <span className={styles.postCameraIcon}>📸</span>
-                  </div>
-                  {/* Platform badge */}
-                  <div className={styles.platformBadge} style={{ background: meta.color }}>
-                    <Icon />
-                  </div>
-                  <div className={styles.postBody}>
-                    <div className={styles.postMeta}>
-                      <div className={styles.platformRow}>
-                        <span className={styles.platformIcon} style={{ color: meta.color }}><Icon /></span>
-                        <span className={styles.platformLabel}>{meta.label}</span>
-                      </div>
-                      <span className={styles.handle}>{post.handle}</span>
-                    </div>
-                    <p className={styles.postTag}>{post.tag}</p>
-                    <div className={styles.postStats}>
-                      <span>❤️ {post.likes} likes</span>
-                      <span>View →</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Platform icon row */}
-          <div className={styles.platformRow2}>
-            {Object.entries(PLATFORM_META).map(([key, { Icon, color, label }]) => (
-              <div key={key} className={styles.platformChip} style={{ "--p-color": color }}>
-                <span style={{ color }}><Icon /></span>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className={styles.followCta}>
-            Follow us for daily inspiration →{" "}
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">@finaltouchstudio</a>
-          </p>
         </div>
       </div>
     </section>

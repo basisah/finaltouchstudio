@@ -11,12 +11,6 @@ export default function HeroTitle() {
         Every Moment Deserves<br />
         <em className={styles.headlineItalic}>a Final Touch</em>
       </h1>
-
-      {/* 1-line description */}
-      <p className={styles.subheadline}>
-        Bespoke event decorations for weddings, birthdays &amp; every celebration in between.
-      </p>
-
     </div>
   );
 }

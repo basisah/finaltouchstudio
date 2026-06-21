@@ -38,6 +38,46 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get booked date ranges for a specific item (public) — must come BEFORE /:id
+router.get("/:id/booked-dates", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Fetch the item's total inventory count
+    const [itemRows] = await db.query(
+      "SELECT unit_count FROM items WHERE id = ?",
+      [id]
+    );
+    const unitCount = itemRows.length > 0 ? (Number(itemRows[0].unit_count) || 1) : 1;
+
+    // Fetch each order's date range + quantity booked for this item
+    // Group by order so overlapping orders with different ranges are separate entries
+    const [rows] = await db.query(
+      `SELECT o.rental_date, o.event_date, SUM(oi.quantity) AS quantity_booked
+       FROM orders o
+       INNER JOIN order_items oi ON oi.order_id = o.id
+       WHERE oi.item_id = ?
+         AND o.status IN ('pending', 'confirmed')
+       GROUP BY o.id, o.rental_date, o.event_date`,
+      [id]
+    );
+
+    const bookedRanges = rows.map((r) => ({
+      rentalDate: r.rental_date instanceof Date
+        ? r.rental_date.toISOString().split("T")[0]
+        : String(r.rental_date).split("T")[0],
+      eventDate: r.event_date instanceof Date
+        ? r.event_date.toISOString().split("T")[0]
+        : String(r.event_date).split("T")[0],
+      quantityBooked: Number(r.quantity_booked) || 1,
+    }));
+
+    res.json({ bookedRanges, unitCount });
+  } catch (err) {
+    console.error("Error fetching booked dates:", err);
+    res.status(500).json({ error: "Failed to fetch booked dates" });
+  }
+});
+
 // Get single item (public)
 router.get("/:id", async (req, res) => {
   try {

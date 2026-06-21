@@ -8,6 +8,7 @@ import DateRangePickerModal from "../../components/DateRangePickerModal/DateRang
 import SearchBar from "../../components/SearchBar/SearchBar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
+import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
 import styles from "./ItemsPage.module.css";
 
 const categoryIcons = {
@@ -202,6 +203,7 @@ const getBookedDatesForItem = (itemId) => {
 export default function ItemsPage() {
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemBookedRanges, setSelectedItemBookedRanges] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const lastSearchRef = useRef("__INITIAL__");
@@ -332,6 +334,15 @@ export default function ItemsPage() {
 
   const handleOpenItem = (item) => {
     setSelectedItem(item);
+    setSelectedItemBookedRanges([]); // reset while loading
+    // Fetch booked dates for this specific item
+    get(`/items/${item.id}/booked-dates`)
+      .then((data) => {
+        if (data && Array.isArray(data.bookedRanges)) {
+          setSelectedItemBookedRanges(data.bookedRanges);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch booked dates:", err));
   };
 
   const handleCloseItem = () => {
@@ -385,43 +396,33 @@ export default function ItemsPage() {
       <Navbar />
 
       <main className={styles.mainContainer3d}>
-        
+
         {/* Top Showcase Banner Card */}
         <section className={styles.showcaseCard3d}>
           <div>
             <span className={styles.showcaseBadge}>Featured Collection</span>
             <h1 className={styles.showcaseTitle}>FinalTouch Signature Series</h1>
             <p className={styles.showcaseDesc}>
-              Artisan rentals and staging items designed right here in Saskatoon. 
+              Artisan rentals and staging items designed right here in Saskatoon.
               Select your dates, build custom packages, and celebrate with flair.
             </p>
             <div className={styles.showcaseMetrics}>
               <div className={styles.showcaseMetricBlock}>
-                <span className={styles.metricValue}>$25.00</span>
-                <span className={styles.metricLabel}>Daily Rates</span>
+                <span className={styles.metricValue}>{dbItems.length || "0"}</span>
+                <span className={styles.metricLabel}>Total Items</span>
               </div>
               <div className={styles.showcaseMetricBlock}>
                 <span className={styles.metricValue}>100%</span>
-                <span className={styles.metricLabel}>Customizable</span>
-              </div>
-              <div className={styles.showcaseMetricBlock}>
-                <span className={styles.metricValue}>High</span>
-                <span className={styles.metricLabel}>Prop Demand</span>
-              </div>
-              <div className={styles.showcaseMetricBlock}>
-                <span className={styles.metricValue}>{dbItems.length || "0"}</span>
-                <span className={styles.metricLabel}>Total Props</span>
+                <span className={styles.metricLabel}>Satisfaction</span>
               </div>
             </div>
           </div>
           <div className={styles.showcaseVisualCol}>
-            <div className={styles.showcaseOrb}>
-              <div className={styles.showcaseOrbInner}>
-                ✨
-              </div>
-            </div>
-            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf1}`}>🌸</span>
-            <span className={`${styles.showcaseLeaf} ${styles.showcaseLeaf2}`}>💡</span>
+            {/* Blur depth orbs for 3D effect */}
+            <div className={styles.logoBlurOrb1}></div>
+            <div className={styles.logoBlurOrb2}></div>
+            {/* Bare logo — no card wrapper */}
+            <img src={logoImg} alt="FinalTouch Studios Logo" className={styles.showcaseLogo} />
           </div>
         </section>
 
@@ -466,249 +467,250 @@ export default function ItemsPage() {
         {categories
           .filter((cat) => !activeCategoryFilter || cat.id === activeCategoryFilter)
           .map((category) => {
-          // Dynamic subcategories calculation
-          const subcategories = (() => {
-            if (category.subcategories && category.subcategories.length > 0) {
-              return category.subcategories;
-            }
-            const itemsInCat = dbItems.filter(item => item.categoryId === category.id);
-            const uniqueSubcatIds = [...new Set(itemsInCat.map(item => item.subCategoryId).filter(Boolean))];
-            if (uniqueSubcatIds.length === 0) {
-              return [{ id: "general", label: "General Props", emoji: "✨" }];
-            }
-            return uniqueSubcatIds.map(subId => ({
-              id: subId,
-              label: subId.charAt(0).toUpperCase() + subId.slice(1),
-              emoji: "✨"
-            }));
-          })();
+            // Dynamic subcategories calculation
+            const subcategories = (() => {
+              if (category.subcategories && category.subcategories.length > 0) {
+                return category.subcategories;
+              }
+              const itemsInCat = dbItems.filter(item => item.categoryId === category.id);
+              const uniqueSubcatIds = [...new Set(itemsInCat.map(item => item.subCategoryId).filter(Boolean))];
+              if (uniqueSubcatIds.length === 0) {
+                return [{ id: "general", label: "General Props", emoji: "✨" }];
+              }
+              return uniqueSubcatIds.map(subId => ({
+                id: subId,
+                label: subId.charAt(0).toUpperCase() + subId.slice(1),
+                emoji: "✨"
+              }));
+            })();
 
-          const activeSubcatId = activeSubcats[category.id];
-          const activeSubcatObj = subcategories.find(s => s.id === activeSubcatId);
+            const activeSubcatId = activeSubcats[category.id];
+            const activeSubcatObj = subcategories.find(s => s.id === activeSubcatId);
 
-          return (
-            <section
-              key={category.id}
-              id={`category-section-${category.id}`}
-              className={styles.categoryBlock3d}
-              style={{ "--category-color": category.color || "#9F507C" }}
-            >
-              {/* Glowing background orb for this category */}
-              <div className={styles.categoryBackdropOrb} />
+            return (
+              <section
+                key={category.id}
+                id={`category-section-${category.id}`}
+                className={styles.categoryBlock3d}
+                style={{ "--category-color": category.color || "#9F507C" }}
+              >
+                {/* Glowing background orb for this category */}
+                <div className={styles.categoryBackdropOrb} />
 
-              <div className={styles.categoryHeader}>
-                <div className={styles.categoryTitleRow}>
-                  {categoryIcons[category.emoji] || categoryIcons[category.id] ? (
-                    <img 
-                      src={categoryIcons[category.emoji] || categoryIcons[category.id]} 
-                      alt="" 
-                      className={styles.categoryHeaderIcon} 
-                    />
-                  ) : (
-                    <span style={{ fontSize: "1.8rem", marginRight: "12px" }}>{category.emoji || "✨"}</span>
-                  )}
-                  <h2 className={styles.categoryTitle}>{category.label}</h2>
-                </div>
-                <div className={styles.categoryTitleDivider} />
-              </div>
-
-              {!activeSubcatId ? (
-                /* 1. Show the Subcategory circles */
-                <div className={styles.gridContainer3d}>
-                  {subcategories.map((subcat) => (
-                    <div
-                      key={subcat.id}
-                      className={styles.gridItem3d}
-                      onClick={() => setActiveSubcats(prev => ({ ...prev, [category.id]: subcat.id }))}
-                    >
-                      <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
-                        {subcat.image ? (
-                          <img 
-                            src={subcat.image} 
-                            alt={subcat.label} 
-                            className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
-                            style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }} 
-                          />
-                        ) : (
-                          <span className={styles.subcatEmoji}>{subcat.emoji}</span>
-                        )}
-                      </div>
-                      <div className={styles.cardLabelWrapper}>
-                        <span className={styles.cardLabel}>{subcat.label}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* 2. Expanded view: show active subcategory items, and other at bottom */
-                <div className={styles.expandedSection}>
-                  <div className={styles.expandedSubcatHeader}>
-                    <button 
-                      type="button" 
-                      className={styles.backToSubcatsBtn}
-                      onClick={() => setActiveSubcats(prev => {
-                        const next = { ...prev };
-                        delete next[category.id];
-                        return next;
-                      })}
-                    >
-                      ← All Categories
-                    </button>
-                    <h3 className={styles.activeSubcatTitle}>
-                      {activeSubcatObj?.emoji} {activeSubcatObj?.label}
-                    </h3>
+                <div className={styles.categoryHeader}>
+                  <div className={styles.categoryTitleRow}>
+                    {categoryIcons[category.emoji] || categoryIcons[category.id] ? (
+                      <img
+                        src={categoryIcons[category.emoji] || categoryIcons[category.id]}
+                        alt=""
+                        className={styles.categoryHeaderIcon}
+                      />
+                    ) : (
+                      <span style={{ fontSize: "1.8rem", marginRight: "12px" }}>{category.emoji || "✨"}</span>
+                    )}
+                    <h2 className={styles.categoryTitle}>{category.label}</h2>
                   </div>
+                  <div className={styles.categoryTitleDivider} />
+                </div>
 
-                  {/* Items Grid */}
-                  {(() => {
-                    const filteredItems = dbItems
-                      .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId);
-
-                    if (filteredItems.length === 0) {
-                      return (
-                        <div className={styles.emptySubcatState}>
-                          <span className={styles.emptyIcon}>✨</span>
-                          <p className={styles.emptyText}>No props available in this category yet.</p>
+                {!activeSubcatId ? (
+                  /* 1. Show the Subcategory circles */
+                  <div className={styles.gridContainer3d}>
+                    {subcategories.map((subcat) => (
+                      <div
+                        key={subcat.id}
+                        className={styles.gridItem3d}
+                        onClick={() => setActiveSubcats(prev => ({ ...prev, [category.id]: subcat.id }))}
+                      >
+                        <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
+                          {subcat.image ? (
+                            <img
+                              src={subcat.image}
+                              alt={subcat.label}
+                              className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
+                              style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }}
+                            />
+                          ) : (
+                            <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                          )}
                         </div>
-                      );
-                    }
+                        <div className={styles.cardLabelWrapper}>
+                          <span className={styles.cardLabel}>{subcat.label}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* 2. Expanded view: show active subcategory items, and other at bottom */
+                  <div className={styles.expandedSection}>
+                    <div className={styles.expandedSubcatHeader}>
+                      <button
+                        type="button"
+                        className={styles.backToSubcatsBtn}
+                        onClick={() => setActiveSubcats(prev => {
+                          const next = { ...prev };
+                          delete next[category.id];
+                          return next;
+                        })}
+                      >
+                        ← All Categories
+                      </button>
+                      <h3 className={styles.activeSubcatTitle}>
+                        {activeSubcatObj?.emoji} {activeSubcatObj?.label}
+                      </h3>
+                    </div>
 
-                    return (
-                      <div className={styles.productGrid}>
-                        {filteredItems.map((item) => {
-                          const cartItem = getCartItem(item.id);
-                          return (
-                            <div
-                              key={item.id}
-                              className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
-                              onClick={() => window.open(`/item/${item.id}`, "_blank")}
-                            >
-                              <button
-                                type="button"
-                                className={styles.infoBtn3d}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(`/item/${item.id}`, "_blank");
-                                }}
-                                title="View details"
+                    {/* Items Grid */}
+                    {(() => {
+                      const filteredItems = dbItems
+                        .filter((item) => item.categoryId === category.id && item.subCategoryId === activeSubcatId);
+
+                      if (filteredItems.length === 0) {
+                        return (
+                          <div className={styles.emptySubcatState}>
+                            <span className={styles.emptyIcon}>✨</span>
+                            <p className={styles.emptyText}>No props available in this category yet.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className={styles.productGrid}>
+                          {filteredItems.map((item) => {
+                            const cartItem = getCartItem(item.id);
+                            return (
+                              <div
+                                key={item.id}
+                                className={`${styles.productCard3d} ${cartItem ? styles.productInCart : ""}`}
+                                onClick={() => window.open(`/item/${item.id}`, "_blank")}
                               >
-                                <span className={styles.infoText}>see item</span>
-                                <span className={styles.infoIcon}>ⓘ</span>
-                              </button>
-                              <div className={styles.productIconContainer3d}>
-                                 {item.image && item.image.startsWith("/uploads") ? (
-                                   <img 
-                                     src={item.image} 
-                                     alt={item.title} 
-                                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
-                                   />
-                                 ) : (
-                                   <div className={styles.productIconWrapper}>
-                                     {getSvgIcon(item.title)}
-                                   </div>
-                                 )}
-                               </div>
-                              
-                              <div className={styles.productDetails3d}>
-                                <h4 className={styles.productTitle}>{item.title}</h4>
-                                
-                                <div className={styles.productFooter}>
-                                  <span className={styles.productPrice}>
-                                    ${parseFloat(item.price || 0).toFixed(2)} CAD <span className={styles.priceUnit}>/day</span>
-                                  </span>
-                                  {cartItem ? (
-                                    <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
-                                      <button
-                                        type="button"
-                                        className={styles.qtyControlBtn}
-                                        onClick={() => updateQuantity(cartItem.id, -1)}
-                                        title="Decrease quantity"
-                                      >
-                                        −
-                                      </button>
-                                      <span className={styles.qtyValue}>{cartItem.quantity || 1}</span>
-                                      <button
-                                        type="button"
-                                        className={styles.qtyControlBtn}
-                                        onClick={() => updateQuantity(cartItem.id, 1)}
-                                        title="Increase quantity"
-                                      >
-                                        +
-                                      </button>
-                                    </div>
+                                <button
+                                  type="button"
+                                  className={styles.infoBtn3d}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(`/item/${item.id}`, "_blank");
+                                  }}
+                                  title="View details"
+                                >
+                                  <span className={styles.infoText}>see item</span>
+                                  <span className={styles.infoIcon}>ⓘ</span>
+                                </button>
+                                <div className={styles.productIconContainer3d}>
+                                  {item.image && item.image.startsWith("/uploads") ? (
+                                    <img
+                                      src={item.image}
+                                      alt={item.title}
+                                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                                    />
                                   ) : (
-                                    <button
-                                      type="button"
-                                      className={styles.productAddBtn}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenItem(item);
-                                      }}
-                                      title="Add to cart"
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                      </svg>
-                                      Rent
-                                    </button>
+                                    <div className={styles.productIconWrapper}>
+                                      {getSvgIcon(item.title)}
+                                    </div>
                                   )}
                                 </div>
+
+                                <div className={styles.productDetails3d}>
+                                  <h4 className={styles.productTitle}>{item.title}</h4>
+
+                                  <div className={styles.productFooter}>
+                                    <span className={styles.productPrice}>
+                                      ${parseFloat(item.price || 0).toFixed(2)} CAD <span className={styles.priceUnit}>/day</span>
+                                    </span>
+                                    {cartItem ? (
+                                      <div className={styles.cardQuantityControl} onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          className={styles.qtyControlBtn}
+                                          onClick={() => updateQuantity(cartItem.id, -1)}
+                                          title="Decrease quantity"
+                                        >
+                                          −
+                                        </button>
+                                        <span className={styles.qtyValue}>{cartItem.quantity || 1}</span>
+                                        <button
+                                          type="button"
+                                          className={styles.qtyControlBtn}
+                                          onClick={() => updateQuantity(cartItem.id, 1)}
+                                          title="Increase quantity"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className={styles.productAddBtn}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenItem(item);
+                                        }}
+                                        title="Add to cart"
+                                      >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Rent
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Bottom: Inactive other subcategories */}
+                    <div className={styles.otherSubcatsWrapper}>
+                      <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
+                      <div className={styles.gridContainer3d}>
+                        {subcategories
+                          .filter((subcat) => subcat.id !== activeSubcatId)
+                          .map((subcat) => (
+                            <div
+                              key={subcat.id}
+                              className={styles.gridItem3d}
+                              onClick={() => {
+                                setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
+                                document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }}
+                            >
+                              <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
+                                {subcat.image ? (
+                                  <img
+                                    src={subcat.image}
+                                    alt={subcat.label}
+                                    className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
+                                    style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }}
+                                  />
+                                ) : (
+                                  <span className={styles.subcatEmoji}>{subcat.emoji}</span>
+                                )}
+                              </div>
+                              <div className={styles.cardLabelWrapper}>
+                                <span className={styles.cardLabel}>{subcat.label}</span>
                               </div>
                             </div>
-                          );
-                        })}
+                          ))}
                       </div>
-                    );
-                  })()}
-
-                  {/* Bottom: Inactive other subcategories */}
-                  <div className={styles.otherSubcatsWrapper}>
-                    <h4 className={styles.otherSubcatsHeading}>Switch Category</h4>
-                    <div className={styles.gridContainer3d}>
-                      {subcategories
-                        .filter((subcat) => subcat.id !== activeSubcatId)
-                        .map((subcat) => (
-                          <div
-                            key={subcat.id}
-                            className={styles.gridItem3d}
-                            onClick={() => {
-                              setActiveSubcats((prev) => ({ ...prev, [category.id]: subcat.id }));
-                              document.getElementById(`category-section-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                            }}
-                          >
-                            <div className={`${styles.circleCard3d} ${subcat.image && subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngContainer : ''}`}>
-                              {subcat.image ? (
-                                <img 
-                                  src={subcat.image} 
-                                  alt={subcat.label} 
-                                  className={subcat.image.toLowerCase().endsWith('.png') ? styles.transparentPngImg : ''}
-                                  style={{ width: "100%", height: "100%", objectFit: subcat.image.toLowerCase().endsWith('.png') ? "contain" : "cover", borderRadius: subcat.image.toLowerCase().endsWith('.png') ? "0%" : "50%" }} 
-                                />
-                              ) : (
-                                <span className={styles.subcatEmoji}>{subcat.emoji}</span>
-                              )}
-                            </div>
-                            <div className={styles.cardLabelWrapper}>
-                              <span className={styles.cardLabel}>{subcat.label}</span>
-                            </div>
-                          </div>
-                        ))}
                     </div>
                   </div>
-                </div>
-              )}
-            </section>
-          );
-        })}
+                )}
+              </section>
+            );
+          })}
       </main>
 
       {/* Booking Popup Modal */}
       {selectedItem && (
-        <DateRangePickerModal 
-          item={selectedItem} 
-          onClose={handleCloseItem} 
-          onConfirm={handleConfirmDates} 
+        <DateRangePickerModal
+          item={selectedItem}
+          onClose={handleCloseItem}
+          onConfirm={handleConfirmDates}
+          bookedRanges={selectedItemBookedRanges}
         />
       )}
 
