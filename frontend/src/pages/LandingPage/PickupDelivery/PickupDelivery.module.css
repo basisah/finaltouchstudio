@@ -24,7 +24,7 @@
   display: flex; flex-direction: column; gap: 14px; text-align: left;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
-.card:hover { border-color: var(--opt-color); transform:translateY(-4px); box-shadow:0 20px 40px var(--border-shadow); }
+.card:hover { border-color: var(--btn-primary); transform:translateY(-4px); box-shadow:0 20px 40px var(--border-shadow); }
 
 .featured {
   border-color: var(--brand-gold);
@@ -37,56 +37,21 @@
   font-size:11px; font-weight:700; letter-spacing:1px;
   padding:5px 18px; border-radius:99px; white-space:nowrap;
 }
-
-.cardIcon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: var(--opt-icon-bg, rgba(129, 87, 164, 0.08));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 6px;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.card:hover .cardIcon {
-  transform: scale(1.1) rotate(2deg);
-}
-
-.iconImg {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-}
-
+.cardIcon { font-size:44px; line-height:1; }
 .cardTitle { font-family:var(--font-serif); font-size:26px; font-weight:700; color:var(--text-main); letter-spacing:-0.3px; }
-.cardSubtitle { font-size:13px; font-weight:600; color: var(--opt-color); letter-spacing:0.3px; }
+.cardSubtitle { font-size:13px; font-weight:600; color:var(--btn-primary); letter-spacing:0.3px; }
 .cardDesc { font-size:14px; color:var(--text-muted); line-height:1.75; }
 
-.highlights { list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom: 8px; }
+.highlights { list-style:none; display:flex; flex-direction:column; gap:8px; flex:1; }
 .highlights li { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-muted); }
-.checkIcon { color: var(--opt-color); flex-shrink: 0; }
-
-.trustBadge {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: rgba(129, 87, 164, 0.02);
-  border-radius: 8px;
-  padding: 10px 12px;
-  border: 1.5px dashed var(--border-shadow);
-  margin-bottom: 12px;
-  line-height: 1.4;
-}
+.highlights li span { color:var(--btn-primary); font-weight:700; flex-shrink:0; }
 
 .cardCta {
-  margin-top: auto; padding:13px 24px; border-radius:99px;
+  margin-top:8px; padding:13px 24px; border-radius:99px;
   border: 1px solid transparent;
   background: var(--brand-gold);
   color:#fff; font-size:14px; font-weight:600;
   transition: all var(--transition); align-self:flex-start;
   box-shadow: 0 4px 12px rgba(168, 135, 96, 0.2);
-  cursor: pointer;
 }
 .cardCta:hover { background:var(--btn-hover); border-color:var(--btn-hover); box-shadow:0 8px 20px rgba(71, 26, 105, 0.25); }

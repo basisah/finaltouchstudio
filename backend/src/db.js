@@ -41,7 +41,7 @@ async function waitForConnection(maxAttempts = 40, delayMs = 250) {
   throw new Error("Could not connect to database");
 }
 
-if (process.env.JEST_WORKER_ID === undefined) {
+if (process.env.JEST_WORKER_ID === undefined && !process.env.VERCEL) {
   waitForConnection(10, 3000)
     .then(() => console.log("✅ Database connected successfully"))
     .catch(() => console.error("❌ Could not connect to database after multiple attempts"));

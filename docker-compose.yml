@@ -32,6 +32,9 @@ services:
       DB_NAME: finaltouchstudio
       DB_USER: appuser
       DB_PASSWORD: apppassword
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: password
+      JWT_SECRET: local-dev-secret
     ports:
       - "4000:4000"
     volumes:
@@ -49,6 +52,7 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_URL: /api
+      VITE_PROXY_TARGET: http://backend:4000
     ports:
       - "8080:3000"
     volumes:

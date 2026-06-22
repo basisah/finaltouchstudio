@@ -1,0 +1,420 @@
+import React, { useMemo } from "react";
+import styles from "../AdminPage.module.css";
+import ItemEditModal from "./ItemEditModal";
+import { getItemStockQuantity, isItemRentable } from "../../../utils/itemStock";
+
+const getItemSortLabel = (item) =>
+  String(item.name || item.title || item.id || "").trim().toLowerCase();
+
+export default function ItemsTab({
+  categories,
+  items,
+  itemCategoryFilter,
+  setItemCategoryFilter,
+  itemSortOrder,
+  setItemSortOrder,
+  handleToggleAvailability,
+  handleDeleteItem,
+  handleUpdateItem,
+  isSavingItem,
+  showAddItemForm,
+  setShowAddItemForm,
+  handleAddItem,
+  newItemSN,
+  setNewItemSN,
+  newItemPic,
+  setNewItemPic,
+  newItemName,
+  setNewItemName,
+  newItemDesc,
+  setNewItemDesc,
+  newItemFile,
+  setNewItemFile,
+  newItemUnitCount,
+  setNewItemUnitCount,
+  addFormRef,
+  editingItem,
+  setEditingItem,
+}) {
+  const activeCategory = categories.find((c) => c.id === itemCategoryFilter);
+  const filteredItems = useMemo(() => {
+    const list =
+      itemCategoryFilter === "all"
+        ? items
+        : items.filter((item) => item.categoryId === itemCategoryFilter);
+
+    return [...list].sort((a, b) => {
+      const cmp = getItemSortLabel(a).localeCompare(getItemSortLabel(b), undefined, {
+        sensitivity: "base",
+      });
+      return itemSortOrder === "za" ? -cmp : cmp;
+    });
+  }, [items, itemCategoryFilter, itemSortOrder]);
+
+  const getCategoryLabel = (categoryId) => {
+    const cat = categories.find((c) => c.id === categoryId);
+    return cat ? `${cat.emoji} ${cat.label}` : categoryId || "Uncategorized";
+  };
+
+  const handleOpenAddForm = () => {
+    setShowAddItemForm(true);
+    if (itemCategoryFilter === "all" && categories.length > 0) {
+      setItemCategoryFilter(categories[0].id);
+    }
+    requestAnimationFrame(() => {
+      addFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  return (
+    <div
+      className={`${styles.categoryGrid} ${!showAddItemForm ? styles.categoryGridFull : ""}`}
+    >
+      <div className={styles.card}>
+        <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+          <div>
+            <h2>📋 Items Inventory ({filteredItems.length})</h2>
+            <p>
+              Manage rental items, toggle availability, and review stock across categories. Click a row
+              to edit.
+            </p>
+          </div>
+          {!showAddItemForm && (
+            <button
+              type="button"
+              className={styles.addItemBtn}
+              style={{ width: "auto", marginTop: 0, flexShrink: 0 }}
+              onClick={handleOpenAddForm}
+            >
+              ➕ Add New Item
+            </button>
+          )}
+        </div>
+
+        <div className={styles.itemsFilterBar}>
+          <label htmlFor="itemsCategoryFilter" className={styles.itemsFilterLabel}>
+            Filter by category
+          </label>
+          <select
+            id="itemsCategoryFilter"
+            className={styles.itemsFilterSelect}
+            value={itemCategoryFilter}
+            onChange={(e) => setItemCategoryFilter(e.target.value)}
+          >
+            <option value="all">All categories ({items.length})</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.emoji} {cat.label} ({items.filter((i) => i.categoryId === cat.id).length})
+              </option>
+            ))}
+          </select>
+
+          <label htmlFor="itemsSortOrder" className={styles.itemsFilterLabel}>
+            Sort by name
+          </label>
+          <select
+            id="itemsSortOrder"
+            className={styles.itemsFilterSelect}
+            value={itemSortOrder}
+            onChange={(e) => setItemSortOrder(e.target.value)}
+          >
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+          </select>
+        </div>
+
+        {filteredItems.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>
+              No items in this view yet. Click <strong>+ Add New Item</strong> above to create one.
+            </p>
+          </div>
+        ) : (
+          <div className={styles.tableWrapper} style={{ overflowX: "auto" }}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Item Details</th>
+                  {itemCategoryFilter === "all" && <th>Category</th>}
+                  <th>Availability</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item) => {
+                  const stockQty = getItemStockQuantity(item);
+                  const isAvailable = isItemRentable(item);
+                  return (
+                    <tr
+                      key={item.id}
+                      className={styles.clickableRow}
+                      onClick={() => setEditingItem(item)}
+                      title="Click to edit"
+                    >
+                      <td>
+                        <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                          <div style={{ flexShrink: 0 }}>
+                            {item.image && item.image.startsWith("/uploads") ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{
+                                  width: "44px",
+                                  height: "44px",
+                                  objectFit: "cover",
+                                  borderRadius: "8px",
+                                  display: "block",
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className={styles.itemEmojiPic}
+                                style={{ width: "44px", height: "44px", borderRadius: "8px" }}
+                              >
+                                {item.image}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <code
+                                style={{
+                                  fontSize: "0.72rem",
+                                  background: "var(--bg-main)",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid var(--border-shadow)",
+                                  color: "var(--text-main)",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                {item.id}
+                              </code>
+                              <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
+                                {item.name || item.title}
+                              </strong>
+                            </div>
+                            <p className={styles.tableSmallDesc} style={{ margin: "4px 0 6px", lineHeight: "1.4" }}>
+                              {item.description}
+                            </p>
+                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                              <span
+                                className={styles.btnCount}
+                                style={{
+                                  background: "rgba(165, 110, 189, 0.12)",
+                                  color: "var(--btn-primary)",
+                                  fontSize: "10px",
+                                  fontWeight: "700",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                }}
+                              >
+                                Stock: {stockQty} units
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      {itemCategoryFilter === "all" && (
+                        <td>
+                          <span className={styles.btnCount}>{getCategoryLabel(item.categoryId)}</span>
+                        </td>
+                      )}
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.availabilityToggle}>
+                          <span
+                            className={`${styles.statusLabel} ${isAvailable ? styles.statusAvailable : styles.statusBooked}`}
+                          >
+                            {isAvailable ? "Available" : "Unavailable"}
+                          </span>
+                          <label className={styles.switch}>
+                            <input
+                              type="checkbox"
+                              checked={isAvailable}
+                              onChange={() => handleToggleAvailability(item.id)}
+                              aria-label={`Toggle availability for ${item.name || item.title}`}
+                            />
+                            <span className={styles.slider} />
+                          </label>
+                        </div>
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            className={styles.btnCount}
+                            style={{ cursor: "pointer", border: "1px solid var(--border-shadow)" }}
+                            onClick={() => setEditingItem(item)}
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.deleteItemBtn}
+                            onClick={() => handleDeleteItem(item.id)}
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <ItemEditModal
+        item={editingItem}
+        categories={categories}
+        onClose={() => setEditingItem(null)}
+        isSaving={isSavingItem}
+        onSave={async (form) => {
+          try {
+            await handleUpdateItem(form);
+            setEditingItem(null);
+          } catch {
+            /* error surfaced in handleUpdateItem */
+          }
+        }}
+      />
+
+      {showAddItemForm && (
+      <div className={styles.card} ref={addFormRef}>
+        <div className={styles.addItemCardHeader}>
+          <div>
+            <h2>➕ Add New Item</h2>
+            <p>
+              {activeCategory
+                ? `Adding to ${activeCategory.emoji} ${activeCategory.label}`
+                : "Select a target category below"}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.cancelCatBtn}
+            onClick={() => setShowAddItemForm(false)}
+          >
+            ✕ Close
+          </button>
+        </div>
+
+        <form onSubmit={handleAddItem} className={styles.itemForm}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemTargetCategory">Category</label>
+            <select
+              id="itemTargetCategory"
+              className={styles.picSelect}
+              value={itemCategoryFilter === "all" ? "" : itemCategoryFilter}
+              onChange={(e) => setItemCategoryFilter(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                -- Select category --
+              </option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.emoji} {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemSN">Unique Serial Number</label>
+            <input
+              id="itemSN"
+              type="text"
+              placeholder="e.g. SN-BTH-003"
+              value={newItemSN}
+              onChange={(e) => setNewItemSN(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemPic">Visual Symbol / Icon</label>
+            <select
+              id="itemPic"
+              value={newItemPic}
+              onChange={(e) => setNewItemPic(e.target.value)}
+              className={styles.picSelect}
+            >
+              <option value="✨">✨ sparkle</option>
+              <option value="🎂">🎂 cake</option>
+              <option value="💍">💍 ring</option>
+              <option value="💒">💒 stage</option>
+              <option value="🌸">🌸 flower</option>
+              <option value="🧸">🧸 teddy</option>
+              <option value="🎈">🎈 balloon</option>
+              <option value="💡">💡 neon</option>
+              <option value="🌹">🌹 rose</option>
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemPhoto">Upload Item Photo (Optional)</label>
+            <input
+              id="itemPhoto"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewItemFile(e.target.files?.[0] || null)}
+              style={{ padding: "6px" }}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemUnitCount">Stock Quantity</label>
+            <input
+              id="itemUnitCount"
+              type="number"
+              min="1"
+              value={newItemUnitCount}
+              onChange={(e) => setNewItemUnitCount(parseInt(e.target.value, 10) || 1)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemName">Item Title</label>
+            <input
+              id="itemName"
+              type="text"
+              placeholder="e.g. Classic White Velvet Stage Chair"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemDesc">Item Description</label>
+            <textarea
+              id="itemDesc"
+              rows={3}
+              placeholder="Rental set specifications, quantity and measurements..."
+              value={newItemDesc}
+              onChange={(e) => setNewItemDesc(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.itemModalActions}>
+            <button
+              type="button"
+              className={styles.cancelCatBtn}
+              onClick={() => setShowAddItemForm(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className={styles.addItemBtn}>
+              ✦ Add Item
+            </button>
+          </div>
+        </form>
+      </div>
+      )}
+    </div>
+  );
+}

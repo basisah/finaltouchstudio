@@ -25,7 +25,6 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        localStorage.removeItem("user_token");
         localStorage.setItem("admin_token", data.token);
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));

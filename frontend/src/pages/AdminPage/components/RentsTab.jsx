@@ -5,9 +5,6 @@ import styles from "./RentsTab.module.css";
 const STATUS_COLORS = {
   pending:   { bg: "#FEF9C3", text: "#854D0E", dot: "#EAB308" },
   confirmed: { bg: "#DCFCE7", text: "#166534", dot: "#22C55E" },
-  ordered:   { bg: "#EDE4F1", text: "#471A69", dot: "#8157A4" },
-  on_hand:   { bg: "#FFFBEB", text: "#B45309", dot: "#F59E0B" },
-  returned:  { bg: "#DCFCE7", text: "#166534", dot: "#22C55E" },
   cancelled: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
 };
 
@@ -15,19 +12,6 @@ function formatDate(d) {
   if (!d) return "—";
   const dt = new Date(d);
   return dt.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
-}
-
-function getStatusLabel(status, fulfillmentType) {
-  const s = (status || "ordered").toLowerCase();
-  if (s === "on_hand") {
-    return fulfillmentType === "delivery" ? "Delivered" : "Picked Up";
-  }
-  if (s === "ordered") return "Ordered";
-  if (s === "returned") return "Returned";
-  if (s === "cancelled") return "Cancelled";
-  if (s === "confirmed") return "Confirmed";
-  if (s === "pending") return "Pending";
-  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 function formatTime(ts) {
@@ -51,7 +35,7 @@ function OrderCard({ order, isSelected, onSelect }) {
         <div className={styles.orderIdBadge}>#{order.id}</div>
         <span className={styles.statusPill} style={{ background: sc.bg, color: sc.text }}>
           <span className={styles.statusDot} style={{ background: sc.dot }} />
-          {getStatusLabel(order.status, order.fulfillment_type)}
+          {order.status}
         </span>
       </div>
       <div className={styles.orderCardName}>{order.customer_name}</div>
@@ -78,7 +62,7 @@ export default function RentsTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [filter, setFilter] = useState("all"); // all | ordered | on_hand | returned | cancelled
+  const [filter, setFilter] = useState("all"); // all | pending | confirmed | cancelled
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
 
@@ -99,46 +83,17 @@ export default function RentsTab() {
     fetchOrders();
   }, []);
 
-  useEffect(() => {
-    if (selectedOrder) {
-      document.body.classList.add("admin-order-focused");
-    } else {
-      document.body.classList.remove("admin-order-focused");
-    }
-    return () => {
-      document.body.classList.remove("admin-order-focused");
-    };
-  }, [selectedOrder]);
-
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingStatus(true);
     setStatusMsg(null);
     try {
       await put(`/admin/orders/${orderId}/status`, { status: newStatus });
       setStatusMsg({ type: "success", text: `Order #${orderId} marked as ${newStatus}` });
-      
       // Update local state
       setOrders(prev =>
-        prev.map(o => {
-          if (o.id === orderId) {
-            // If marking whole order as returned, update returned_quantity for all items to match quantity
-            const updatedItems = newStatus === "returned" 
-              ? o.items.map(it => ({ ...it, returned_quantity: it.quantity })) 
-              : o.items;
-            return { ...o, status: newStatus, items: updatedItems };
-          }
-          return o;
-        })
+        prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
       );
-      setSelectedOrder(prev => {
-        if (prev && prev.id === orderId) {
-          const updatedItems = newStatus === "returned"
-            ? prev.items.map(it => ({ ...it, returned_quantity: it.quantity }))
-            : prev.items;
-          return { ...prev, status: newStatus, items: updatedItems };
-        }
-        return prev;
-      });
+      setSelectedOrder(prev => prev && prev.id === orderId ? { ...prev, status: newStatus } : prev);
       setTimeout(() => setStatusMsg(null), 3000);
     } catch (err) {
       setStatusMsg({ type: "error", text: "Failed to update status. Please try again." });
@@ -148,82 +103,14 @@ export default function RentsTab() {
     }
   };
 
-  const handleItemReturnChange = async (orderItemId, newQty) => {
-    if (!selectedOrder) return;
-    setStatusMsg(null);
-    try {
-      await put(`/admin/orders/${selectedOrder.id}/items/${orderItemId}/return`, {
-        returned_quantity: newQty
-      });
-      setStatusMsg({ type: "success", text: `Updated returned units to ${newQty}` });
-      
-      // Update local state for immediate feedback
-      setOrders(prev =>
-        prev.map(o => {
-          if (o.id === selectedOrder.id) {
-            const updatedItems = o.items.map(it =>
-              it.order_item_id === orderItemId ? { ...it, returned_quantity: newQty } : it
-            );
-            
-            // Auto calculate status if all items are fully returned
-            const allReturned = updatedItems.every(it => (it.returned_quantity || 0) >= it.quantity);
-            const anyReturned = updatedItems.some(it => (it.returned_quantity || 0) > 0);
-            let newStatus = o.status;
-            
-            if (allReturned) {
-              newStatus = "returned";
-            } else if (anyReturned && (o.status === "ordered" || o.status === "pending" || o.status === "confirmed")) {
-              newStatus = "on_hand";
-            } else if (!allReturned && o.status === "returned") {
-              newStatus = "on_hand";
-            }
-
-            return { ...o, status: newStatus, items: updatedItems };
-          }
-          return o;
-        })
-      );
-
-      setSelectedOrder(prev => {
-        if (!prev) return null;
-        const updatedItems = prev.items.map(it =>
-          it.order_item_id === orderItemId ? { ...it, returned_quantity: newQty } : it
-        );
-        
-        const allReturned = updatedItems.every(it => (it.returned_quantity || 0) >= it.quantity);
-        const anyReturned = updatedItems.some(it => (it.returned_quantity || 0) > 0);
-        let newStatus = prev.status;
-        
-        if (allReturned) {
-          newStatus = "returned";
-        } else if (anyReturned && (prev.status === "ordered" || prev.status === "pending" || prev.status === "confirmed")) {
-          newStatus = "on_hand";
-        } else if (!allReturned && prev.status === "returned") {
-          newStatus = "on_hand";
-        }
-
-        return { ...prev, status: newStatus, items: updatedItems };
-      });
-
-      setTimeout(() => setStatusMsg(null), 2500);
-    } catch (err) {
-      console.error(err);
-      setStatusMsg({ type: "error", text: "Failed to update returned units." });
-      setTimeout(() => setStatusMsg(null), 3000);
-    }
-  };
-
-  const filteredOrders = orders.filter(o => {
-    if (filter === "all") return true;
-    if (filter === "ordered") return o.status === "ordered" || o.status === "pending" || o.status === "confirmed";
-    return o.status === filter;
-  });
+  const filteredOrders = orders.filter(o =>
+    filter === "all" ? true : o.status === filter
+  );
 
   const counts = {
     all: orders.length,
-    ordered: orders.filter(o => o.status === "ordered" || o.status === "pending" || o.status === "confirmed").length,
-    on_hand: orders.filter(o => o.status === "on_hand").length,
-    returned: orders.filter(o => o.status === "returned").length,
+    pending: orders.filter(o => o.status === "pending").length,
+    confirmed: orders.filter(o => o.status === "confirmed").length,
     cancelled: orders.filter(o => o.status === "cancelled").length,
   };
 
@@ -241,13 +128,13 @@ export default function RentsTab() {
 
         {/* Filter Tabs */}
         <div className={styles.filterTabs}>
-          {["all", "ordered", "on_hand", "returned", "cancelled"].map(f => (
+          {["all", "pending", "confirmed", "cancelled"].map(f => (
             <button
               key={f}
               className={`${styles.filterTab} ${filter === f ? styles.filterTabActive : ""}`}
               onClick={() => setFilter(f)}
             >
-              {f === "all" ? "All" : f === "on_hand" ? "On Hand" : f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
               <span className={styles.filterCount}>{counts[f]}</span>
             </button>
           ))}
@@ -309,7 +196,7 @@ export default function RentsTab() {
                   }}
                 >
                   <span className={styles.statusDot} style={{ background: STATUS_COLORS[selectedOrder.status]?.dot }} />
-                  {getStatusLabel(selectedOrder.status, selectedOrder.fulfillment_type)}
+                  {selectedOrder.status}
                 </span>
               </div>
               <div className={styles.deskTimestamp}>
@@ -323,24 +210,17 @@ export default function RentsTab() {
               <div className={styles.actionBtns}>
                 <button
                   className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                  disabled={["on_hand", "returned", "cancelled"].includes(selectedOrder.status) || updatingStatus}
-                  onClick={() => handleStatusUpdate(selectedOrder.id, "on_hand")}
+                  disabled={selectedOrder.status === "confirmed" || updatingStatus}
+                  onClick={() => handleStatusUpdate(selectedOrder.id, "confirmed")}
                 >
-                  {selectedOrder.fulfillment_type === "delivery" ? "🚚 Mark Delivered" : "🏪 Mark Picked Up"}
+                  ✅ Confirm Order
                 </button>
                 <button
                   className={`${styles.actionBtn} ${styles.actionBtnPending}`}
-                  disabled={["ordered", "pending", "cancelled"].includes(selectedOrder.status) || updatingStatus}
-                  onClick={() => handleStatusUpdate(selectedOrder.id, "ordered")}
+                  disabled={selectedOrder.status === "pending" || updatingStatus}
+                  onClick={() => handleStatusUpdate(selectedOrder.id, "pending")}
                 >
-                  ⏳ Set Ordered
-                </button>
-                <button
-                  className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                  disabled={selectedOrder.status === "returned" || selectedOrder.status === "cancelled" || updatingStatus}
-                  onClick={() => handleStatusUpdate(selectedOrder.id, "returned")}
-                >
-                  {selectedOrder.fulfillment_type === "delivery" ? "✅ Mark Picked Up (All)" : "✅ Mark Returned (All)"}
+                  ⏳ Set Pending
                 </button>
                 <button
                   className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
@@ -461,33 +341,7 @@ export default function RentsTab() {
                       </div>
                       <div className={styles.itemInfo}>
                         <span className={styles.itemName}>{item.name || "Unknown Item"}</span>
-                        <div className={styles.qtyContainer}>
-                          <span className={styles.itemQty}>Qty: {item.quantity || 1}</span>
-                          <span className={styles.itemReturnedInfo}>
-                            Returned: {item.returned_quantity || 0} / {item.quantity || 1}
-                          </span>
-                        </div>
-                        {selectedOrder.status !== "cancelled" && (
-                          <div className={styles.returnControls}>
-                            <button
-                              className={styles.qtyControlBtn}
-                              disabled={(item.returned_quantity || 0) <= 0}
-                              onClick={() => handleItemReturnChange(item.order_item_id, (item.returned_quantity || 0) - 1)}
-                              title="Decrement returned units"
-                            >
-                              −
-                            </button>
-                            <span className={styles.returnedCountText}>{item.returned_quantity || 0}</span>
-                            <button
-                              className={styles.qtyControlBtn}
-                              disabled={(item.returned_quantity || 0) >= (item.quantity || 1)}
-                              onClick={() => handleItemReturnChange(item.order_item_id, (item.returned_quantity || 0) + 1)}
-                              title="Increment returned units"
-                            >
-                              ＋
-                            </button>
-                          </div>
-                        )}
+                        <span className={styles.itemQty}>Qty: {item.quantity || 1}</span>
                       </div>
                       <div className={styles.itemPrice}>
                         ${parseFloat(item.price || 0).toFixed(2)} CAD

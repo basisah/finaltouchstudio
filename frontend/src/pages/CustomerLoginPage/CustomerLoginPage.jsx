@@ -35,7 +35,6 @@ export default function CustomerLoginPage() {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        localStorage.removeItem("admin_token");
         localStorage.setItem("user_token", data.token);
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
@@ -66,7 +65,6 @@ export default function CustomerLoginPage() {
       const data = await apiRes.json();
 
       if (apiRes.ok && data.token) {
-        localStorage.removeItem("admin_token");
         localStorage.setItem("user_token", data.token);
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));

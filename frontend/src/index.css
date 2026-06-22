@@ -72,13 +72,13 @@
   --transition: 0.22s var(--ease);
 
   /* ── Typography ──────────────────────────────────────────────── */
-  --font-display: 'Pinyon Script', cursive;
+  --font-display: 'Great Vibes', cursive;
   /* eyebrow script accents */
-  --font-serif: 'Montserrat', sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
   /* festive headings */
-  --font-heading: 'Montserrat', sans-serif;
+  --font-heading: 'Outfit', 'Inter', -apple-system, sans-serif;
   /* clean modern headings — all pages */
-  --font-sans: 'Montserrat', sans-serif;
+  --font-sans: 'Outfit', 'Inter', -apple-system, sans-serif;
   /* body */
 }
 
@@ -215,35 +215,4 @@ button {
   box-shadow: 0 4px 12px var(--border-shadow);
   color: var(--text-main);
   border-radius: 12px;
-}
-
-/* ── Admin Mode Focus Fading (Order Selected) ── */
-body.admin-order-focused [class*="sidebar_"],
-body.admin-order-focused [class*="sidebar"],
-body.admin-order-focused [class*="header_"],
-body.admin-order-focused [class*="header"] {
-  opacity: 0.35;
-  filter: blur(1.5px);
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-body.admin-order-focused [class*="sidebar_"]:hover,
-body.admin-order-focused [class*="sidebar"]:hover,
-body.admin-order-focused [class*="header_"]:hover,
-body.admin-order-focused [class*="header"]:hover {
-  opacity: 1;
-  filter: none;
-}
-
-body.admin-order-focused [class*="orderCard_"]:not([class*="orderCardSelected_"]),
-body.admin-order-focused [class*="orderCard"]:not([class*="orderCardSelected"]) {
-  opacity: 0.35;
-  filter: blur(1.5px);
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-body.admin-order-focused [class*="orderList_"]:hover [class*="orderCard_"]:not([class*="orderCardSelected_"]),
-body.admin-order-focused [class*="orderList"]:hover [class*="orderCard"]:not([class*="orderCardSelected"]) {
-  opacity: 0.85;
-  filter: none;
 }

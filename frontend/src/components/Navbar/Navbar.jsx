@@ -3,10 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import styles from "./Navbar.module.css";
 
-import logoImg from "../../assets/Logo/FinalTouchStudiosLogo_Icon.png";
-
-const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
-
+import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
 
 // Desktop: only Items + Build links (Profile + Cart are icons)
 const DESKTOP_NAV = [
@@ -28,16 +25,6 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
 
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const { cart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
@@ -56,39 +43,18 @@ export default function Navbar() {
     else setActiveLink("#home");
   }, [location]);
 
-  // Read logged-in user info on mount/navigation and synchronize with database
+  // Read logged-in user info on mount/navigation
   useEffect(() => {
-    const token = localStorage.getItem("user_token") || localStorage.getItem("admin_token");
+    const adminToken = localStorage.getItem("admin_token");
+    const userToken = localStorage.getItem("user_token");
     const userInfo = localStorage.getItem("user_info");
 
-    // Immediately show cached user info if available to keep it fast
-    if (token && userInfo) {
+    if ((adminToken || userToken) && userInfo) {
       try {
         setUser(JSON.parse(userInfo));
       } catch (e) {
-        // Ignore parsing error
-      }
-    }
-
-    // In the background, fetch the latest user record to synchronize state and overwrite stale data
-    if (token) {
-      fetch(`${BASE_URL}/api/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => {
-        if (res.ok) return res.json();
-        throw new Error("Stale token");
-      })
-      .then(data => {
-        if (data.user) {
-          setUser(data.user);
-          localStorage.setItem("user_info", JSON.stringify(data.user));
-        }
-      })
-      .catch(() => {
-        // If unauthorized or stale, clear local user state
         setUser(null);
-      });
+      }
     } else {
       setUser(null);
     }
@@ -190,46 +156,30 @@ export default function Navbar() {
 
           <div className={styles.profileContainer}>
             <button 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+              onClick={() => {
+                if (user) {
+                  navigate("/profile");
+                } else {
+                  setIsDropdownOpen(!isDropdownOpen);
+                }
+              }} 
               className={styles.iconBtn} 
               aria-label="User Profile"
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-               {user ? (
-                user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.name}
-                    referrerPolicy="no-referrer"
-                    style={{
-                      width: "38px",
-                      height: "38px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "none",
-                      display: "block",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "38px",
-                      height: "38px",
-                      borderRadius: "50%",
-                      background: "var(--brand-gold)",
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.95rem",
-                      fontWeight: "700",
-                      border: "none",
-                      fontFamily: "var(--font-sans)",
-                    }}
-                  >
-                    {getInitials(user.name)}
-                  </div>
-                )
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid rgba(255,255,255,0.4)",
+                  }}
+                />
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={styles.navIcon}>
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -238,54 +188,20 @@ export default function Navbar() {
               )}
             </button>
 
-            {isDropdownOpen && (
+            {isDropdownOpen && !user && (
               <div className={styles.dropdown}>
-                {user ? (
-                  <>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName}>{user.name}</span>
-                      <span className={styles.userEmail}>{user.email}</span>
-                    </div>
-                    <div className={styles.dropDivider}></div>
-                    <Link 
-                      to="/profile" 
-                      onClick={() => setIsDropdownOpen(false)} 
-                      className={styles.dropLink}
-                    >
-                      My Profile
-                    </Link>
-                    {user.role === "admin" && (
-                      <Link 
-                        to="/admin" 
-                        onClick={() => setIsDropdownOpen(false)} 
-                        className={styles.dropLink}
-                      >
-                        Admin Panel
-                      </Link>
-                    )}
-                    <button 
-                      onClick={handleSignOut} 
-                      className={styles.signOutBtn}
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName} style={{ fontSize: "0.9rem" }}>Welcome to FinalTouch</span>
-                      <span className={styles.userEmail}>Sign in to manage bookings</span>
-                    </div>
-                    <div className={styles.dropDivider}></div>
-                    <Link 
-                      to="/login" 
-                      onClick={() => setIsDropdownOpen(false)} 
-                      className={styles.signInBtn}
-                    >
-                      Sign In / Connect
-                    </Link>
-                  </>
-                )}
+                <div className={styles.userInfo}>
+                  <span className={styles.userName} style={{ fontSize: "0.9rem" }}>Welcome to FinalTouch</span>
+                  <span className={styles.userEmail}>Sign in to manage bookings</span>
+                </div>
+                <div className={styles.dropDivider}></div>
+                <Link 
+                  to="/login" 
+                  onClick={() => setIsDropdownOpen(false)} 
+                  className={styles.signInBtn}
+                >
+                  Sign In / Connect
+                </Link>
               </div>
             )}
           </div>
