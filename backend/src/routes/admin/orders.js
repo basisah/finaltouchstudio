@@ -29,7 +29,9 @@ router.get("/", async (req, res) => {
                  oi.price_at_rent,
                  COALESCE(i.image, ''),
                  COALESCE(oi.item_id, ''),
-                 COALESCE(oi.package_id, '')
+                 COALESCE(oi.package_id, ''),
+                 COALESCE(oi.returned_quantity, 0),
+                 oi.id
                ) SEPARATOR ';;'
              ) AS items_summary
       FROM orders o
@@ -45,8 +47,17 @@ router.get("/", async (req, res) => {
       const rawItems = order.items_summary || "";
       const items = rawItems
         ? rawItems.split(";;").map(entry => {
-            const [name, quantity, price, image, item_id, package_id] = entry.split("||");
-            return { name, quantity: Number(quantity), price: parseFloat(price), image, item_id, package_id };
+            const [name, quantity, price, image, item_id, package_id, returned_quantity, order_item_id] = entry.split("||");
+            return {
+              name,
+              quantity: Number(quantity),
+              price: parseFloat(price),
+              image,
+              item_id,
+              package_id,
+              returned_quantity: Number(returned_quantity || 0),
+              order_item_id: Number(order_item_id)
+            };
           })
         : [];
       const { items_summary, ...rest } = order;
@@ -68,7 +79,8 @@ router.get("/:id", async (req, res) => {
 
     const order = orders[0];
     const [items] = await db.query(
-      `SELECT oi.id, oi.quantity, oi.price_at_rent, oi.item_id, oi.package_id,
+      `SELECT oi.id, oi.id AS order_item_id, oi.quantity, oi.returned_quantity, oi.price_at_rent, oi.item_id, oi.package_id,
+              COALESCE(i.title, p.name, 'Unknown Item') AS name,
               i.name AS item_name, i.image AS item_image,
               p.name AS package_name
        FROM order_items oi
@@ -88,11 +100,17 @@ router.get("/:id", async (req, res) => {
 // PUT update order status
 router.put("/:id/status", async (req, res) => {
   const { status } = req.body;
-  if (!status || !['pending', 'confirmed', 'cancelled'].includes(status)) {
-    return res.status(400).json({ error: "Valid status ('pending', 'confirmed', 'cancelled') is required" });
+  const allowed = ['pending', 'confirmed', 'ordered', 'on_hand', 'returned', 'cancelled'];
+  if (!status || !allowed.includes(status)) {
+    return res.status(400).json({ error: `Valid status (${allowed.join(', ')}) is required` });
   }
 
   try {
+    // If status is updated to 'returned', automatically set returned_quantity = quantity for all items
+    if (status === 'returned') {
+      await db.query("UPDATE order_items SET returned_quantity = quantity WHERE order_id = ?", [req.params.id]);
+    }
+
     const [result] = await db.query("UPDATE orders SET status = ? WHERE id = ?", [status, req.params.id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: "Order not found" });
 
@@ -120,6 +138,71 @@ router.put("/:id/status", async (req, res) => {
   } catch (err) {
     console.error("Error updating order status:", err);
     res.status(500).json({ error: "Failed to update order status" });
+  }
+});
+
+// PUT update returned quantity for a specific order item unit-by-unit
+router.put("/:orderId/items/:orderItemId/return", async (req, res) => {
+  const { orderId, orderItemId } = req.params;
+  const { returned_quantity } = req.body;
+
+  if (returned_quantity === undefined || returned_quantity < 0) {
+    return res.status(400).json({ error: "Valid returned_quantity is required" });
+  }
+
+  try {
+    // 1. Update the returned quantity for the specific order item
+    const [result] = await db.query(
+      "UPDATE order_items SET returned_quantity = ? WHERE id = ? AND order_id = ?",
+      [returned_quantity, orderItemId, orderId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Order item not found" });
+    }
+
+    // 2. Fetch all items in the order to check if we should auto-transition status
+    const [items] = await db.query(
+      "SELECT quantity, returned_quantity FROM order_items WHERE order_id = ?",
+      [orderId]
+    );
+
+    let allReturned = true;
+    let anyReturned = false;
+    for (const item of items) {
+      if (item.returned_quantity < item.quantity) {
+        allReturned = false;
+      }
+      if (item.returned_quantity > 0) {
+        anyReturned = true;
+      }
+    }
+
+    // Fetch current order status
+    const [orders] = await db.query("SELECT status FROM orders WHERE id = ?", [orderId]);
+    if (orders.length > 0) {
+      const currentStatus = orders[0].status;
+      let newStatus = currentStatus;
+
+      if (allReturned) {
+        newStatus = "returned";
+      } else if (anyReturned && (currentStatus === "ordered" || currentStatus === "pending" || currentStatus === "confirmed")) {
+        // If some items are returned and status was 'ordered', update it to 'on_hand'
+        newStatus = "on_hand";
+      } else if (!allReturned && currentStatus === "returned") {
+        // If it was returned but now we decremented returned count, set it back to 'on_hand'
+        newStatus = "on_hand";
+      }
+
+      if (newStatus !== currentStatus) {
+        await db.query("UPDATE orders SET status = ? WHERE id = ?", [newStatus, orderId]);
+      }
+    }
+
+    res.json({ success: true, message: "Returned quantity updated successfully" });
+  } catch (err) {
+    console.error("Error updating returned quantity:", err);
+    res.status(500).json({ error: "Failed to update returned quantity" });
   }
 });
 

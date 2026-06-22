@@ -200,17 +200,21 @@ router.get("/profile", auth, async (req, res) => {
 
     const user = users[0];
 
-    // Fetch bookings/orders linked to user ID in the new schema
+    // Fetch bookings/orders linked to user ID or email in the new schema with review status
     const [orders] = await db.query(
-      `SELECT id, customer_name, event_date AS return_date, rental_date AS pickup_date, total_amount AS price, status, created_at, fulfillment_type
-       FROM orders WHERE user_id = ? ORDER BY created_at DESC`,
-      [userId]
+      `SELECT o.id, o.customer_name, o.event_date AS return_date, o.rental_date AS pickup_date, o.total_amount AS price, o.status, o.created_at, o.fulfillment_type, o.venue_address, o.delivery_fee, o.special_notes,
+              IF(r.id IS NOT NULL, 1, 0) AS reviewed,
+              r.rating AS review_rating, r.comment AS review_comment
+       FROM orders o
+       LEFT JOIN reviews r ON r.order_id = o.id
+       WHERE o.user_id = ? OR o.customer_email = ? ORDER BY o.created_at DESC`,
+      [userId, user.email]
     );
 
     const bookings = await Promise.all(orders.map(async (order) => {
       // Find package name or item names
       const [items] = await db.query(
-        `SELECT oi.quantity, i.name AS item_name, p.name AS package_name
+        `SELECT oi.id, oi.quantity, oi.returned_quantity, oi.price_at_rent, i.name AS item_name, i.title AS item_title, i.image AS item_image, p.name AS package_name
          FROM order_items oi
          LEFT JOIN items i ON oi.item_id = i.id
          LEFT JOIN packages p ON oi.package_id = p.id
@@ -228,7 +232,7 @@ router.get("/profile", auth, async (req, res) => {
           description += ` + ${otherItemsCount} custom item(s)`;
         }
       } else {
-        description = items.map(it => `${it.quantity}x ${it.item_name || 'Item'}`).join(", ");
+        description = items.map(it => `${it.quantity}x ${it.item_title || it.item_name || 'Item'}`).join(", ");
         if (!description) {
           description = "Custom Rental Package";
         }
@@ -237,6 +241,14 @@ router.get("/profile", auth, async (req, res) => {
       return {
         ...order,
         package_name: description,
+        items: items.map(it => ({
+          order_item_id: it.id,
+          name: it.item_title || it.item_name || it.package_name || "Item",
+          quantity: it.quantity,
+          returned_quantity: it.returned_quantity || 0,
+          price: it.price_at_rent,
+          image: it.item_image || null
+        })),
         payment_method: order.fulfillment_type === "delivery" ? "Delivery/Fulfillment" : "Customer Pickup"
       };
     }));
@@ -244,7 +256,7 @@ router.get("/profile", auth, async (req, res) => {
     res.json({ user, bookings });
   } catch (err) {
     console.error("Profile fetch error:", err);
-    res.status(500).json({ error: "Failed to fetch profile" });
+    res.status(500).json({ error: "Failed to fetch profile", message: err.message, stack: err.stack });
   }
 });
 

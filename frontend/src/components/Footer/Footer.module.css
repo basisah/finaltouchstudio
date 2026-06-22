@@ -1,22 +1,16 @@
 /* ── Footer wrapper ────────────────────────────────────────────────────────── */
 .footer {
-  background: var(--btn-primary);
+  background: linear-gradient(to bottom, var(--bg-main) 0%, var(--btn-primary) 320px, var(--btn-primary) 100%);
   color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-sans);
   position: relative;
-  margin-top: auto;
+  margin-top: -2px;
+  padding-top: 320px;
 }
 
-/* Gradient fade-in from the section above */
+/* Gradient fade-in from the section above (hidden) */
 .topDivider {
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    var(--clr-benifuji) 30%,
-    var(--clr-mulberry-mix) 60%,
-    transparent 100%
-  );
-  opacity: 0.5;
+  display: none;
 }
 
 /* ── 3-column grid ─────────────────────────────────────────────────────────── */
@@ -58,6 +52,13 @@
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.3s ease;
+}
+
+.logoMarkImg:hover {
+  transform: translateY(-2px) scale(1.05);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .logoMark {
@@ -136,6 +137,12 @@
   transform: translateX(4px);
 }
 
+.linkList a:hover,
+.linkList button:hover {
+  color: var(--brand-gold);
+  transform: translateX(4px);
+}
+
 .linkList a::before,
 .linkList button::before {
   content: "→";
@@ -148,13 +155,6 @@
 .linkList a:hover::before,
 .linkList button:hover::before {
   opacity: 1;
-}
-
-/* ── RIGHT: Social Links ──────────────────────────────────────────────────── */
-.socialLinks {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .socialLink {

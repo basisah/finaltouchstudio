@@ -35,7 +35,7 @@ router.post("/bookings", async (req, res) => {
     // Insert into orders table
     const [result] = await db.query(
       `INSERT INTO orders (user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'pickup', 0.00, 'Customer Pickup', ?, ?, 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, 'pickup', 0.00, 'Customer Pickup', ?, ?, 'ordered')`,
       [userId, name, email, phone, returnDate, pickupDate, `Legacy endpoint. Payment: ${paymentMethod}`, price]
     );
 
@@ -249,7 +249,7 @@ router.post("/orders", auth, async (req, res) => {
     // 1. Insert order record
     const [result] = await db.query(
       `INSERT INTO orders (user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ordered')`,
       [
         userId,
         customer_name,
@@ -327,7 +327,10 @@ router.post("/orders", auth, async (req, res) => {
 // GET - User gets their own orders
 router.get("/orders", auth, async (req, res) => {
   try {
-    const [orders] = await db.query("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [req.user.id]);
+    const [orders] = await db.query(
+      "SELECT * FROM orders WHERE user_id = ? OR customer_email = ? ORDER BY created_at DESC",
+      [req.user.id, req.user.email]
+    );
     res.json(orders);
   } catch (err) {
     console.error("Error fetching orders:", err);
@@ -338,7 +341,10 @@ router.get("/orders", auth, async (req, res) => {
 // GET - User gets single order details
 router.get("/orders/:id", auth, async (req, res) => {
   try {
-    const [orders] = await db.query("SELECT * FROM orders WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    const [orders] = await db.query(
+      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR customer_email = ?)",
+      [req.params.id, req.user.id, req.user.email]
+    );
     if (orders.length === 0) return res.status(404).json({ error: "Order not found" });
 
     const order = orders[0];
@@ -357,6 +363,71 @@ router.get("/orders/:id", auth, async (req, res) => {
   } catch (err) {
     console.error("Error fetching order details:", err);
     res.status(500).json({ error: "Failed to fetch order details" });
+  }
+});
+
+// GET - Fetch 3 recent real reviews (public)
+router.get("/reviews", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, order_id, user_id, customer_name, role, rating, comment, created_at FROM reviews WHERE order_id IS NOT NULL ORDER BY created_at DESC LIMIT 3"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ error: "Failed to fetch reviews" });
+  }
+});
+
+// POST - Submit review for a returned order (authenticated)
+router.post("/reviews", auth, async (req, res) => {
+  const userId = req.user.id;
+  const { order_id, rating, comment, role } = req.body;
+
+  if (!order_id || !rating || !comment) {
+    return res.status(400).json({ error: "Order ID, rating (1-5), and comment are required" });
+  }
+
+  const rate = parseInt(rating, 10);
+  if (isNaN(rate) || rate < 1 || rate > 5) {
+    return res.status(400).json({ error: "Rating must be an integer between 1 and 5" });
+  }
+
+  try {
+    // 1. Verify that the order exists, has status 'returned', and belongs to this user (by user_id or email)
+    const [orders] = await db.query(
+      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR customer_email = ?)",
+      [order_id, userId, req.user.email]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ error: "Order not found or access denied" });
+    }
+
+    const order = orders[0];
+    if (order.status !== "returned") {
+      return res.status(400).json({ error: "You can only write a review after the order is returned" });
+    }
+
+    // 2. Check if a review already exists for this order
+    const [existing] = await db.query("SELECT id FROM reviews WHERE order_id = ?", [order_id]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "You have already submitted a review for this order" });
+    }
+
+    // 3. Insert review
+    const customerName = order.customer_name || req.user.name || "Verified Client";
+    const clientRole = role || "Client";
+
+    const [result] = await db.query(
+      "INSERT INTO reviews (order_id, user_id, customer_name, role, rating, comment) VALUES (?, ?, ?, ?, ?, ?)",
+      [order_id, userId, customerName, clientRole, rate, comment]
+    );
+
+    res.status(201).json({ success: true, reviewId: result.insertId, message: "Review submitted successfully" });
+  } catch (err) {
+    console.error("Error creating review:", err);
+    res.status(500).json({ error: "Failed to submit review", message: err.message, stack: err.stack });
   }
 });
 

@@ -83,7 +83,23 @@ router.get("/:id", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: "Item not found" });
-    res.json(rows[0]);
+
+    const item = rows[0];
+
+    // Fetch rental count in the past month (30 days)
+    const [rentalRows] = await db.query(
+      `SELECT COALESCE(SUM(oi.quantity), 0) AS rental_count
+       FROM order_items oi
+       INNER JOIN orders o ON oi.order_id = o.id
+       WHERE oi.item_id = ?
+         AND o.status IN ('pending', 'confirmed')
+         AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
+      [req.params.id]
+    );
+
+    item.rental_count = Number(rentalRows[0]?.rental_count) || 0;
+
+    res.json(item);
   } catch (err) {
     console.error("Error fetching item:", err);
     res.status(500).json({ error: "Failed to fetch item" });

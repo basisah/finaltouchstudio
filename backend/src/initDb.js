@@ -163,12 +163,26 @@ async function initializeDatabase() {
       venue_address TEXT NOT NULL,
       special_notes TEXT NULL,
       total_amount DECIMAL(10, 2) NOT NULL,
-      status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+      status ENUM('pending', 'confirmed', 'ordered', 'on_hand', 'returned', 'cancelled') NOT NULL DEFAULT 'ordered',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );`);
 
     // Ensure columns exist in orders table (in case the table already existed with an older schema)
+    try {
+      await db.query("ALTER TABLE orders MODIFY COLUMN status ENUM('pending', 'confirmed', 'ordered', 'on_hand', 'returned', 'cancelled') NOT NULL DEFAULT 'ordered'");
+      console.log("Updated 'status' ENUM on 'orders' table.");
+    } catch (err) {
+      console.error("Failed to alter status ENUM on orders table:", err);
+    }
+
+    try {
+      await db.query("UPDATE orders SET status = 'ordered' WHERE status IN ('pending', 'confirmed')");
+      console.log("Migrated legacy pending/confirmed orders to 'ordered'.");
+    } catch (err) {
+      console.error("Failed to migrate orders statuses:", err);
+    }
+
     try {
       await db.query("ALTER TABLE orders ADD COLUMN fulfillment_type ENUM('delivery', 'pickup') NOT NULL DEFAULT 'pickup'");
       console.log("Added column 'fulfillment_type' to 'orders' table.");
@@ -205,10 +219,18 @@ async function initializeDatabase() {
       package_id INT NULL,
       quantity INT DEFAULT 1,
       price_at_rent DECIMAL(10, 2) NOT NULL,
+      returned_quantity INT DEFAULT 0,
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
       FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL,
       FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL
     );`);
+
+    try {
+      await db.query("ALTER TABLE order_items ADD COLUMN returned_quantity INT DEFAULT 0");
+      console.log("Added column 'returned_quantity' to 'order_items' table.");
+    } catch (err) {
+      // Column may already exist
+    }
 
     // 8. Create cross-device live shopping cart state caching table
     await db.query(`CREATE TABLE IF NOT EXISTS user_cart (
@@ -233,6 +255,85 @@ async function initializeDatabase() {
       message TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
+
+    // 9.5. Create reviews table
+    await db.query(`CREATE TABLE IF NOT EXISTS reviews (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id INT UNIQUE NULL,
+      user_id INT NULL,
+      customer_name VARCHAR(255) NOT NULL,
+      role VARCHAR(100) DEFAULT 'Client',
+      rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    );`);
+
+    // Upgrade/Migrate existing reviews table structure if it already existed with an older schema
+    try {
+      await db.query("ALTER TABLE reviews ADD COLUMN order_id INT UNIQUE NULL");
+      console.log("Added column 'order_id' to 'reviews' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE reviews ADD CONSTRAINT fk_reviews_order_id FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE");
+      console.log("Added foreign key constraint 'fk_reviews_order_id' to 'reviews' table.");
+    } catch (err) {
+      // Constraint may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE reviews MODIFY COLUMN item_id VARCHAR(50) NULL");
+      console.log("Made 'item_id' nullable in 'reviews' table.");
+    } catch (err) {
+      // Column modification failed or already done
+    }
+
+    try {
+      await db.query("ALTER TABLE reviews MODIFY COLUMN user_id INT NULL");
+      console.log("Made 'user_id' nullable in 'reviews' table.");
+    } catch (err) {
+      // Column modification failed or already done
+    }
+
+    try {
+      await db.query("ALTER TABLE reviews ADD COLUMN customer_name VARCHAR(255) NOT NULL DEFAULT 'Verified Client'");
+      console.log("Added column 'customer_name' to 'reviews' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    try {
+      await db.query("ALTER TABLE reviews ADD COLUMN role VARCHAR(100) DEFAULT 'Client'");
+      console.log("Added column 'role' to 'reviews' table.");
+    } catch (err) {
+      // Column may already exist
+    }
+
+    // Seed default reviews if table is empty
+    try {
+      const [reviewsRows] = await db.query("SELECT COUNT(*) AS count FROM reviews");
+      if (reviewsRows[0].count === 0) {
+        const seedReviews = [
+          [null, null, "Sarah M.", "Bride", 5, "FinalTouch transformed our reception stage into an absolute fairytale! The floral arch was gorgeous and the team was incredibly professional and detailed."],
+          [null, null, "David K.", "Groom", 5, "We ordered the proposal package and everything was set up perfectly. The fairy lights, custom signs, and staging made our moment truly unforgettable."],
+          [null, null, "Aaliyah R.", "Host", 5, "The custom balloon wall and stage setup were a massive hit at my daughter's birthday. The process was stress-free and the design was stunning."]
+        ];
+
+        for (const [orderId, userId, name, role, rating, comment] of seedReviews) {
+          await db.query(
+            "INSERT INTO reviews (order_id, user_id, customer_name, role, rating, comment) VALUES (?, ?, ?, ?, ?, ?)",
+            [orderId, userId, name, role, rating, comment]
+          );
+        }
+        console.log("🌱 Seeded initial website testimonials into 'reviews' table.");
+      }
+    } catch (seedErr) {
+      console.error("Failed to seed reviews:", seedErr);
+    }
 
     // 10. Seed/Upsert permanent categories to guarantee their presence and sorting
     const permanentCats = [

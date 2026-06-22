@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import logoImg from "../../assets/Logo/FinalTouchStudiosLogo.png";
+import logoImg from "../../assets/Logo/FinalTouchStudiosLogo_Icon.png";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
