@@ -32,7 +32,7 @@ router.post("/register", async (req, res) => {
     const token = jwt.sign(
       { id: userId, email, name, role: "user" },
       process.env.JWT_SECRET || "default_dev_secret",
-      { expiresIn: "24h" }
+      { expiresIn: "2h" }
     );
 
     // Send Welcome Email to Customer
@@ -87,7 +87,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: user.role },
       process.env.JWT_SECRET || "default_dev_secret",
-      { expiresIn: "24h" }
+      { expiresIn: "2h" }
     );
 
     res.json({ token, user: { id: user.id, email: user.email, name: user.name, avatar_url: user.avatar_url, role: user.role } });
@@ -148,7 +148,7 @@ router.post("/google", async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: user.role },
       process.env.JWT_SECRET || "default_dev_secret",
-      { expiresIn: "24h" }
+      { expiresIn: "2h" }
     );
 
     // If it's a new user registration via Google, welcome the user and notify the admin!

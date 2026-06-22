@@ -13,12 +13,14 @@ import CartPage from "./pages/CartPage/CartPage";
 import CustomerLoginPage from "./pages/CustomerLoginPage/CustomerLoginPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import BuildPage from "./pages/BuildPage/BuildPage";
+import SessionTimeoutHandler from "./components/SessionTimeoutHandler";
 
 
 export default function App() {
   return (
     <CartProvider>
       <Router>
+        <SessionTimeoutHandler />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />

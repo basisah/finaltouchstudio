@@ -26,6 +26,7 @@ export default function LoginPage() {
 
       if (response.ok && data.token) {
         localStorage.setItem("admin_token", data.token);
+        localStorage.setItem("admin_login_time", Date.now().toString());
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }

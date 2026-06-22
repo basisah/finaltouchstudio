@@ -19,6 +19,8 @@ export default function ProtectedRoute({ children }) {
         setIsAuthenticated(true);
       } catch (err) {
         localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_login_time");
+        localStorage.removeItem("user_info");
         setIsAuthenticated(false);
       }
     };

@@ -36,6 +36,7 @@ export default function CustomerLoginPage() {
 
       if (response.ok && data.token) {
         localStorage.setItem("user_token", data.token);
+        localStorage.setItem("user_login_time", Date.now().toString());
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }
@@ -66,6 +67,7 @@ export default function CustomerLoginPage() {
 
       if (apiRes.ok && data.token) {
         localStorage.setItem("user_token", data.token);
+        localStorage.setItem("user_login_time", Date.now().toString());
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }

@@ -86,6 +86,8 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_login_time");
+    localStorage.removeItem("user_info");
     navigate("/");
   };
 

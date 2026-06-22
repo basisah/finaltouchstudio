@@ -16,7 +16,7 @@ router.post("/login", (req, res) => {
 
   if (adminUsername && adminPassword && username === adminUsername && password === adminPassword) {
     const token = jwt.sign({ username: adminUsername, role: "admin" }, process.env.JWT_SECRET || "default_dev_secret", {
-      expiresIn: "24h"
+      expiresIn: "30m"
     });
     return res.json({ token, user: { name: "Admin", email: "admin@finaltouch.com", role: "admin" } });
   }

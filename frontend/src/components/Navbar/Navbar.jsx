@@ -88,7 +88,9 @@ export default function Navbar() {
 
   const handleSignOut = () => {
     localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_login_time");
     localStorage.removeItem("user_token");
+    localStorage.removeItem("user_login_time");
     localStorage.removeItem("user_info");
     setUser(null);
     setIsDropdownOpen(false);
