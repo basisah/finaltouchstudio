@@ -4,7 +4,7 @@ if (BASE_URL.startsWith('http') && !BASE_URL.endsWith('/api')) {
 }
 
 async function request(method, path, body) {
-  const token = localStorage.getItem('admin_token');
+  const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token');
   const options = {
     method,
     headers: {

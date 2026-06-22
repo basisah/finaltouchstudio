@@ -11,6 +11,8 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+
+
 const initializeDatabase = require("./initDb");  // Database setup script initDb.js
 const db = require("./db");
 
@@ -69,6 +71,8 @@ app.use("/api/packages", adminPackages);
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+
 
 
 
