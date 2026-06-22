@@ -12,12 +12,14 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const initializeDatabase = require("./initDb");  // Database setup script initDb.js
+const { getUploadsRoot, ensureDir } = require("./utils/uploadsPath");
 
 // Routes
 const packageRoutes = require("./routes/packageRoutes");
 const userAuthRoutes = require("./routes/userAuthRoutes");  // User registration, login, google OAuth logins
 const itemRoutes = require("./routes/itemRoutes");          // Rental inventory (public GET)
 const bookingRoutes = require("./routes/bookingRoutes");    // checkout, cart, orders (public/user)
+const contactRoutes = require("./routes/contactRoutes");    // contact form + admin inbox
 const categoryRoutes = require("./routes/categoryRoutes");    // categories (public GET)
 
 // Admin Routes
@@ -30,17 +32,15 @@ const adminOrders = require("./routes/admin/orders");
 // Server configuration
 const app = express();
 const PORT = process.env.PORT || 4000;
+const API = "/api";
 
 // Middleware to suport frontend
 app.use(cors());
 // Handle incoming JSON payloads
 app.use(express.json());
 
-// Expose static uploads folder
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDir = getUploadsRoot();
+ensureDir(uploadDir);
 app.use("/uploads", express.static(uploadDir));
 
 // Expose static assets/icons folder
@@ -51,21 +51,22 @@ app.use("/uploads/Icons", express.static(iconsDir));
 initializeDatabase();
 
 // Mount Public/User Routes
-app.use("/api/packages", packageRoutes);
-app.use("/api/auth", userAuthRoutes);
-app.use("/api/items", itemRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api", bookingRoutes);
+app.use(`${API}/packages`, packageRoutes);
+app.use(`${API}/auth`, userAuthRoutes);
+app.use(`${API}/items`, itemRoutes);
+app.use(`${API}/categories`, categoryRoutes);
+app.use(API, bookingRoutes);
+app.use(`${API}/contact`, contactRoutes);
 
 // Mount Admin Routes
-app.use("/api/admin/auth", adminAuth);
-app.use("/api/admin/orders", adminOrders);
-app.use("/api/categories", adminCategories);
-app.use("/api", adminItems); // handles POST /upload, and CRUD on /items
-app.use("/api/packages", adminPackages);
+app.use(`${API}/admin/auth`, adminAuth);
+app.use(`${API}/admin/orders`, adminOrders);
+app.use(`${API}/categories`, adminCategories);
+app.use(API, adminItems); // handles POST /upload, and CRUD on /items
+app.use(`${API}/packages`, adminPackages);
 
 // Health check
-app.get("/api/health", (req, res) => {
+app.get(`${API}/health`, (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

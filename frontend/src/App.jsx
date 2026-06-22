@@ -9,6 +9,7 @@ import ItemDetailPage from "./pages/ItemDetailPage/ItemDetailPage";
 import PackageDetail from "./pages/PackageDetail/PackageDetail";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
 import CartPage from "./pages/CartPage/CartPage";
+import CartCheckoutPage from "./pages/CartCheckoutPage/CartCheckoutPage";
 import CustomerLoginPage from "./pages/CustomerLoginPage/CustomerLoginPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import BuildPage from "./pages/BuildPage/BuildPage";
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/package/:id" element={<PackageDetail />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/cart/checkout" element={<CartCheckoutPage />} />
           <Route path="/login" element={<CustomerLoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/build" element={<BuildPage />} />

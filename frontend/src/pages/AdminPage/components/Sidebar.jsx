@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import styles from "../AdminPage.module.css";
-import logoImg from "../../../assets/Logo/FinalTouchStudiosLogo.png";
 
 import babyIcon from "../../../assets/Icons/baby.png";
 import birthdayIcon from "../../../assets/Icons/birthday-cake.png";
@@ -28,36 +27,28 @@ const categoryIcons = {
 };
 
 export default function Sidebar({
-  categories,
   items,
   members,
   payments,
   activeTab,
   setActiveTab,
-  onTriggerAddCategory,
   setSearchQuery,
   handleLogout,
   isSidebarOpen,
   setIsSidebarOpen,
 }) {
-  const [isCatExpanded, setIsCatExpanded] = useState(false);
-
-  // Show up to 10 categories by default, expand logic showing all
-  const visibleCategories = isCatExpanded ? categories : categories.slice(0, 10);
-
   return (
     <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
-      {/* Top Brand Area */}
       <div className={styles.sidebarHeader}>
-        <img src={logoImg} alt="FinalTouch Studios Logo" className={styles.logoMarkImg} />
+        <span className={styles.sidebarIcon}>✨</span>
         <div>
           <h3>FinalTouch</h3>
           <p>Admin Workspace</p>
         </div>
       </div>
 
-      {/* Navigation - Scrollable Content */}
       <nav className={styles.navigation}>
+<<<<<<< HEAD
         {/* Categories Header & Controls */}
         <div className={styles.sectionHeaderRow}>
           <p className={styles.navLabel}>Categories</p>
@@ -165,10 +156,28 @@ export default function Sidebar({
 
         <div className={styles.divider}></div>
 
+=======
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
         <p className={styles.navLabel}>Management Modules</p>
         <ul className={styles.sysList}>
           <li>
             <button
+              type="button"
+              className={`${styles.navBtn} ${activeTab === "items" ? styles.active : ""}`}
+              onClick={() => {
+                setActiveTab("items");
+                setSearchQuery("");
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
+            >
+              <span className={styles.btnEmoji}>📋</span>
+              <span className={styles.btnLabel}>Items Management</span>
+              <span className={styles.btnCount}>{items.length}</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
               className={`${styles.navBtn} ${activeTab === "members" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("members");
@@ -177,12 +186,13 @@ export default function Sidebar({
               }}
             >
               <span className={styles.btnEmoji}>👥</span>
-              <span className={styles.btnLabel}>Members Directory</span>
+              <span className={styles.btnLabel}>Members Management</span>
               <span className={styles.btnCount}>{members.length}</span>
             </button>
           </li>
           <li>
             <button
+              type="button"
               className={`${styles.navBtn} ${activeTab === "payments" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("payments");
@@ -191,12 +201,13 @@ export default function Sidebar({
               }}
             >
               <span className={styles.btnEmoji}>💳</span>
-              <span className={styles.btnLabel}>Payments Ledger</span>
+              <span className={styles.btnLabel}>Payments & Invoices</span>
               <span className={styles.btnCount}>{payments.length}</span>
             </button>
           </li>
           <li>
             <button
+              type="button"
               className={`${styles.navBtn} ${activeTab === "packages" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("packages");
@@ -210,6 +221,7 @@ export default function Sidebar({
           </li>
           <li>
             <button
+              type="button"
               className={`${styles.navBtn} ${activeTab === "categories" ? styles.active : ""}`}
               onClick={() => {
                 setActiveTab("categories");
@@ -224,9 +236,8 @@ export default function Sidebar({
         </ul>
       </nav>
 
-      {/* Bottom Fixed Logout Section */}
       <div className={styles.sidebarFooter}>
-        <button onClick={handleLogout} className={styles.logoutBtn}>
+        <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
           Logout <span>🚪</span>
         </button>
       </div>

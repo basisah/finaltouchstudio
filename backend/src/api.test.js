@@ -1,6 +1,21 @@
 const request = require("supertest");
 const db = require("./db");
+const initializeDatabase = require("./initDb");
 const app = require("./index");
+
+const seedItem = {
+  id: "ci-seed-item",
+  title: "CI Seed Item",
+  categoryId: "props",
+  description: "Seeded for list tests",
+};
+
+const testItem = {
+  id: "ci-test-item",
+  title: "CI Test Item",
+  categoryId: "props",
+  description: "Created in tests",
+};
 
 describe("API", () => {
   let authToken;
@@ -8,9 +23,24 @@ describe("API", () => {
 
   beforeAll(async () => {
     await db.waitForConnection();
+    await initializeDatabase();
+    await db.query("DELETE FROM items WHERE id IN (?, ?)", [seedItem.id, testItem.id]);
+    await db.query(
+      `INSERT INTO items (id, name, title, categoryId, description, isAvailable, image)
+       VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
+      [
+        seedItem.id,
+        seedItem.title,
+        seedItem.title,
+        seedItem.categoryId,
+        seedItem.description,
+        "✨",
+      ]
+    );
   });
 
   afterAll(async () => {
+    await db.query("DELETE FROM items WHERE id IN (?, ?)", [seedItem.id, testItem.id]);
     await db.closePool();
   });
 
@@ -24,19 +54,19 @@ describe("API", () => {
     });
   });
 
-  describe("POST /api/auth/login", () => {
+  describe("POST /api/admin/auth/login", () => {
     it("returns 401 for invalid credentials", async () => {
       const res = await request(app)
-        .post("/api/auth/login")
+        .post("/api/admin/auth/login")
         .send({ username: "wrong", password: "wrong" });
 
       expect(res.status).toBe(401);
-      expect(res.body.error).toBe("Invalid credentials");
+      expect(res.body.error).toBe("Invalid username or password");
     });
 
     it("returns a token for valid credentials", async () => {
       const res = await request(app)
-        .post("/api/auth/login")
+        .post("/api/admin/auth/login")
         .send({
           username: process.env.ADMIN_USERNAME || "admin",
           password: process.env.ADMIN_PASSWORD || "testpassword",
@@ -48,16 +78,16 @@ describe("API", () => {
     });
   });
 
-  describe("GET /api/auth/verify", () => {
+  describe("GET /api/admin/auth/verify", () => {
     it("returns 401 without a token", async () => {
-      const res = await request(app).get("/api/auth/verify");
+      const res = await request(app).get("/api/admin/auth/verify");
 
       expect(res.status).toBe(401);
     });
 
     it("returns valid for a good token", async () => {
       const res = await request(app)
-        .get("/api/auth/verify")
+        .get("/api/admin/auth/verify")
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -80,7 +110,7 @@ describe("API", () => {
     it("returns 401 without auth", async () => {
       const res = await request(app)
         .post("/api/items")
-        .send({ name: "Unauthorized Item" });
+        .send(testItem);
 
       expect(res.status).toBe(401);
     });
@@ -89,19 +119,20 @@ describe("API", () => {
       const res = await request(app)
         .post("/api/items")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "CI Test Item", description: "Created in tests" });
+        .send(testItem);
 
       expect(res.status).toBe(201);
-      expect(res.body.name).toBe("CI Test Item");
-      expect(res.body.description).toBe("Created in tests");
+      expect(res.body.title).toBe(testItem.title);
+      expect(res.body.categoryId).toBe(testItem.categoryId);
+      expect(res.body.description).toBe(testItem.description);
       createdItemId = res.body.id;
     });
 
-    it("returns 400 when name is missing", async () => {
+    it("returns 400 when required fields are missing", async () => {
       const res = await request(app)
         .post("/api/items")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ description: "No name" });
+        .send({ description: "Missing required fields" });
 
       expect(res.status).toBe(400);
       expect(res.body.error).toBe("Name is required");
@@ -112,7 +143,7 @@ describe("API", () => {
     it("returns 401 without auth", async () => {
       const res = await request(app)
         .put(`/api/items/${createdItemId}`)
-        .send({ name: "Updated" });
+        .send({ title: "Updated" });
 
       expect(res.status).toBe(401);
     });
@@ -121,18 +152,29 @@ describe("API", () => {
       const res = await request(app)
         .put(`/api/items/${createdItemId}`)
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "Updated CI Item", description: "Updated in tests" });
+        .send({
+          title: "Updated CI Item",
+          categoryId: "props",
+          description: "Updated in tests",
+          isAvailable: true,
+          image: "✨",
+        });
 
       expect(res.status).toBe(200);
-      expect(res.body.name).toBe("Updated CI Item");
+      expect(res.body.title).toBe("Updated CI Item");
       expect(res.body.description).toBe("Updated in tests");
     });
 
     it("returns 404 for a missing item", async () => {
       const res = await request(app)
-        .put("/api/items/999999")
+        .put("/api/items/does-not-exist")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "Missing" });
+        .send({
+          title: "Missing",
+          categoryId: "props",
+          isAvailable: true,
+          image: "✨",
+        });
 
       expect(res.status).toBe(404);
     });
@@ -160,6 +202,48 @@ describe("API", () => {
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe("POST /api/contact", () => {
+    it("returns 400 when required fields are missing", async () => {
+      const res = await request(app)
+        .post("/api/contact")
+        .send({ email: "test@example.com" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Name, email, and message are required");
+    });
+
+    it("creates an enquiry", async () => {
+      const res = await request(app).post("/api/contact").send({
+        name: "CI Test User",
+        email: "ci-test@example.com",
+        occasion: "Birthday",
+        message: "Test enquiry from CI",
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.enquiryId).toBeDefined();
+    });
+  });
+
+  describe("GET /api/contact", () => {
+    it("returns 401 without auth", async () => {
+      const res = await request(app).get("/api/contact");
+      expect(res.status).toBe(401);
+    });
+
+    it("returns enquiries for admin", async () => {
+      const res = await request(app)
+        .get("/api/contact")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+      expect(res.body[0].name).toBeDefined();
+      expect(res.body[0].message).toBeDefined();
     });
   });
 });

@@ -14,7 +14,10 @@
   justify-content: center;
   /* Extra bottom padding = half the card height (≈210px) so cards don't clip */
   padding-bottom: 230px;
-  overflow: visible;         /* cards must bleed into next section */
+  /* Cards straddle the section edge via absolute positioning + translateY(50%).
+     That overflow would otherwise extend document scroll height — cancel it here. */
+  margin-bottom: -210px;
+  overflow: visible;
 }
 
 /* ── Background image — NO heavy tint, just a very subtle edge vignette ───── */
@@ -420,6 +423,7 @@
 @media (max-width: 900px) {
   .hero {
     padding-bottom: 300px;
+    margin-bottom: -170px; /* half of 340px card height */
   }
   .categoryStrip {
     gap: 16px;
@@ -446,6 +450,7 @@
   .hero {
     min-height: 70vh;
     padding-bottom: 0;
+    margin-bottom: 0; /* strip is in normal flow on mobile */
   }
 
   .content {

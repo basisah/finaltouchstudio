@@ -188,6 +188,24 @@ router.get("/profile", auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Env-based admin tokens have no DB user id
+    if (!userId && req.user.role === "admin") {
+      return res.json({
+        user: {
+          name: req.user.username || "Admin",
+          email: "admin@finaltouch.com",
+          role: "admin",
+          avatar_url: null,
+          created_at: null,
+        },
+        bookings: [],
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: "Invalid session" });
+    }
+
     // Fetch user record
     const [users] = await db.query(
       "SELECT id, name, email, avatar_url, role, created_at FROM users WHERE id = ?",

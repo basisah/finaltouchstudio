@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import styles from "../AdminPage.module.css";
 import { compressImage } from "../../../utils/imageCompressor";
+<<<<<<< HEAD
 import ConfirmModal from "./ConfirmModal";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
@@ -19,6 +20,14 @@ const CATEGORY_PNG_ICONS = [
 const EMOJI_OPTIONS = ["🎂","💒","🌼","🍼","✨","🎉","💍","🌸","👰","🥳","🎈","🏮","🎓","❤️","🌺","🎪"];
 const COLOR_OPTIONS = ["#B8729A","#9F507C","#D97706","#8B5CF6","#542141","#EC4899","#6366F1","#10B981","#F59E0B","#EF4444","#06B6D4","#84CC16"];
 
+=======
+import EmojiPicker from "../../../components/EmojiPicker/EmojiPicker";
+
+const COLOR_OPTIONS = ["#B8729A","#9F507C","#D97706","#8B5CF6","#542141","#EC4899","#6366F1","#10B981","#F59E0B","#EF4444","#06B6D4","#84CC16"];
+
+const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
+
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 export default function CategoriesTab({ categories, onRefresh }) {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
@@ -187,6 +196,12 @@ export default function CategoriesTab({ categories, onRefresh }) {
     }
   };
 
+  const handleCancelAdd = () => {
+    setShowAddForm(false);
+    setNewForm({ id: "", label: "", emoji: "🎉", color: "#B8729A", description: "" });
+    setNewImageFile(null);
+  };
+
   return (
     <div className={styles.tabContent}>
       <div className={styles.tabHeader}>
@@ -194,15 +209,30 @@ export default function CategoriesTab({ categories, onRefresh }) {
           <h2 className={styles.tabTitle}>🗂️ Categories</h2>
           <p className={styles.tabSubtitle}>Manage event categories shown on landing & items pages. Upload a photo and edit names/colors.</p>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowAddForm(!showAddForm)}>
-          {showAddForm ? "✕ Cancel" : "➕ Add Category"}
+        <button
+          type="button"
+          className={styles.catHeaderAddBtn}
+          onClick={() => setShowAddForm(true)}
+          disabled={showAddForm}
+        >
+          ➕ Add Category
         </button>
       </div>
 
       {/* ── Add New Category Form ── */}
       {showAddForm && (
-        <div className={styles.catEditorCard} style={{ marginBottom: "24px", border: "2px dashed var(--admin-border)" }}>
-          <h3 style={{ marginBottom: "16px", fontSize: "0.95rem", fontWeight: 700 }}>New Category</h3>
+        <div className={styles.catEditorCard} style={{ marginBottom: "24px", border: "2px dashed var(--border-shadow)" }}>
+          <div className={styles.catFormHeader}>
+            <h3 className={styles.catFormTitle}>New Category</h3>
+            <button
+              type="button"
+              className={styles.catFormCloseBtn}
+              onClick={handleCancelAdd}
+              aria-label="Close new category form"
+            >
+              ✕
+            </button>
+          </div>
           <form onSubmit={handleAddNew} className={styles.catEditorForm}>
             <div className={styles.catEditorRow}>
               <div className={styles.catEditorField}>
@@ -228,6 +258,14 @@ export default function CategoriesTab({ categories, onRefresh }) {
             </div>
 
             <div className={styles.catEditorRow}>
+<<<<<<< HEAD
+=======
+              <EmojiPicker
+                label="Emoji"
+                value={newForm.emoji}
+                onChange={(emoji) => setNewForm((p) => ({ ...p, emoji }))}
+              />
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
               <div className={styles.catEditorField}>
                 <label>Color</label>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
@@ -350,9 +388,19 @@ export default function CategoriesTab({ categories, onRefresh }) {
               </button>
             </div>
 
-            <button type="submit" className={styles.addBtn} disabled={saving}>
-              {uploading ? "Uploading..." : saving ? "Saving..." : "✅ Create Category"}
-            </button>
+            <div className={styles.catFormActions}>
+              <button
+                type="button"
+                className={styles.catCancelBtn}
+                onClick={handleCancelAdd}
+                disabled={saving || uploading}
+              >
+                Cancel
+              </button>
+              <button type="submit" className={styles.catSubmitBtn} disabled={saving || uploading}>
+                {uploading ? "Uploading…" : saving ? "Creating…" : "Create Category"}
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -402,6 +450,7 @@ export default function CategoriesTab({ categories, onRefresh }) {
                       <label>Label</label>
                       <input className={styles.catEditorInput} value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} />
                     </div>
+<<<<<<< HEAD
                   </div>
 
                   <div className={styles.catEditorField} style={{ marginBottom: "16px" }}>
@@ -487,6 +536,13 @@ export default function CategoriesTab({ categories, onRefresh }) {
                         </button>
                       ))}
                     </div>
+=======
+                    <EmojiPicker
+                      label="Emoji"
+                      value={form.emoji}
+                      onChange={(emoji) => setForm((p) => ({ ...p, emoji }))}
+                    />
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
                   </div>
 
                   <div className={styles.catEditorField}>
@@ -526,11 +582,13 @@ export default function CategoriesTab({ categories, onRefresh }) {
                     </button>
                   </div>
 
-                  <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-                    <button className={styles.addBtn} onClick={() => handleSaveEdit(cat.id)} disabled={saving}>
-                      {uploading ? "Uploading..." : saving ? "Saving..." : "💾 Save"}
+                  <div className={styles.catFormActions}>
+                    <button type="button" className={styles.catCancelBtn} onClick={cancelEdit} disabled={saving || uploading}>
+                      Cancel
                     </button>
-                    <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
+                    <button type="button" className={styles.catSubmitBtn} onClick={() => handleSaveEdit(cat.id)} disabled={saving || uploading}>
+                      {uploading ? "Uploading…" : saving ? "Saving…" : "Save Changes"}
+                    </button>
                   </div>
                 </div>
               )}

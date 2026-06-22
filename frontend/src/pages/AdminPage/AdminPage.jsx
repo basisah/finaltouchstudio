@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.css";
 import { get, post, put, del } from "../../api/client";
+import { getEnquiries, markAllEnquiriesRead } from "../../api/bookings.api";
 import { compressImage } from "../../utils/imageCompressor";
-import { getSortedCategories } from "../../utils/categoryHelper";
 
 // Modular Imports
 import {
-  initialCategories,
-  initialItems,
-  initialEnquiries,
   initialMembers,
   initialPayments,
 } from "./mockData";
 
+import { resolveInventoryCategories } from "../../constants/inventory";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import InventoryTab from "./components/InventoryTab";
+import ItemsTab from "./components/ItemsTab";
 import MembersTab from "./components/MembersTab";
 import PaymentsTab from "./components/PaymentsTab";
 import EnquiriesTab from "./components/EnquiriesTab";
@@ -30,26 +28,28 @@ export default function AdminPage() {
   // Core Dashboard State (bootstrapped from DB and mockData file)
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
-  const [enquiries, setEnquiries] = useState(initialEnquiries);
+  const [enquiries, setEnquiries] = useState([]);
   const [members, setMembers] = useState(initialMembers);
   const [payments, setPayments] = useState(initialPayments);
 
+  const applyCategories = (data) => {
+    const merged = resolveInventoryCategories(data);
+    setCategories(merged);
+    if (merged.length > 0) {
+      setItemCategoryFilter((prev) => {
+        if (prev === "all" || merged.some((c) => c.id === prev)) return prev;
+        return merged[0].id;
+      });
+    }
+  };
+
   const refreshData = () => {
     get("/categories")
-      .then((data) => {
-        const { allItemsCategories } = getSortedCategories(data || []);
-        setCategories(allItemsCategories);
-        // Default active tab to first category if not set or invalid
-        if (allItemsCategories.length > 0) {
-          setActiveTab((prev) => {
-            const tabsList = ["members", "payments", "packages", "enquiries", "categories"];
-            if (tabsList.includes(prev)) return prev;
-            if (allItemsCategories.some(c => c.id === prev)) return prev;
-            return allItemsCategories[0].id;
-          });
-        }
-      })
-      .catch((err) => console.error("Error loading admin categories:", err));
+      .then(applyCategories)
+      .catch((err) => {
+        console.error("Error loading admin categories:", err);
+        applyCategories([]);
+      });
 
     get("/items?all=true")
       .then((data) => setItems(data))
@@ -61,8 +61,21 @@ export default function AdminPage() {
   }, []);
 
   // Nav Selection
-  const [activeTab, setActiveTab] = useState("proposal");
+  const [activeTab, setActiveTab] = useState("items");
+  const [itemCategoryFilter, setItemCategoryFilter] = useState("all");
+  const [itemSortOrder, setItemSortOrder] = useState("az");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const addItemFormRef = useRef(null);
+
+  // Item additions
+  const [newItemSN, setNewItemSN] = useState("");
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemDesc, setNewItemDesc] = useState("");
+  const [newItemPic, setNewItemPic] = useState("✨");
+  const [newItemFile, setNewItemFile] = useState(null);
+  const [newItemUnitCount, setNewItemUnitCount] = useState(1);
+  const [isSavingItem, setIsSavingItem] = useState(false);
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
 
   // Member additions
   const [newMemName, setNewMemName] = useState("");
@@ -77,10 +90,193 @@ export default function AdminPage() {
   // Global Search
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("items_title");
+  const [editingItem, setEditingItem] = useState(null);
+
+  const handleOpenItemFromSearch = (item) => {
+    setActiveTab("items");
+    setItemCategoryFilter(item.categoryId || "all");
+    setEditingItem(item);
+    setSearchQuery("");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     navigate("/");
+  };
+
+  const fetchEnquiries = async () => {
+    const token = localStorage.getItem("admin_token");
+    if (!token || token === "mock_khaled_admin_token") return;
+
+    try {
+      const data = await getEnquiries();
+      setEnquiries(data);
+    } catch (err) {
+      console.error("Failed to fetch enquiries:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, []);
+
+  // Toggle Item Availability
+  const handleToggleAvailability = async (itemId) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+    try {
+      const updatedItem = await put(`/items/${itemId}`, {
+        ...item,
+        isAvailable: !Boolean(item.isAvailable),
+      });
+      setItems(items.map((i) => (i.id === itemId ? updatedItem : i)));
+    } catch (err) {
+      alert("Failed to toggle availability: " + err.message);
+    }
+  };
+
+  // Add Item
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    if (!newItemName.trim() || !newItemSN.trim()) return;
+
+    const sn = newItemSN.trim().toLowerCase();
+    if (items.some((item) => (item.id || "").toLowerCase() === sn)) {
+      alert("Unique Serial Number required. This one already exists!");
+      return;
+    }
+
+    if (itemCategoryFilter === "all") {
+      alert("Please select a target category in the add form.");
+      return;
+    }
+    const targetCategory = itemCategoryFilter;
+
+    try {
+      let imagePath = newItemPic || "✨";
+
+      if (newItemFile) {
+        const compressedFile = await compressImage(newItemFile);
+        const formData = new FormData();
+        formData.append("image", compressedFile);
+
+        const token = localStorage.getItem("admin_token");
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.path;
+      }
+
+      const createdItem = await post("/items", {
+        id: newItemSN.trim(),
+        serialNumber: newItemSN.trim(),
+        name: newItemName,
+        title: newItemName,
+        description: newItemDesc,
+        categoryId: targetCategory,
+        isAvailable: true,
+        unit_count: newItemUnitCount,
+        image: imagePath
+      });
+
+      setItems([...items, createdItem]);
+      setNewItemName("");
+      setNewItemDesc("");
+      setNewItemSN("");
+      setNewItemPic("✨");
+      setNewItemFile(null);
+      setNewItemUnitCount(1);
+      setShowAddItemForm(false);
+    } catch (err) {
+      alert("Failed to add item: " + err.message);
+    }
+  };
+
+  const handleUpdateItem = async (form) => {
+    const {
+      id,
+      name,
+      title,
+      description,
+      categoryId,
+      unit_count,
+      isAvailable,
+      imageEmoji,
+      imageFile,
+    } = form;
+
+    const existing = items.find((i) => i.id === id);
+    if (!existing) return;
+
+    setIsSavingItem(true);
+    try {
+      let imagePath = existing.image;
+
+      if (imageFile) {
+        const compressedFile = await compressImage(imageFile);
+        const formData = new FormData();
+        formData.append("image", compressedFile);
+
+        const token = localStorage.getItem("admin_token");
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.path;
+      } else if (existing.image && String(existing.image).startsWith("/uploads")) {
+        imagePath = imageEmoji === "✨" ? existing.image : imageEmoji;
+      } else {
+        imagePath = imageEmoji;
+      }
+
+      const updatedItem = await put(`/items/${id}`, {
+        name,
+        title: title || name,
+        description,
+        categoryId,
+        unit_count,
+        isAvailable,
+        image: imagePath,
+      });
+
+      setItems(items.map((i) => (i.id === id ? updatedItem : i)));
+    } catch (err) {
+      alert("Failed to update item: " + err.message);
+      throw err;
+    } finally {
+      setIsSavingItem(false);
+    }
+  };
+
+  // Delete Item
+  const handleDeleteItem = async (itemId) => {
+    if (window.confirm("Delete this item permanently?")) {
+      try {
+        await del(`/items/${itemId}`);
+        setItems(items.filter((item) => item.id !== itemId));
+      } catch (err) {
+        alert("Failed to delete item: " + err.message);
+      }
+    }
   };
 
   // Add Member
@@ -137,32 +333,62 @@ export default function AdminPage() {
   };
 
   // Mark all enquiries as read
-  const handleMarkAllRead = () => {
-    setEnquiries(enquiries.map((e) => ({ ...e, read: true })));
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllEnquiriesRead();
+      setEnquiries(enquiries.map((e) => ({ ...e, read: true })));
+    } catch (err) {
+      console.error("Failed to mark enquiries as read:", err);
+    }
   };
 
   // Filters & Counts
-  const activeCategory = categories.find((cat) => cat.id === activeTab);
-  const activeCategoryItems = items.filter((item) => item.categoryId === activeTab);
   const unreadEnquiriesCount = enquiries.filter((e) => !e.read).length;
 
-  // Search Results evaluation
+  const normalize = (value) => String(value ?? "").toLowerCase().trim();
+
+  const getItemSearchText = (item) =>
+    [
+      item.name,
+      item.title,
+      item.description,
+      item.categoryId,
+      categories.find((c) => c.id === item.categoryId)?.label,
+    ]
+      .map(normalize)
+      .filter(Boolean)
+      .join(" ");
+
+  const getMemberSearchText = (mem) =>
+    [mem.name, mem.email, mem.phone, mem.id, mem.status, mem.joinDate]
+      .map(normalize)
+      .filter(Boolean)
+      .join(" ");
+
+  // Search Results evaluation (client-side over loaded admin data)
   const getSearchResults = () => {
-    if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
+    const query = normalize(searchQuery);
+    if (!query) return [];
 
     if (searchType === "items_title") {
-      return items.filter(
-        (item) => item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
-      );
-    } else if (searchType === "items_serial") {
-      return items.filter((item) => item.serialNumber.toLowerCase().includes(query));
-    } else if (searchType === "members") {
-      return members.filter(
-        (mem) =>
-          mem.name.toLowerCase().includes(query) ||
-          mem.email.toLowerCase().includes(query) ||
-          mem.id.toLowerCase().includes(query)
+      return items.filter((item) => getItemSearchText(item).includes(query));
+    }
+    if (searchType === "items_serial") {
+      return items.filter((item) => {
+        const serial = normalize(item.serialNumber || item.id);
+        return serial.includes(query);
+      });
+    }
+    if (searchType === "members") {
+      return members.filter((mem) => getMemberSearchText(mem).includes(query));
+    }
+    if (searchType === "enquiries") {
+      return enquiries.filter((enq) =>
+        [enq.name, enq.email, enq.occasion, enq.message, enq.date]
+          .map(normalize)
+          .filter(Boolean)
+          .join(" ")
+          .includes(query)
       );
     }
     return [];
@@ -170,21 +396,15 @@ export default function AdminPage() {
 
   const searchResults = getSearchResults();
 
-  const onTriggerAddCategory = () => {
-    setActiveTab("add_category");
-  };
-
   return (
     <div className={styles.dashboard}>
       {/* Sidebar Section */}
       <Sidebar
-        categories={categories}
         items={items}
         members={members}
         payments={payments}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onTriggerAddCategory={onTriggerAddCategory}
         setSearchQuery={setSearchQuery}
         handleLogout={handleLogout}
         isSidebarOpen={isSidebarOpen}
@@ -219,20 +439,43 @@ export default function AdminPage() {
               searchQuery={searchQuery}
               searchType={searchType}
               searchResults={searchResults}
-              categories={categories}
               setActiveTab={setActiveTab}
               setSearchQuery={setSearchQuery}
+              onOpenItem={handleOpenItemFromSearch}
             />
           )}
 
-          {/* B. Default Tab Route: Category Items Inventory */}
-          {(activeCategory || activeTab === "add_category") && searchQuery.trim() === "" && (
-            <InventoryTab
-              activeCategory={activeCategory || { id: "add_category", label: "Add Category", emoji: "➕" }}
-              activeCategoryItems={activeCategoryItems}
-              refreshData={refreshData}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
+          {/* B. Items Management */}
+          {activeTab === "items" && searchQuery.trim() === "" && (
+            <ItemsTab
+              categories={categories}
+              items={items}
+              itemCategoryFilter={itemCategoryFilter}
+              setItemCategoryFilter={setItemCategoryFilter}
+              itemSortOrder={itemSortOrder}
+              setItemSortOrder={setItemSortOrder}
+              handleToggleAvailability={handleToggleAvailability}
+              handleDeleteItem={handleDeleteItem}
+              handleUpdateItem={handleUpdateItem}
+              isSavingItem={isSavingItem}
+              showAddItemForm={showAddItemForm}
+              setShowAddItemForm={setShowAddItemForm}
+              handleAddItem={handleAddItem}
+              newItemSN={newItemSN}
+              setNewItemSN={setNewItemSN}
+              newItemPic={newItemPic}
+              setNewItemPic={setNewItemPic}
+              newItemName={newItemName}
+              setNewItemName={setNewItemName}
+              newItemDesc={newItemDesc}
+              setNewItemDesc={setNewItemDesc}
+              newItemFile={newItemFile}
+              setNewItemFile={setNewItemFile}
+              newItemUnitCount={newItemUnitCount}
+              setNewItemUnitCount={setNewItemUnitCount}
+              addFormRef={addItemFormRef}
+              editingItem={editingItem}
+              setEditingItem={setEditingItem}
             />
           )}
 
@@ -282,68 +525,6 @@ export default function AdminPage() {
             <CategoriesTab categories={categories} onRefresh={refreshData} />
           )}
 
-          {/* I. General Settings Tab */}
-          {activeTab === "general_settings" && searchQuery.trim() === "" && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2>⚙️ General Settings</h2>
-                <p>Manage system-wide configuration, business rules, and branding metadata.</p>
-              </div>
-              <div className={styles.emptyState}>
-                <p>System configuration panel is loaded and active. Ready for deployment integrations.</p>
-              </div>
-            </div>
-          )}
-
-          {/* J. Analytics Dashboard Tab */}
-          {activeTab === "analytics" && searchQuery.trim() === "" && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2>📊 Live Analytics Dashboard</h2>
-                <p>Overview of sales metrics, popular item rentals, category performance, and client trends.</p>
-              </div>
-              <div className={styles.emptyState}>
-                <p>No analytical data recorded for this billing cycle. Try making checkout reservations first.</p>
-              </div>
-            </div>
-          )}
-
-          {/* K. User Management Tab */}
-          {activeTab === "user_management" && searchQuery.trim() === "" && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2>👤 User & Staff Management</h2>
-                <p>Manage staff privileges, register new administrators, and review customer access tokens.</p>
-              </div>
-              <div className={styles.emptyState}>
-                <p>Active Administrator Directory. Use database controls to register secondary workspace credentials.</p>
-              </div>
-            </div>
-          )}
-
-          {/* F. Category Setup Guide (fallback empty activeTab state) */}
-          {activeTab === "" && searchQuery.trim() === "" && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2>Setup Category</h2>
-                <p>Use the left panel category controls to design and save your new filter category.</p>
-              </div>
-              <div className={styles.guideContent}>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>1</span>
-                  <p>Choose an appropriate emoji representative (e.g. 🎓 for education).</p>
-                </div>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>2</span>
-                  <p>Enter a name that will be displayed in user gallery filter buttons.</p>
-                </div>
-                <div className={styles.guideStep}>
-                  <span className={styles.stepNum}>3</span>
-                  <p>Click "Save" to mount the category. You can then immediately start adding inventory items to it!</p>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
       </main>
     </div>

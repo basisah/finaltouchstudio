@@ -196,7 +196,93 @@
   border: 1.5px solid #34162A;
 }
 
-/* ── Light Theme Navbar (for all pages except landing page) ── */
+/* ── Burgundy theme (Items / dark inventory pages) ── */
+.navbar.burgundy {
+  background: rgba(26, 15, 18, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.28);
+}
+
+.navbar.burgundy .logoText {
+  color: #fff;
+  text-shadow: none;
+}
+
+.navbar.burgundy .logoAccent {
+  color: var(--clr-gizmo);
+}
+
+.navbar.burgundy .logoMark {
+  box-shadow: 0 4px 14px rgba(157, 90, 111, 0.4);
+}
+
+.navbar.burgundy .navLink {
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: none;
+}
+
+.navbar.burgundy .navLink:hover,
+.navbar.burgundy .navLink.active {
+  color: var(--clr-portrait-pink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar.burgundy .mobileNavLink {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.navbar.burgundy .mobileNavLink:hover,
+.navbar.burgundy .mobileNavLink.active {
+  color: var(--clr-portrait-pink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar.burgundy .iconBtn {
+  color: rgba(255, 255, 255, 0.9);
+  filter: none;
+}
+
+.navbar.burgundy .iconBtn:hover {
+  color: var(--clr-gizmo);
+}
+
+.navbar.burgundy .badge {
+  border-color: #1a0f12;
+}
+
+.navbar.burgundy.scrolled {
+  background: rgba(26, 15, 18, 0.97);
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(189, 120, 147, 0.15);
+}
+
+.navbar.burgundy .dropdown {
+  background: rgba(36, 20, 28, 0.98);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.navbar.burgundy .userName {
+  color: #fff;
+}
+
+.navbar.burgundy .userEmail {
+  color: var(--clr-portrait-pink);
+}
+
+.navbar.burgundy .dropDivider {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar.burgundy .signInBtn {
+  background: linear-gradient(135deg, var(--clr-mulberry-mix), var(--btn-hover));
+}
+
+.navbar.burgundy .signInBtn:hover {
+  background: linear-gradient(135deg, var(--clr-benifuji), var(--clr-mulberry-mix));
+}
+
+/* ── Light Theme Navbar (cart, profile, checkout, etc.) ── */
 .navbar.light {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-shadow);

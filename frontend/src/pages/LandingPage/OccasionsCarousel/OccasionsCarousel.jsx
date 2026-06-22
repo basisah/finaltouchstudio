@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
-import { get } from "../../../api/client";
+import { DISPLAY_CATEGORIES } from "../../ItemsPage/itemsPageCategories";
 import styles from "./OccasionsCarousel.module.css";
 
+<<<<<<< HEAD
 const categoryIcons = {
   baby: "/uploads/Icons/Category/baby.png",
   "birthday-cake": "/uploads/Icons/Category/birthday-cake.png",
@@ -136,48 +135,21 @@ const getSvgIcon = (title) => {
   return <SpecialIcon />;
 };
 
+=======
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 export default function OccasionsCarousel() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [dbItems, setDbItems] = useState([]);
-
-  useEffect(() => {
-    // Fetch categories
-    get("/categories")
-      .then((data) => {
-        if (data && data.length > 0) {
-          const merged = data.map((dbCat) => {
-            const staticCat = INVENTORY_CATEGORIES.find((c) => c.id === dbCat.id);
-            return {
-              ...staticCat,
-              ...dbCat,
-              subcategories: dbCat.subcategories || staticCat?.subcategories || [],
-            };
-          });
-          setCategories(merged);
-        } else {
-          setCategories(INVENTORY_CATEGORIES);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to load categories, falling back to static:", err);
-        setCategories(INVENTORY_CATEGORIES);
-      });
-
-    // Fetch items
-    get("/items")
-      .then((data) => setDbItems(data))
-      .catch((err) => console.error("Error fetching items:", err));
-  }, []);
+  const categories = DISPLAY_CATEGORIES.filter((c) => c.id !== "all");
 
   return (
     <section className={styles.section} id="catalog">
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Our Catalog</h2>
-          <p className={styles.sectionSub}>Browse items by category — click any item to book</p>
+          <p className={styles.sectionSub}>Browse our rental inventory by category</p>
         </div>
 
+<<<<<<< HEAD
         {categories.map((category) => {
           const colors = categoryColors[category.id] || categoryColors.global;
           const icon = categoryIcons[category.emoji] || categoryIcons[category.id] || (category.image_url && category.image_url.startsWith("/") ? category.image_url : null);
@@ -260,10 +232,25 @@ export default function OccasionsCarousel() {
                     </div>
                   );
                 })}
+=======
+        <div className={styles.gridContainer}>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              className={styles.gridItem}
+              onClick={() => navigate(`/items?category=${category.id}`)}
+            >
+              <div className={styles.circleCard}>
+                <span className={styles.subcatEmoji}>{category.emoji}</span>
               </div>
-            </div>
-          );
-        })}
+              <div className={styles.cardLabelWrapper}>
+                <span className={styles.cardLabel}>{category.label}</span>
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );

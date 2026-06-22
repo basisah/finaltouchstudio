@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const auth = require("../middleware/auth");
+const optionalAuth = require("../middleware/optionalAuth");
+const { canRentQuantity } = require("../utils/rentalAvailability");
 const { sendNotificationEmail } = require("../utils/mailer");
 const getPurchaseUserTemplate = require("../emailservices/purchaseUser");
 const getPurchaseAdminTemplate = require("../emailservices/purchaseAdmin");
@@ -140,12 +142,16 @@ router.get("/cart", auth, async (req, res) => {
     const userId = req.user.id;
     const [cartRows] = await db.query(
       `SELECT uc.id, uc.quantity, uc.item_id, uc.package_id,
-              i.name AS item_name, i.image AS item_image, i.description AS item_description,
-              p.name AS package_name, p.price AS package_price
+              uc.pickup_date, uc.return_date,
+              i.name AS item_name, i.title AS item_title, i.image AS item_image,
+              i.description AS item_description, i.categoryId AS item_categoryId,
+              i.price AS item_price,
+              p.name AS package_name, p.price AS package_price, p.category_id AS package_category_id
        FROM user_cart uc
        LEFT JOIN items i ON uc.item_id = i.id
        LEFT JOIN packages p ON uc.package_id = p.id
-       WHERE uc.user_id = ?`,
+       WHERE uc.user_id = ?
+       ORDER BY uc.created_at ASC`,
       [userId]
     );
     res.json(cartRows);
@@ -155,10 +161,10 @@ router.get("/cart", auth, async (req, res) => {
   }
 });
 
-// POST - Add/update item or package in cart
+// POST - Add a line to cart (each add creates a new row, matching frontend behaviour)
 router.post("/cart", auth, async (req, res) => {
   const userId = req.user.id;
-  const { item_id, package_id, quantity } = req.body;
+  const { item_id, package_id, quantity, pickup_date, return_date } = req.body;
   const qty = parseInt(quantity, 10) || 1;
 
   if (!item_id && !package_id) {
@@ -166,27 +172,60 @@ router.post("/cart", auth, async (req, res) => {
   }
 
   try {
-    if (item_id) {
-      const [existing] = await db.query("SELECT id, quantity FROM user_cart WHERE user_id = ? AND item_id = ?", [userId, item_id]);
-      if (existing.length > 0) {
-        const newQty = existing[0].quantity + qty;
-        await db.query("UPDATE user_cart SET quantity = ? WHERE id = ?", [newQty, existing[0].id]);
-      } else {
-        await db.query("INSERT INTO user_cart (user_id, item_id, quantity) VALUES (?, ?, ?)", [userId, item_id, qty]);
-      }
-    } else {
-      const [existing] = await db.query("SELECT id, quantity FROM user_cart WHERE user_id = ? AND package_id = ?", [userId, package_id]);
-      if (existing.length > 0) {
-        const newQty = existing[0].quantity + qty;
-        await db.query("UPDATE user_cart SET quantity = ? WHERE id = ?", [newQty, existing[0].id]);
-      } else {
-        await db.query("INSERT INTO user_cart (user_id, package_id, quantity) VALUES (?, ?, ?)", [userId, package_id, qty]);
-      }
-    }
-    res.json({ success: true, message: "Cart updated successfully" });
+    const [result] = await db.query(
+      `INSERT INTO user_cart (user_id, item_id, package_id, quantity, pickup_date, return_date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        item_id || null,
+        package_id || null,
+        qty,
+        pickup_date || null,
+        return_date || null,
+      ]
+    );
+    res.status(201).json({ success: true, id: result.insertId, message: "Cart updated successfully" });
   } catch (err) {
     console.error("Error updating cart:", err);
     res.status(500).json({ error: "Failed to update cart" });
+  }
+});
+
+// PUT - Update quantity on a cart line
+router.put("/cart/line/:id", auth, async (req, res) => {
+  const qty = parseInt(req.body.quantity, 10);
+  if (!qty || qty < 1) {
+    return res.status(400).json({ error: "Valid quantity (>= 1) is required" });
+  }
+
+  try {
+    const [result] = await db.query(
+      "UPDATE user_cart SET quantity = ? WHERE id = ? AND user_id = ?",
+      [qty, req.params.id, req.user.id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Cart line not found" });
+    }
+    res.json({ success: true, message: "Cart line updated" });
+  } catch (err) {
+    console.error("Error updating cart line:", err);
+    res.status(500).json({ error: "Failed to update cart line" });
+  }
+});
+
+// DELETE single cart line by row id
+router.delete("/cart/line/:id", auth, async (req, res) => {
+  try {
+    const [result] = await db.query(
+      "DELETE FROM user_cart WHERE id = ? AND user_id = ?",
+      [req.params.id, req.user.id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Cart line not found" });
+    }
+    res.json({ success: true, message: "Cart line removed" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to remove cart line" });
   }
 });
 
@@ -224,9 +263,25 @@ router.delete("/cart", auth, async (req, res) => {
 // 4. ORDER MANAGEMENT ENDPOINTS (Authenticated)
 // ==========================================
 
-// POST - Place a new order
-router.post("/orders", auth, async (req, res) => {
-  const userId = req.user.id;
+async function resolveOrderUserId(req, customer_email, customer_name) {
+  if (req.user?.id) {
+    return req.user.id;
+  }
+
+  const [userRows] = await db.query("SELECT id FROM users WHERE email = ?", [customer_email]);
+  if (userRows.length > 0) {
+    return userRows[0].id;
+  }
+
+  const [insertUser] = await db.query(
+    "INSERT INTO users (email, name, role) VALUES (?, ?, 'user')",
+    [customer_email, customer_name]
+  );
+  return insertUser.insertId;
+}
+
+// POST - Place a new order (authenticated or guest)
+router.post("/orders", optionalAuth, async (req, res) => {
   const {
     customer_name,
     customer_email,
@@ -246,6 +301,8 @@ router.post("/orders", auth, async (req, res) => {
   }
 
   try {
+    const userId = await resolveOrderUserId(req, customer_email, customer_name);
+
     // 1. Insert order record
     const [result] = await db.query(
       `INSERT INTO orders (user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status)
@@ -267,11 +324,61 @@ router.post("/orders", auth, async (req, res) => {
 
     const orderId = result.insertId;
 
-    // 2. Insert itemized details
+    // 2. Insert itemized details (with per-item rental dates when provided)
     for (const item of items) {
+      const itemPickup = item.pickup_date || rental_date;
+      const itemReturn = item.return_date || event_date;
+
+      if (item.item_id) {
+        const [stockRows] = await db.query(
+          "SELECT unit_count, isAvailable FROM items WHERE id = ?",
+          [item.item_id]
+        );
+        if (stockRows.length === 0) {
+          return res.status(400).json({ error: `Item ${item.item_id} not found` });
+        }
+        const totalStock = Math.max(0, parseInt(stockRows[0].unit_count, 10) || 0);
+        if (!stockRows[0].isAvailable || totalStock <= 0) {
+          return res.status(400).json({ error: `Item ${item.item_id} is not available for rent` });
+        }
+
+        const [existing] = await db.query(
+          `SELECT oi.quantity,
+                  COALESCE(oi.pickup_date, o.rental_date) AS pickup_date,
+                  COALESCE(oi.return_date, o.event_date) AS return_date
+           FROM order_items oi
+           INNER JOIN orders o ON o.id = oi.order_id
+           WHERE oi.item_id = ?
+             AND o.status IN ('pending', 'confirmed')`,
+          [item.item_id]
+        );
+
+        const bookings = existing.map((row) => ({
+          pickupDate: String(row.pickup_date).slice(0, 10),
+          returnDate: String(row.return_date).slice(0, 10),
+          quantity: parseInt(row.quantity, 10) || 0,
+        }));
+
+        const qty = parseInt(item.quantity, 10) || 1;
+        if (!canRentQuantity(bookings, itemPickup, itemReturn, qty, totalStock)) {
+          return res.status(409).json({
+            error: `Not enough stock for ${item.item_id} on the selected dates (requested ${qty})`,
+          });
+        }
+      }
+
       await db.query(
-        "INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent) VALUES (?, ?, ?, ?, ?)",
-        [orderId, item.item_id || null, item.package_id || null, item.quantity || 1, item.price || 0.00]
+        `INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent, pickup_date, return_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          orderId,
+          item.item_id || null,
+          item.package_id || null,
+          item.quantity || 1,
+          item.price || 0.0,
+          itemPickup,
+          itemReturn,
+        ]
       );
     }
 

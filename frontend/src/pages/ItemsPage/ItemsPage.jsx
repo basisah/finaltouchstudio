@@ -1,15 +1,23 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import { INVENTORY_CATEGORIES } from "../../constants/inventory";
-import { getSortedCategories } from "../../utils/categoryHelper";
 import { get } from "../../api/client";
+import { getCategories } from "../../api/categories.api";
 import DateRangePickerModal from "../../components/DateRangePickerModal/DateRangePickerModal";
 import SearchBar from "../../components/SearchBar/SearchBar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
+import CategoryNavPills from "./components/CategoryNavPills";
+import InventoryCategorySection from "./components/InventoryCategorySection";
+import { useActiveCategoryObserver } from "./hooks/useActiveCategoryObserver";
+import { resolveInventoryCategories } from "../../constants/inventory";
+import {
+  buildPillCategories,
+  groupItemsByCategoryId,
+} from "./itemsPageCategories";
 import styles from "./ItemsPage.module.css";
 
+<<<<<<< HEAD
 const categoryIcons = {
   baby: "/uploads/Icons/Category/baby.png",
   "birthday-cake": "/uploads/Icons/Category/birthday-cake.png",
@@ -198,48 +206,113 @@ const getBookedDatesForItem = (itemId) => {
   const date4 = ((code + 21) % 28) + 1;
   return [date1, date2, date3, date4];
 };
+=======
+const SCROLL_OFFSET = 160;
+
+function matchesSearch(item, query) {
+  if (!query.trim()) return true;
+  const q = query.toLowerCase();
+  return [item.title, item.name, item.description, item.categoryId]
+    .filter(Boolean)
+    .some((field) => String(field).toLowerCase().includes(q));
+}
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 
 export default function ItemsPage() {
-  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
-  const [selectedItem, setSelectedItem] = useState(null);
+  const { cart, addToCart } = useCart();
   const location = useLocation();
-  const navigate = useNavigate();
-  const lastSearchRef = useRef("__INITIAL__");
-  const hasScrolledRef = useRef(false);
-  const [activeSubcats, setActiveSubcats] = useState({});
 
+  const [dbItems, setDbItems] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+<<<<<<< HEAD
   const [dbItems, setDbItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategoryId, setActiveCategoryId] = useState("");
   const [activeCategoryFilter, setActiveCategoryFilter] = useState(null);
+=======
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 
   useEffect(() => {
-    // Fetch items
     get("/items")
       .then((data) => setDbItems(data))
       .catch((err) => console.error("Error fetching items:", err));
-
-    // Fetch categories
-    get("/categories")
-      .then((data) => {
-        const { allItemsCategories } = getSortedCategories(data || []);
-        setCategories(allItemsCategories);
-      })
-      .catch((err) => {
-        console.warn("Failed to load categories, falling back to static:", err);
-        const { allItemsCategories } = getSortedCategories([]);
-        setCategories(allItemsCategories);
-      });
   }, []);
+
+  useEffect(() => {
+    getCategories()
+      .then((data) => setDbCategories(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
+  const filteredItems = useMemo(
+    () => dbItems.filter((item) => matchesSearch(item, searchQuery)),
+    [dbItems, searchQuery]
+  );
+
+  const effectiveCategories = useMemo(() => {
+    if (dbCategories.length > 0) return dbCategories;
+
+    // Local/dev fallback: no rows in categories table yet, but items exist
+    const itemCategoryIds = new Set(dbItems.map((item) => item.categoryId).filter(Boolean));
+    return resolveInventoryCategories([]).filter((cat) => itemCategoryIds.has(cat.id));
+  }, [dbCategories, dbItems]);
+
+  const groupedItems = useMemo(
+    () => groupItemsByCategoryId(filteredItems, effectiveCategories),
+    [filteredItems, effectiveCategories]
+  );
+
+  const visiblePillCategories = useMemo(
+    () => buildPillCategories(effectiveCategories),
+    [effectiveCategories]
+  );
+
+  const categoryById = useMemo(
+    () => Object.fromEntries(effectiveCategories.map((c) => [c.id, c])),
+    [effectiveCategories]
+  );
+
+  const visibleSectionIds = useMemo(
+    () => visiblePillCategories.filter((c) => c.id !== "all").map((c) => c.id),
+    [visiblePillCategories]
+  );
+
+  const [activePillId, setActivePillId] = useActiveCategoryObserver(visibleSectionIds, {
+    topOffset: SCROLL_OFFSET,
+  });
+
+  const scrollToCategory = useCallback((categoryId) => {
+    if (categoryId === "all") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const el = document.getElementById(`category-section-${categoryId}`);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  }, []);
+
+  const handlePillSelect = useCallback(
+    (categoryId) => {
+      setActivePillId(categoryId);
+      scrollToCategory(categoryId);
+    },
+    [scrollToCategory, setActivePillId]
+  );
+
+  const handleRentItem = useCallback((item) => setSelectedItem(item), []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const catId = params.get("category");
-    const subcatId = params.get("subcategory");
     const itemId = params.get("item");
 
+<<<<<<< HEAD
     // Reset scroll flag when search parameters change
     if (location.search !== lastSearchRef.current) {
       lastSearchRef.current = location.search;
@@ -296,10 +369,20 @@ export default function ItemsPage() {
       // Default active tab selection if no query param is present and not already active
       if (categories.length > 0 && !activeCategoryId) {
         setActiveCategoryId(categories[0].id);
+=======
+    if (catId && (catId === "all" || categoryById[catId])) {
+      setActivePillId(catId);
+      const timer = setTimeout(() => scrollToCategory(catId), 400);
+      if (itemId) {
+        const item = dbItems.find((i) => i.id === itemId);
+        if (item) setSelectedItem(item);
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
       }
+      return () => clearTimeout(timer);
     }
-  }, [location.search, dbItems, categories, activeCategoryId]);
+  }, [location.search, dbItems, categoryById, scrollToCategory, setActivePillId]);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (activeCategoryFilter) return;
 
@@ -339,38 +422,24 @@ export default function ItemsPage() {
   };
 
   const triggerToast = (msg) => {
+=======
+  const triggerToast = useCallback((msg) => {
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
     setToastMsg(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
-  };
+  }, []);
 
-  // Check if item is already in cart
-  const getCartItem = (itemId) => {
-    return cart.find((c) => c.item.id === itemId);
-  };
+  const handleConfirmDates = useCallback(
+    ({ pickupDate, returnDate, quantity, item }) => {
+      addToCart(item, pickupDate, returnDate, quantity);
+      triggerToast(`Added ${quantity}× "${item.title || item.name}" to your cart`);
+      setSelectedItem(null);
+    },
+    [addToCart, triggerToast]
+  );
 
-  const handleQuickRemove = (itemId, e) => {
-    e.stopPropagation();
-    const cartItem = getCartItem(itemId);
-    if (cartItem) {
-      removeFromCart(cartItem.id);
-      triggerToast(`Removed "${cartItem.item.title}" from your Cart!`);
-    }
-  };
-
-  const handleConfirmDates = ({ pickupDate, returnDate, quantity, item }) => {
-    addToCart(item, pickupDate, returnDate, quantity);
-    triggerToast(`Added ${quantity}x "${item.title}" to your Cart!`);
-    handleCloseItem();
-  };
-
-  const handleCategoryClick = (catId) => {
-    setActiveCategoryId(catId);
-    const element = document.getElementById(`category-section-${catId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
+  const categoriesToRender = effectiveCategories;
 
   const handleToggleCategory = (catId) => {
     if (activeCategoryFilter === catId) {
@@ -384,6 +453,7 @@ export default function ItemsPage() {
     <div className={styles.page}>
       <Navbar />
 
+<<<<<<< HEAD
       <main className={styles.mainContainer3d}>
         
         {/* Top Showcase Banner Card */}
@@ -482,20 +552,59 @@ export default function ItemsPage() {
               emoji: "✨"
             }));
           })();
+=======
+      <div className={styles.ambientOrb1} aria-hidden="true" />
+      <div className={styles.ambientOrb2} aria-hidden="true" />
 
-          const activeSubcatId = activeSubcats[category.id];
-          const activeSubcatObj = subcategories.find(s => s.id === activeSubcatId);
+      <main className={styles.main}>
+        <header className={styles.pageIntro}>
+          <p className={styles.pageEyebrow}>FinalTouch Studio</p>
+          <h1 className={styles.pageTitle}>Rental Inventory</h1>
+          <p className={styles.pageSubtitle}>
+            Curated props and décor for weddings, birthdays, holud, and celebrations.
+          </p>
+        </header>
 
-          return (
-            <section
+        <div className={styles.searchBlock}>
+          <div className={styles.searchGlass}>
+            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3-3" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search props, categories, inventory…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search inventory"
+            />
+          </div>
+        </div>
+
+        {visiblePillCategories.length > 0 && (
+          <div className={styles.stickyPillsWrap}>
+            <CategoryNavPills
+              categories={visiblePillCategories}
+              activeId={activePillId}
+              onSelect={handlePillSelect}
+            />
+          </div>
+        )}
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
+
+        <div className={styles.categoriesStack}>
+          {categoriesToRender.map((category) => (
+            <InventoryCategorySection
               key={category.id}
-              id={`category-section-${category.id}`}
-              className={styles.categoryBlock3d}
-              style={{ "--category-color": category.color || "#9F507C" }}
-            >
-              {/* Glowing background orb for this category */}
-              <div className={styles.categoryBackdropOrb} />
+              category={category}
+              items={groupedItems[category.id] || []}
+              categoryMap={categoryById}
+              onRentItem={handleRentItem}
+            />
+          ))}
 
+<<<<<<< HEAD
               <div className={styles.categoryHeader}>
                 <div className={styles.categoryTitleRow}>
                   {categoryIcons[category.emoji] || categoryIcons[category.id] ? (
@@ -701,21 +810,30 @@ export default function ItemsPage() {
             </section>
           );
         })}
+=======
+          {filteredItems.length === 0 && (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyEmoji}>✨</span>
+              <h3>No items found</h3>
+              <p>Try a different search term or browse another category.</p>
+            </div>
+          )}
+        </div>
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
       </main>
 
-      {/* Booking Popup Modal */}
       {selectedItem && (
-        <DateRangePickerModal 
-          item={selectedItem} 
-          onClose={handleCloseItem} 
-          onConfirm={handleConfirmDates} 
+        <DateRangePickerModal
+          item={selectedItem}
+          cart={cart}
+          onClose={() => setSelectedItem(null)}
+          onConfirm={handleConfirmDates}
         />
       )}
 
-      {/* Floating Toast Notification */}
       {showToast && (
-        <div className={styles.toast}>
-          <span>{toastMsg}</span>
+        <div className={styles.toast} role="status">
+          {toastMsg}
         </div>
       )}
 

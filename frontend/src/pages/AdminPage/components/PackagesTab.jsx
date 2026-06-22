@@ -3,7 +3,14 @@ import styles from "../AdminPage.module.css";
 import { getPackages, getItems } from "../../../api/packages.api";
 import { createPackage, updatePackage, deletePackage } from "../../../api/admin/packages.api";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
+<<<<<<< HEAD
 import ConfirmModal from "./ConfirmModal";
+=======
+import {
+  DISPLAY_CATEGORIES,
+  getDisplayCategoryId,
+} from "../../ItemsPage/itemsPageCategories";
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 
 export default function PackagesTab() {
   const [packages, setPackages] = useState([]);
@@ -16,9 +23,11 @@ export default function PackagesTab() {
   const [editingPackage, setEditingPackage] = useState(null);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [categoryId, setCategoryId] = useState("birthday");
+  const packageCategories = DISPLAY_CATEGORIES.filter((c) => c.id !== "all");
+  const [categoryId, setCategoryId] = useState(packageCategories[0]?.id || "");
   const [selectedItemIds, setSelectedItemIds] = useState([]);
 
+<<<<<<< HEAD
   // Confirm Modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletePkgId, setDeletePkgId] = useState(null);
@@ -31,6 +40,9 @@ export default function PackagesTab() {
     { id: "baby", label: "Baby Shower Props", emoji: "🍼" },
     { id: "global", label: "Global Essentials", emoji: "⚙️" },
   ];
+=======
+  const categoriesList = packageCategories;
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 
   const fetchDashboardData = async () => {
     try {
@@ -55,7 +67,7 @@ export default function PackagesTab() {
     setEditingPackage(null);
     setName("");
     setPrice("");
-    setCategoryId("birthday");
+    setCategoryId(packageCategories[0]?.id || "");
     setSelectedItemIds([]);
     setIsModalOpen(true);
   };
@@ -117,21 +129,21 @@ export default function PackagesTab() {
     }
   };
 
-  // Filter items matching current category choice
   const filteredItemsForCategory = allItems.filter(
-    (item) => item.categoryId === categoryId
+    (item) => getDisplayCategoryId(item.categoryId) === categoryId
   );
 
-  const activeCatObj = INVENTORY_CATEGORIES.find(c => c.id === categoryId);
-  const catSubcats = activeCatObj?.subcategories || [];
-  
-  const groupedItems = catSubcats.map(sub => {
-    const subItems = filteredItemsForCategory.filter(item => item.subCategoryId === sub.id);
-    return { sub, items: subItems };
-  });
+  const groupedItems = INVENTORY_CATEGORIES.map((productType) => {
+    const typeItems = filteredItemsForCategory.filter(
+      (item) => item.categoryId === productType.id
+    );
+    return { sub: productType, items: typeItems };
+  }).filter((group) => group.items.length > 0);
 
   const unassignedItems = filteredItemsForCategory.filter(
-    item => !catSubcats.some(sub => sub.id === item.subCategoryId)
+    (item) =>
+      !INVENTORY_CATEGORIES.some((cat) => cat.id === item.categoryId) &&
+      getDisplayCategoryId(item.categoryId) === categoryId
   );
 
   if (loading) {
@@ -144,7 +156,7 @@ export default function PackagesTab() {
         <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h2>📦 Decor Packages</h2>
-            <p>Customize pre-defined packages for main landing page categories</p>
+            <p>Bundle items by inventory category</p>
           </div>
           <button className={styles.addItemBtn} style={{ width: "auto", marginTop: 0 }} onClick={handleOpenCreateModal}>
             ➕ Create Custom Package
@@ -296,7 +308,7 @@ export default function PackagesTab() {
                 }}>
                   {filteredItemsForCategory.length === 0 ? (
                     <p style={{ color: "var(--txt-muted)", fontSize: "0.85rem" }}>
-                      No items found in category '{categoryId}'. Add items to this category in the inventory tab first!
+                      No items found in this category. Add items in Items Management first!
                     </p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import styles from "../AdminPage.module.css";
+<<<<<<< HEAD
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 import { post, put, del } from "../../../api/client";
 import { compressImage } from "../../../utils/imageCompressor";
@@ -78,14 +79,29 @@ const SUBCAT_EMOJIS_WITH_NAMES = [
   { emoji: "🌟", name: "Stars" },
   { emoji: "🕯️", name: "Candles" }
 ];
+=======
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
 
 export default function InventoryTab({
   activeCategory,
   activeCategoryItems,
-  refreshData,
-  activeTab,
-  setActiveTab,
+  handleToggleAvailability,
+  handleDeleteItem,
+  handleAddItem,
+  newItemSN,
+  setNewItemSN,
+  newItemPic,
+  setNewItemPic,
+  newItemName,
+  setNewItemName,
+  newItemDesc,
+  setNewItemDesc,
+  newItemFile,
+  setNewItemFile,
+  newItemUnitCount,
+  setNewItemUnitCount,
 }) {
+<<<<<<< HEAD
   // Mode checks
   const isAddCategoryMode = activeTab === "add_category";
 
@@ -560,20 +576,19 @@ export default function InventoryTab({
     }
   };
 
+=======
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
   return (
-    <div className={styles.inventoryGridContainer}>
-      {/* ──────────────────────────────────────────────────────── */}
-      {/* MIDDLE SECTION: Dynamic Inventory Hub (Column 2)         */}
-      {/* ──────────────────────────────────────────────────────── */}
-      <div className={styles.middleWorkspace}>
-        {isAddCategoryMode ? (
-          /* State A: Add Category Mode */
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2>➕ Create New Category</h2>
-              <p>Configure details for a new filter category</p>
-            </div>
+    <div className={styles.categoryGrid}>
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <h2>
+            {activeCategory.emoji} {activeCategory.label} Inventory ({activeCategoryItems.length})
+          </h2>
+          <p>Review rental items, availability, and serials</p>
+        </div>
 
+<<<<<<< HEAD
             <form onSubmit={handleCreateCategory} className={styles.itemForm}>
               <div className={styles.inputGroup}>
                 <label htmlFor="catTitle">Category Title</label>
@@ -1345,11 +1360,122 @@ export default function InventoryTab({
                 ✦ {selectedItem ? "Save Changes" : "Create & Add to Category"}
               </button>
             </form>
+=======
+        {activeCategoryItems.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>No items configured in this category. Create one below on the right!</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrapper} style={{ overflowX: "hidden" }}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Item Details</th>
+                  <th>Availability Switch</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeCategoryItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                        <div style={{ flexShrink: 0 }}>
+                          {item.image && item.image.startsWith("/uploads") ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              style={{
+                                width: "44px",
+                                height: "44px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                                display: "block",
+                              }}
+                            />
+                          ) : (
+                            <span
+                              className={styles.itemEmojiPic}
+                              style={{ width: "44px", height: "44px", borderRadius: "8px" }}
+                              title="Item visual thumb"
+                            >
+                              {item.image}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <code
+                              style={{
+                                fontSize: "0.72rem",
+                                background: "var(--bg-main)",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid var(--border-shadow)",
+                                color: "var(--text-main)",
+                                fontWeight: "600",
+                              }}
+                            >
+                              {item.serialNumber || item.id}
+                            </code>
+                            <strong style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
+                              {item.name || item.title}
+                            </strong>
+                          </div>
+                          <p className={styles.tableSmallDesc} style={{ margin: "4px 0 6px", lineHeight: "1.4" }}>
+                            {item.description}
+                          </p>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                            <span
+                              className={styles.btnCount}
+                              style={{
+                                background: "rgba(165, 110, 189, 0.12)",
+                                color: "var(--btn-primary)",
+                                fontSize: "10px",
+                                fontWeight: "700",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              Stock: {item.unit_count || 1} units
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.availabilityToggle}>
+                        <span
+                          className={`${styles.statusLabel} ${item.isAvailable ? styles.statusAvailable : styles.statusBooked}`}
+                        >
+                          {item.isAvailable ? "Available" : "Booked"}
+                        </span>
+                        <label className={styles.switch}>
+                          <input
+                            type="checkbox"
+                            checked={item.isAvailable}
+                            onChange={() => handleToggleAvailability(item.id)}
+                          />
+                          <span className={styles.slider}></span>
+                        </label>
+                      </div>
+                    </td>
+                    <td>
+                      <button className={styles.deleteItemBtn} onClick={() => handleDeleteItem(item.id)}>
+                        🗑️ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
           </div>
         </>
         )}
       </div>
 
+<<<<<<< HEAD
       {/* ──────────────────────────────────────────────────────── */}
       {/* RIGHT SECTION: Item List & Status Feed (Column 3)        */}
       {/* ──────────────────────────────────────────────────────── */}
@@ -1459,7 +1585,97 @@ export default function InventoryTab({
               </div>
             )}
           </div>
+=======
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <h2>➕ Add to Inventory</h2>
+          <p>Configure details for a new product entry in {activeCategory.label}</p>
+>>>>>>> b345ecb6cec937d07c74eeb5ff7cdb60018e1842
         </div>
+
+        <form onSubmit={handleAddItem} className={styles.itemForm}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemSN">Unique Serial Number</label>
+            <input
+              id="itemSN"
+              type="text"
+              placeholder="e.g. SN-BTH-003"
+              value={newItemSN}
+              onChange={(e) => setNewItemSN(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemPic">Visual Symbol / Icon</label>
+            <select
+              id="itemPic"
+              value={newItemPic}
+              onChange={(e) => setNewItemPic(e.target.value)}
+              className={styles.picSelect}
+            >
+              <option value="✨">✨ sparkle</option>
+              <option value="🎂">🎂 cake</option>
+              <option value="💍">💍 ring</option>
+              <option value="💒">💒 stage</option>
+              <option value="🌸">🌸 flower</option>
+              <option value="🧸">🧸 teddy</option>
+              <option value="🎈">🎈 balloon</option>
+              <option value="💡">💡 neon</option>
+              <option value="🌹">🌹 rose</option>
+            </select>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemPhoto">Upload Item Photo (Optional)</label>
+            <input
+              id="itemPhoto"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewItemFile(e.target.files[0])}
+              style={{ padding: "6px" }}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemUnitCount">Stock Quantity in Inventory</label>
+            <input
+              id="itemUnitCount"
+              type="number"
+              min="1"
+              value={newItemUnitCount}
+              onChange={(e) => setNewItemUnitCount(parseInt(e.target.value, 10) || 1)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemName">Item Title</label>
+            <input
+              id="itemName"
+              type="text"
+              placeholder="e.g. Classic White Velvet Stage Chair"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="itemDesc">Item Description</label>
+            <textarea
+              id="itemDesc"
+              rows={3}
+              placeholder="Rental set specifications, quantity and measurements..."
+              value={newItemDesc}
+              onChange={(e) => setNewItemDesc(e.target.value)}
+            />
+          </div>
+
+          <button type="submit" className={styles.addItemBtn}>
+            ✦ Add Item to category
+          </button>
+        </form>
       </div>
 
       <ConfirmModal

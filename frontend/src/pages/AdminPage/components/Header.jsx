@@ -28,6 +28,7 @@ export default function Header({
             <option value="items_title">Items by Title</option>
             <option value="items_serial">Items by Serial</option>
             <option value="members">Members</option>
+            <option value="enquiries">Enquiries</option>
           </select>
         </div>
         <input
@@ -38,7 +39,12 @@ export default function Header({
           className={styles.searchInput}
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery("")} className={styles.clearSearchBtn}>
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className={styles.clearSearchBtn}
+            aria-label="Clear search"
+          >
             ✕
           </button>
         )}

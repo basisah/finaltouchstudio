@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
 import Footer from "../../components/Footer/Footer";
 import styles from "./CustomerLoginPage.module.css";
 
@@ -13,9 +14,12 @@ export default function CustomerLoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { syncCartAfterLogin } = useCart();
 
-  // If redirected from checkout, we should return the customer back to checkout
-  const redirectPath = location.state?.from || "/";
+  const redirectPath =
+    location.state?.from ||
+    new URLSearchParams(location.search).get("redirect") ||
+    "/";
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
@@ -39,6 +43,7 @@ export default function CustomerLoginPage() {
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }
+        await syncCartAfterLogin();
         navigate(redirectPath);
       } else {
         setError(data.error || "Authentication failed. Please check your credentials.");
@@ -69,6 +74,7 @@ export default function CustomerLoginPage() {
         if (data.user) {
           localStorage.setItem("user_info", JSON.stringify(data.user));
         }
+        await syncCartAfterLogin();
         navigate(redirectPath);
       } else {
         setError(data.error || "Google Sign-In failed.");

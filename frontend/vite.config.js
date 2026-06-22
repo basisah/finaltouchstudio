@@ -17,14 +17,13 @@ export default defineConfig({
       interval: 300,
     },
     proxy: {
-      // Proxy /api calls to the backend container
+      // Local dev: localhost. Docker: set VITE_PROXY_TARGET=http://backend:4000
       "/api": {
-        target: "http://backend:4000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
         changeOrigin: true,
       },
-      // Proxy /uploads calls to the backend container
       "/uploads": {
-        target: "http://backend:4000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
         changeOrigin: true,
       },
     },
