@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS package_items (
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
+
+/**
+* Users table supporting manual registration and Google OAuth with profile
+*/
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NULL,
+    name VARCHAR(255) NOT NULL,
+    google_id VARCHAR(255) UNIQUE NULL,
+    avatar_url VARCHAR(255) NULL,
+    role VARCHAR(50) DEFAULT 'user',        -- Prevents non-admin users from accessing admin routes
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 /**
  * Purpose: Master billing and reservation schedule ledger tracking all client transactions.
  * Explicitly tracks logistics preferences (delivery vs. pickup) for user dashboard rendering and owner alerts.
@@ -91,18 +107,4 @@ CREATE TABLE IF NOT EXISTS user_cart (
     FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
 );
 
-/**
-* Users table supporting manual registration and Google OAuth with profile
-*/
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NULL,
-    name VARCHAR(255) NOT NULL,
-    google_id VARCHAR(255) UNIQUE NULL,
-    avatar_url VARCHAR(255) NULL,
-    role VARCHAR(50) DEFAULT 'user',        -- Prevents non-admin users from accessing admin routes
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
 
