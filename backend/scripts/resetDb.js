@@ -1,5 +1,5 @@
-const db = require("./src/db.js");
-const initializeDatabase = require("./src/initDb.js");
+const db = require("../src/db");
+const initializeDatabase = require("../src/database/initDb");
 
 async function reset() {
   console.log("⚠️ Dropping all tables for FinalTouch Studio...");

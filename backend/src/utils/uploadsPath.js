@@ -19,7 +19,7 @@ function ensureDir(dir) {
 }
 
 function getItemUploadDir() {
-  const dir = getUploadsRoot();
+  const dir = path.join(getUploadsRoot(), "items");
   ensureDir(dir);
   return dir;
 }
@@ -30,7 +30,14 @@ function getCategoryUploadDir() {
   return dir;
 }
 
+function getSubcategoryUploadDir() {
+  const dir = path.join(getUploadsRoot(), "subcategories");
+  ensureDir(dir);
+  return dir;
+}
+
 module.exports = {
+  getSubcategoryUploadDir,
   getUploadsRoot,
   getItemUploadDir,
   getCategoryUploadDir,

@@ -1,96 +1,84 @@
 /**
- * Backend entry point
- * 
- * Purpose:
- * Initializes ecosystem environment variables, provisions middleware hooks (CORS, JSON Parser), 
- * guarantees structural system directories (upload item photo stores), boots and patches database schemas, 
- * and handles modular routing paths for the runtime application state.
+ * Backend entry point — wires middleware, static uploads and the route modules.
  */
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
 
-
-const initializeDatabase = require("./initDb");  // Database setup script initDb.js
 const db = require("./db");
+const initializeDatabase = require("./database/initDb");
+const { getUploadsRoot, ensureDir } = require("./utils/uploadsPath");
 
-// Routes
+// Public / customer routes
 const packageRoutes = require("./routes/packageRoutes");
-const userAuthRoutes = require("./routes/userAuthRoutes");  // User registration, login, google OAuth logins
-const itemRoutes = require("./routes/itemRoutes");          // Rental inventory (public GET)
-const bookingRoutes = require("./routes/bookingRoutes");    // checkout, cart, orders (public/user)
-const categoryRoutes = require("./routes/categoryRoutes");    // categories (public GET)
+const userAuthRoutes = require("./routes/userAuthRoutes");
+const itemRoutes = require("./routes/itemRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
-// Admin Routes
+// Admin routes
 const adminAuth = require("./routes/admin/auth");
 const adminCategories = require("./routes/admin/categories");
 const adminItems = require("./routes/admin/items");
 const adminPackages = require("./routes/admin/packages");
 const adminOrders = require("./routes/admin/orders");
 
-// Server configuration
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Middleware to suport frontend
 app.use(cors());
-// Handle incoming JSON payloads
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
-// Expose static uploads folder
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// ── Static files ─────────────────────────────────────────────────────────────
+// Uploaded files get a unique, never-reused filename, so browsers may cache
+// them for a long time; bundled icons can change with a deploy, so a day.
+const staticOptions = { maxAge: "30d", immutable: true };
+const bundledUploads = path.join(__dirname, "../uploads");
+ensureDir(bundledUploads);
+app.use("/uploads/Icons", express.static(path.join(__dirname, "Assets/Icons"), { maxAge: "1d" }));
+app.use("/uploads", express.static(bundledUploads, staticOptions));
+// On serverless hosts new uploads land in a writable temp folder instead.
+if (path.resolve(getUploadsRoot()) !== path.resolve(bundledUploads)) {
+  app.use("/uploads", express.static(getUploadsRoot(), staticOptions));
 }
-app.use("/uploads", express.static(uploadDir));
 
-// Expose static assets/icons folder
-const iconsDir = path.join(__dirname, "Assets/Icons");
-app.use("/uploads/Icons", express.static(iconsDir));
-
-// Initialize database tables and seed data
+// Create / migrate tables, indexes and default rows.
 initializeDatabase();
 
-// Mount Public/User Routes
+// ── Public / customer API ────────────────────────────────────────────────────
 app.use("/api/packages", packageRoutes);
 app.use("/api/auth", userAuthRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api", bookingRoutes);
 
-// Mount Admin Routes
+// ── Admin API ────────────────────────────────────────────────────────────────
 app.use("/api/admin/auth", adminAuth);
 app.use("/api/admin/orders", adminOrders);
 app.use("/api/categories", adminCategories);
-app.use("/api", adminItems); // handles POST /upload, and CRUD on /items
+app.use("/api", adminItems); // POST /upload and CRUD on /items
 app.use("/api/packages", adminPackages);
 
-// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-
-
-
-
-// Stats API
+// Landing-page counters — one round trip instead of three.
 app.get("/api/stats", async (req, res) => {
   try {
-    const [itemRows] = await db.query("SELECT COUNT(*) AS totalItems FROM items");
-    const [userRows] = await db.query("SELECT COUNT(*) AS totalUsers FROM users");
-    const [orderRows] = await db.query("SELECT COUNT(*) AS totalOrders FROM orders");
-    
-    const totalItems = itemRows[0] ? itemRows[0].totalItems : 0;
-    const totalUsers = userRows[0] ? userRows[0].totalUsers : 0;
-    const totalOrders = orderRows[0] ? orderRows[0].totalOrders : 0;
-
+    const [[row]] = await db.query(
+      `SELECT (SELECT COUNT(*) FROM items)  AS totalItems,
+              (SELECT COUNT(*) FROM users)  AS totalUsers,
+              (SELECT COUNT(*) FROM orders) AS totalOrders`
+    );
+    res.set("Cache-Control", "public, max-age=300");
     res.json({
-      totalItems: Number(totalItems),
-      totalUsers: Number(totalUsers),
-      totalOrders: Number(totalOrders),
+      totalItems: Number(row.totalItems) || 0,
+      totalUsers: Number(row.totalUsers) || 0,
+      totalOrders: Number(row.totalOrders) || 0,
     });
   } catch (err) {
     console.error("Error fetching stats:", err);

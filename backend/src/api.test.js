@@ -1,6 +1,6 @@
 const request = require("supertest");
 const db = require("./db");
-const initializeDatabase = require("./initDb");
+const initializeDatabase = require("./database/initDb");
 const app = require("./index");
 
 const seedItem = {
