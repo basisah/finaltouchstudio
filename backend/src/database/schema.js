@@ -137,6 +137,21 @@ const TABLES = [
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )`],
+  // Payment attempts against an order (e-transfer, card, PayPal; full or deposit).
+  ["payments", `CREATE TABLE IF NOT EXISTS payments (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id INT NOT NULL,
+      method ENUM('etransfer', 'card', 'paypal') NOT NULL DEFAULT 'etransfer',
+      amount_cents INT NOT NULL,
+      type ENUM('full', 'deposit', 'balance') NOT NULL DEFAULT 'full',
+      status ENUM('awaiting', 'received', 'refunded', 'failed') NOT NULL DEFAULT 'awaiting',
+      reference_note VARCHAR(255) NULL,
+      confirmed_by INT NULL,
+      confirmed_at TIMESTAMP NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+      FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL
+    )`],
 ];
 
 /** Columns introduced after a table first shipped: [table, column, definition]. */
@@ -164,6 +179,7 @@ const COLUMNS = [
   ["orders", "delivery_fee", "DECIMAL(10, 2) DEFAULT 0.00"],
   ["orders", "venue_address", "TEXT"],
   ["orders", "special_notes", "TEXT DEFAULT NULL"],
+  ["orders", "payment_status", "ENUM('unpaid', 'deposit_paid', 'paid_in_full', 'refunded') NOT NULL DEFAULT 'unpaid'"],
 
   ["order_items", "returned_quantity", "INT DEFAULT 0"],
   // Per-line rental window. The API has always read and written these columns,
