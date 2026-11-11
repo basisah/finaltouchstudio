@@ -2,94 +2,99 @@ const express = require("express");
 const router = express.Router();
 const db = require("../../db");
 const auth = require("../../middleware/auth");
-
-// Helper middleware to verify admin role
-const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
-    next();
-  } else {
-    res.status(403).json({ error: "Access denied. Admin role required." });
-  }
-};
+const isAdmin = require("../../middleware/isAdmin");
 
 // All routes here are admin-only
 router.use(auth, isAdmin);
 
-// POST create a new package (Protected)
+/** Replaces a package's item list with one DELETE and one multi-row INSERT. */
+async function replacePackageItems(conn, packageId, itemIds) {
+  await conn.query("DELETE FROM package_items WHERE package_id = ?", [packageId]);
+  const unique = Array.isArray(itemIds) ? [...new Set(itemIds.filter(Boolean))] : [];
+  if (unique.length === 0) return;
+  await conn.query("INSERT INTO package_items (package_id, item_id) VALUES ?", [unique.map((itemId) => [packageId, itemId])]);
+}
+
+// POST create a new package
 router.post("/", async (req, res) => {
-  const { name, price, category_id, itemIds } = req.body;
+  const { name, price, category_id, itemIds, description, image } = req.body;
   if (!name || !price || !category_id) {
     return res.status(400).json({ error: "Name, price, and category_id are required" });
   }
-  
-  try {
-    // Check if a package for this category already exists
-    const [existing] = await db.query("SELECT id FROM packages WHERE category_id = ?", [category_id]);
-    if (existing.length > 0) {
-      return res.status(400).json({ error: `A package for category '${category_id}' already exists.` });
-    }
 
-    const [result] = await db.query(
-      "INSERT INTO packages (name, price, category_id) VALUES (?, ?, ?)",
-      [name, price, category_id]
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [result] = await conn.query(
+      "INSERT INTO packages (name, price, category_id, description, image) VALUES (?, ?, ?, ?, ?)",
+      [name, price, category_id, description || null, image || null]
     );
     const packageId = result.insertId;
-    
-    // Add package items
-    if (itemIds && Array.isArray(itemIds)) {
-      for (const itemId of itemIds) {
-        await db.query(
-          "INSERT INTO package_items (package_id, item_id) VALUES (?, ?)",
-          [packageId, itemId]
-        );
-      }
-    }
-    
+    await replacePackageItems(conn, packageId, itemIds);
+    await conn.commit();
+
     res.status(201).json({ id: packageId, name, price, category_id, itemIds });
   } catch (err) {
+    await conn.rollback();
+    // category_id is UNIQUE — one package per occasion.
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ error: `A package for category '${category_id}' already exists.` });
+    }
     console.error("Error creating package:", err);
     res.status(500).json({ error: "Failed to create package" });
+  } finally {
+    conn.release();
   }
 });
 
-// PUT update a package (Protected)
+// PUT update a package
 router.put("/:id", async (req, res) => {
-  const { name, price, category_id, itemIds } = req.body;
+  const { name, price, category_id, itemIds, description, image } = req.body;
   const packageId = req.params.id;
-  
+
   if (!name || !price || !category_id) {
     return res.status(400).json({ error: "Name, price, and category_id are required" });
   }
-  
+
+  const conn = await db.getConnection();
   try {
-    const [result] = await db.query(
-      "UPDATE packages SET name = ?, price = ?, category_id = ?, updated_at = NOW() WHERE id = ?",
-      [name, price, category_id, packageId]
-    );
-    
+    await conn.beginTransaction();
+
+    // description / image are optional: only overwrite them when the client sent the field.
+    const sets = ["name = ?", "price = ?", "category_id = ?", "updated_at = NOW()"];
+    const params = [name, price, category_id];
+    if (description !== undefined) {
+      sets.push("description = ?");
+      params.push(description || null);
+    }
+    if (image !== undefined) {
+      sets.push("image = ?");
+      params.push(image || null);
+    }
+
+    const [result] = await conn.query(`UPDATE packages SET ${sets.join(", ")} WHERE id = ?`, [...params, packageId]);
     if (result.affectedRows === 0) {
+      await conn.rollback();
       return res.status(404).json({ error: "Package not found" });
     }
-    
-    // Refresh items list: delete old and insert new
-    await db.query("DELETE FROM package_items WHERE package_id = ?", [packageId]);
-    if (itemIds && Array.isArray(itemIds)) {
-      for (const itemId of itemIds) {
-        await db.query(
-          "INSERT INTO package_items (package_id, item_id) VALUES (?, ?)",
-          [packageId, itemId]
-        );
-      }
-    }
-    
+
+    await replacePackageItems(conn, packageId, itemIds);
+    await conn.commit();
+
     res.json({ id: packageId, name, price, category_id, itemIds });
   } catch (err) {
+    await conn.rollback();
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ error: `A package for category '${category_id}' already exists.` });
+    }
     console.error("Error updating package:", err);
     res.status(500).json({ error: "Failed to update package" });
+  } finally {
+    conn.release();
   }
 });
 
-// DELETE a package (Protected)
+// DELETE a package
 router.delete("/:id", async (req, res) => {
   try {
     const [result] = await db.query("DELETE FROM packages WHERE id = ?", [req.params.id]);

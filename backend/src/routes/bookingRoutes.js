@@ -3,15 +3,81 @@ const router = express.Router();
 const db = require("../db");
 const auth = require("../middleware/auth");
 const optionalAuth = require("../middleware/optionalAuth");
-const { canRentQuantity } = require("../utils/rentalAvailability");
+const { canRentQuantity, formatDateRow } = require("../utils/rentalAvailability");
+const { ACTIVE_ORDER_STATUSES } = require("../constants/orderStatus");
 const { sendNotificationEmail } = require("../utils/mailer");
 const getPurchaseUserTemplate = require("../emailservices/purchaseUser");
 const getPurchaseAdminTemplate = require("../emailservices/purchaseAdmin");
-const getEnquiryAdminTemplate = require("../emailservices/enquiryAdmin");
+
+const ORDER_COLUMNS =
+  "id, user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status, created_at";
+
+const ORDER_ITEM_SELECT = `SELECT oi.order_id, oi.id, oi.quantity, oi.price_at_rent, oi.item_id, oi.package_id,
+              i.name AS item_name, i.image AS item_image,
+              p.name AS package_name
+         FROM order_items oi
+         LEFT JOIN items i ON oi.item_id = i.id
+         LEFT JOIN packages p ON oi.package_id = p.id`;
+
+/** A validation failure that maps straight to an HTTP response. */
+class OrderError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** Finds the account for an email, creating a password-less guest account if needed. */
+async function findOrCreateUser(conn, email, name) {
+  const [rows] = await conn.query("SELECT id FROM users WHERE email = ?", [email]);
+  if (rows.length > 0) return rows[0].id;
+  const [inserted] = await conn.query("INSERT INTO users (email, name, role) VALUES (?, ?, 'user')", [email, name]);
+  return inserted.insertId;
+}
+
+/** Sends the customer receipt and the owner notification for a new order. */
+async function sendOrderEmails(order, items) {
+  try {
+    await dispatchOrderEmails(order, items);
+  } catch (err) {
+    // The order is already committed — a mail problem must not fail the request.
+    console.error("Order email dispatch failed:", err);
+  }
+}
+
+async function dispatchOrderEmails(order, items) {
+  const customer = getPurchaseUserTemplate({
+    orderId: order.orderId,
+    customerName: order.customerName,
+    totalAmount: order.totalAmount,
+    eventDate: order.eventDate,
+    rentalDate: order.rentalDate,
+    fulfillmentType: order.fulfillmentType,
+    venueAddress: order.venueAddress,
+    items,
+  });
+  await sendNotificationEmail({ to: order.customerEmail, subject: customer.subject, text: customer.text, html: customer.html });
+
+  const admin = getPurchaseAdminTemplate({
+    orderId: order.orderId,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    customerPhone: order.customerPhone,
+    totalAmount: order.totalAmount,
+    eventDate: order.eventDate,
+    rentalDate: order.rentalDate,
+    fulfillmentType: order.fulfillmentType,
+    deliveryFee: order.deliveryFee,
+    venueAddress: order.venueAddress,
+    specialNotes: order.specialNotes,
+    items,
+  });
+  await sendNotificationEmail({ subject: admin.subject, text: admin.text, html: admin.html });
+}
 
 // ==========================================
 // 1. COMPATIBILITY ENDPOINT: POST /bookings
-// Maps the old bookings structure to new orders/order_items schema
+// Maps the old single-package booking form onto orders / order_items
 // ==========================================
 router.post("/bookings", async (req, res) => {
   const { name, phone, email, pickupDate, returnDate, packageName, price, paymentMethod } = req.body;
@@ -20,60 +86,36 @@ router.post("/bookings", async (req, res) => {
     return res.status(400).json({ error: "Missing required booking details" });
   }
 
+  const conn = await db.getConnection();
+  let orderId;
   try {
-    // Check if user exists, otherwise create a guest user
-    let [userRows] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
-    let userId;
-    if (userRows.length === 0) {
-      const [insertUser] = await db.query(
-        "INSERT INTO users (email, name, role) VALUES (?, ?, 'user')",
-        [email, name]
-      );
-      userId = insertUser.insertId;
-    } else {
-      userId = userRows[0].id;
-    }
+    await conn.beginTransaction();
+    const userId = await findOrCreateUser(conn, email, name);
 
-    // Insert into orders table
-    const [result] = await db.query(
+    const [result] = await conn.query(
       `INSERT INTO orders (user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status)
        VALUES (?, ?, ?, ?, ?, ?, 'pickup', 0.00, 'Customer Pickup', ?, ?, 'ordered')`,
       [userId, name, email, phone, returnDate, pickupDate, `Legacy endpoint. Payment: ${paymentMethod}`, price]
     );
+    orderId = result.insertId;
 
-    const orderId = result.insertId;
-
-    // Find if package exists, otherwise insert empty package relation
-    const [pkgRows] = await db.query("SELECT id FROM packages WHERE name = ?", [packageName]);
-    const packageId = pkgRows.length > 0 ? pkgRows[0].id : null;
-
-    await db.query(
-      "INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent) VALUES (?, NULL, ?, 1, ?)",
-      [orderId, packageId, price]
+    // Link the package when one with this name exists.
+    await conn.query(
+      `INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent)
+       VALUES (?, NULL, (SELECT id FROM packages WHERE name = ? LIMIT 1), 1, ?)`,
+      [orderId, packageName, price]
     );
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    console.error("Booking creation error:", err);
+    return res.status(500).json({ error: "Failed to submit booking" });
+  } finally {
+    conn.release();
+  }
 
-    const itemsList = [{ package_name: packageName, quantity: 1, price: price }];
-
-    // Send Welcome/Receipt Email to Customer
-    const customerEmailData = getPurchaseUserTemplate({
-      orderId,
-      customerName: name,
-      totalAmount: price,
-      eventDate: returnDate,
-      rentalDate: pickupDate,
-      fulfillmentType: 'pickup',
-      venueAddress: 'Customer Pickup',
-      items: itemsList
-    });
-    await sendNotificationEmail({
-      to: email,
-      subject: customerEmailData.subject,
-      text: customerEmailData.text,
-      html: customerEmailData.html
-    });
-
-    // Send Admin Notification Email
-    const adminEmailData = getPurchaseAdminTemplate({
+  await sendOrderEmails(
+    {
       orderId,
       customerName: name,
       customerEmail: email,
@@ -81,65 +123,24 @@ router.post("/bookings", async (req, res) => {
       totalAmount: price,
       eventDate: returnDate,
       rentalDate: pickupDate,
-      fulfillmentType: 'pickup',
-      deliveryFee: 0.00,
-      venueAddress: 'Customer Pickup',
+      fulfillmentType: "pickup",
+      deliveryFee: 0.0,
+      venueAddress: "Customer Pickup",
       specialNotes: `Legacy endpoint booking. Payment Method: ${paymentMethod}`,
-      items: itemsList
-    });
-    await sendNotificationEmail({
-      subject: adminEmailData.subject,
-      text: adminEmailData.text,
-      html: adminEmailData.html
-    });
+    },
+    [{ package_name: packageName, quantity: 1, price }]
+  );
 
-    res.status(201).json({ success: true, bookingId: orderId, message: "Booking registered successfully" });
-  } catch (err) {
-    console.error("Booking creation error:", err);
-    res.status(500).json({ error: "Failed to submit booking" });
-  }
+  res.status(201).json({ success: true, bookingId: orderId, message: "Booking registered successfully" });
 });
 
 // ==========================================
-// 2. CONTACT ENQUIRY ENDPOINT: POST /contact
-// ==========================================
-router.post("/contact", async (req, res) => {
-  const { name, email, occasion, message } = req.body;
-
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: "Name, email, and message are required" });
-  }
-
-  try {
-    const [result] = await db.query(
-      "INSERT INTO enquiries (name, email, occasion, message) VALUES (?, ?, ?, ?)",
-      [name, email, occasion || "Not Specified", message]
-    );
-
-    const enquiryId = result.insertId;
-
-    const emailData = getEnquiryAdminTemplate({ enquiryId, name, email, occasion, message });
-    await sendNotificationEmail({
-      subject: emailData.subject,
-      text: emailData.text,
-      html: emailData.html
-    });
-
-    res.status(201).json({ success: true, enquiryId, message: "Enquiry submitted successfully" });
-  } catch (err) {
-    console.error("Enquiry submission error:", err);
-    res.status(500).json({ error: "Failed to submit enquiry" });
-  }
-});
-
-// ==========================================
-// 3. CART SYSTEM ENDPOINTS (Authenticated)
+// 2. CART ENDPOINTS (authenticated)
 // ==========================================
 
-// GET user's cart
+// GET the signed-in customer's saved cart
 router.get("/cart", auth, async (req, res) => {
   try {
-    const userId = req.user.id;
     const [cartRows] = await db.query(
       `SELECT uc.id, uc.quantity, uc.item_id, uc.package_id,
               uc.pickup_date, uc.return_date,
@@ -152,7 +153,7 @@ router.get("/cart", auth, async (req, res) => {
        LEFT JOIN packages p ON uc.package_id = p.id
        WHERE uc.user_id = ?
        ORDER BY uc.created_at ASC`,
-      [userId]
+      [req.user.id]
     );
     res.json(cartRows);
   } catch (err) {
@@ -161,9 +162,8 @@ router.get("/cart", auth, async (req, res) => {
   }
 });
 
-// POST - Add a line to cart (each add creates a new row, matching frontend behaviour)
+// POST — add a line to the cart
 router.post("/cart", auth, async (req, res) => {
-  const userId = req.user.id;
   const { item_id, package_id, quantity, pickup_date, return_date } = req.body;
   const qty = parseInt(quantity, 10) || 1;
 
@@ -175,14 +175,7 @@ router.post("/cart", auth, async (req, res) => {
     const [result] = await db.query(
       `INSERT INTO user_cart (user_id, item_id, package_id, quantity, pickup_date, return_date)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        item_id || null,
-        package_id || null,
-        qty,
-        pickup_date || null,
-        return_date || null,
-      ]
+      [req.user.id, item_id || null, package_id || null, qty, pickup_date || null, return_date || null]
     );
     res.status(201).json({ success: true, id: result.insertId, message: "Cart updated successfully" });
   } catch (err) {
@@ -191,7 +184,7 @@ router.post("/cart", auth, async (req, res) => {
   }
 });
 
-// PUT - Update quantity on a cart line
+// PUT — change the quantity on a cart line
 router.put("/cart/line/:id", auth, async (req, res) => {
   const qty = parseInt(req.body.quantity, 10);
   if (!qty || qty < 1) {
@@ -199,13 +192,12 @@ router.put("/cart/line/:id", auth, async (req, res) => {
   }
 
   try {
-    const [result] = await db.query(
-      "UPDATE user_cart SET quantity = ? WHERE id = ? AND user_id = ?",
-      [qty, req.params.id, req.user.id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Cart line not found" });
-    }
+    const [result] = await db.query("UPDATE user_cart SET quantity = ? WHERE id = ? AND user_id = ?", [
+      qty,
+      req.params.id,
+      req.user.id,
+    ]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Cart line not found" });
     res.json({ success: true, message: "Cart line updated" });
   } catch (err) {
     console.error("Error updating cart line:", err);
@@ -213,23 +205,18 @@ router.put("/cart/line/:id", auth, async (req, res) => {
   }
 });
 
-// DELETE single cart line by row id
+// DELETE one cart line by row id
 router.delete("/cart/line/:id", auth, async (req, res) => {
   try {
-    const [result] = await db.query(
-      "DELETE FROM user_cart WHERE id = ? AND user_id = ?",
-      [req.params.id, req.user.id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Cart line not found" });
-    }
+    const [result] = await db.query("DELETE FROM user_cart WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Cart line not found" });
     res.json({ success: true, message: "Cart line removed" });
   } catch (err) {
     res.status(500).json({ error: "Failed to remove cart line" });
   }
 });
 
-// DELETE single item from cart
+// DELETE every line for one item
 router.delete("/cart/item/:itemId", auth, async (req, res) => {
   try {
     await db.query("DELETE FROM user_cart WHERE user_id = ? AND item_id = ?", [req.user.id, req.params.itemId]);
@@ -239,7 +226,7 @@ router.delete("/cart/item/:itemId", auth, async (req, res) => {
   }
 });
 
-// DELETE single package from cart
+// DELETE every line for one package
 router.delete("/cart/package/:packageId", auth, async (req, res) => {
   try {
     await db.query("DELETE FROM user_cart WHERE user_id = ? AND package_id = ?", [req.user.id, req.params.packageId]);
@@ -249,7 +236,7 @@ router.delete("/cart/package/:packageId", auth, async (req, res) => {
   }
 });
 
-// DELETE - Clear entire cart
+// DELETE — clear the whole cart
 router.delete("/cart", auth, async (req, res) => {
   try {
     await db.query("DELETE FROM user_cart WHERE user_id = ?", [req.user.id]);
@@ -260,27 +247,63 @@ router.delete("/cart", auth, async (req, res) => {
 });
 
 // ==========================================
-// 4. ORDER MANAGEMENT ENDPOINTS (Authenticated)
+// 3. ORDER ENDPOINTS
 // ==========================================
 
-async function resolveOrderUserId(req, customer_email, customer_name) {
-  if (req.user?.id) {
-    return req.user.id;
-  }
+/**
+ * Checks every item line against stock and existing bookings.
+ *
+ * Two IN queries cover the whole order (previously two queries per line).
+ * Lines of the same order are counted against each other as well, so asking
+ * for the same item twice cannot overbook it.
+ */
+async function assertStockAvailable(conn, lines) {
+  const itemIds = [...new Set(lines.filter((l) => l.item_id).map((l) => String(l.item_id)))];
+  if (itemIds.length === 0) return;
 
-  const [userRows] = await db.query("SELECT id FROM users WHERE email = ?", [customer_email]);
-  if (userRows.length > 0) {
-    return userRows[0].id;
-  }
+  // FOR UPDATE serialises concurrent checkouts of the same items.
+  const [stockRows] = await conn.query("SELECT id, unit_count, isAvailable FROM items WHERE id IN (?) FOR UPDATE", [itemIds]);
+  const stockById = new Map(stockRows.map((row) => [String(row.id), row]));
 
-  const [insertUser] = await db.query(
-    "INSERT INTO users (email, name, role) VALUES (?, ?, 'user')",
-    [customer_email, customer_name]
+  const [bookingRows] = await conn.query(
+    `SELECT oi.item_id, oi.quantity,
+            COALESCE(oi.pickup_date, o.rental_date) AS pickup_date,
+            COALESCE(oi.return_date, o.event_date)  AS return_date
+       FROM order_items oi
+       INNER JOIN orders o ON o.id = oi.order_id
+      WHERE oi.item_id IN (?) AND o.status IN (?)`,
+    [itemIds, ACTIVE_ORDER_STATUSES]
   );
-  return insertUser.insertId;
+
+  const bookingsByItem = new Map(itemIds.map((id) => [id, []]));
+  for (const row of bookingRows) {
+    bookingsByItem.get(String(row.item_id))?.push({
+      pickupDate: formatDateRow(row.pickup_date),
+      returnDate: formatDateRow(row.return_date),
+      quantity: parseInt(row.quantity, 10) || 0,
+    });
+  }
+
+  for (const line of lines) {
+    if (!line.item_id) continue;
+    const id = String(line.item_id);
+    const stock = stockById.get(id);
+    if (!stock) throw new OrderError(400, `Item ${id} not found`);
+
+    const totalStock = Math.max(0, parseInt(stock.unit_count, 10) || 0);
+    if (!stock.isAvailable || totalStock <= 0) {
+      throw new OrderError(400, `Item ${id} is not available for rent`);
+    }
+
+    const bookings = bookingsByItem.get(id);
+    if (!canRentQuantity(bookings, line.pickup_date, line.return_date, line.quantity, totalStock)) {
+      throw new OrderError(409, `Not enough stock for ${id} on the selected dates (requested ${line.quantity})`);
+    }
+    bookings.push({ pickupDate: line.pickup_date, returnDate: line.return_date, quantity: line.quantity });
+  }
 }
 
-// POST - Place a new order (authenticated or guest)
+// POST — place a new order (signed-in or guest)
 router.post("/orders", optionalAuth, async (req, res) => {
   const {
     customer_name,
@@ -293,18 +316,33 @@ router.post("/orders", optionalAuth, async (req, res) => {
     venue_address,
     special_notes,
     total_amount,
-    items
+    items,
   } = req.body;
 
   if (!customer_name || !customer_email || !customer_phone || !event_date || !rental_date || total_amount === undefined || !items || !Array.isArray(items)) {
     return res.status(400).json({ error: "Missing required order checkout details" });
   }
 
-  try {
-    const userId = await resolveOrderUserId(req, customer_email, customer_name);
+  // Each line falls back to the order-level rental window.
+  const lines = items.map((item) => ({
+    item_id: item.item_id || null,
+    package_id: item.package_id || null,
+    quantity: parseInt(item.quantity, 10) || 1,
+    price: item.price || 0.0,
+    pickup_date: String(item.pickup_date || rental_date).slice(0, 10),
+    return_date: String(item.return_date || event_date).slice(0, 10),
+  }));
 
-    // 1. Insert order record
-    const [result] = await db.query(
+  const conn = await db.getConnection();
+  let orderId;
+  try {
+    // One transaction: a rejected line no longer leaves a half-written order behind.
+    await conn.beginTransaction();
+
+    const userId = req.user?.id || (await findOrCreateUser(conn, customer_email, customer_name));
+    await assertStockAvailable(conn, lines);
+
+    const [result] = await conn.query(
       `INSERT INTO orders (user_id, customer_name, customer_email, customer_phone, event_date, rental_date, fulfillment_type, delivery_fee, venue_address, special_notes, total_amount, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ordered')`,
       [
@@ -314,97 +352,37 @@ router.post("/orders", optionalAuth, async (req, res) => {
         customer_phone,
         event_date,
         rental_date,
-        fulfillment_type || 'pickup',
-        delivery_fee || 0.00,
-        venue_address || 'Customer Pickup',
+        fulfillment_type || "pickup",
+        delivery_fee || 0.0,
+        venue_address || "Customer Pickup",
         special_notes || null,
-        total_amount
+        total_amount,
       ]
     );
+    orderId = result.insertId;
 
-    const orderId = result.insertId;
-
-    // 2. Insert itemized details (with per-item rental dates when provided)
-    for (const item of items) {
-      const itemPickup = item.pickup_date || rental_date;
-      const itemReturn = item.return_date || event_date;
-
-      if (item.item_id) {
-        const [stockRows] = await db.query(
-          "SELECT unit_count, isAvailable FROM items WHERE id = ?",
-          [item.item_id]
-        );
-        if (stockRows.length === 0) {
-          return res.status(400).json({ error: `Item ${item.item_id} not found` });
-        }
-        const totalStock = Math.max(0, parseInt(stockRows[0].unit_count, 10) || 0);
-        if (!stockRows[0].isAvailable || totalStock <= 0) {
-          return res.status(400).json({ error: `Item ${item.item_id} is not available for rent` });
-        }
-
-        const [existing] = await db.query(
-          `SELECT oi.quantity,
-                  COALESCE(oi.pickup_date, o.rental_date) AS pickup_date,
-                  COALESCE(oi.return_date, o.event_date) AS return_date
-           FROM order_items oi
-           INNER JOIN orders o ON o.id = oi.order_id
-           WHERE oi.item_id = ?
-             AND o.status IN ('pending', 'confirmed')`,
-          [item.item_id]
-        );
-
-        const bookings = existing.map((row) => ({
-          pickupDate: String(row.pickup_date).slice(0, 10),
-          returnDate: String(row.return_date).slice(0, 10),
-          quantity: parseInt(row.quantity, 10) || 0,
-        }));
-
-        const qty = parseInt(item.quantity, 10) || 1;
-        if (!canRentQuantity(bookings, itemPickup, itemReturn, qty, totalStock)) {
-          return res.status(409).json({
-            error: `Not enough stock for ${item.item_id} on the selected dates (requested ${qty})`,
-          });
-        }
-      }
-
-      await db.query(
-        `INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent, pickup_date, return_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          item.item_id || null,
-          item.package_id || null,
-          item.quantity || 1,
-          item.price || 0.0,
-          itemPickup,
-          itemReturn,
-        ]
+    if (lines.length > 0) {
+      // Single multi-row insert instead of one INSERT per line.
+      await conn.query(
+        "INSERT INTO order_items (order_id, item_id, package_id, quantity, price_at_rent, pickup_date, return_date) VALUES ?",
+        [lines.map((l) => [orderId, l.item_id, l.package_id, l.quantity, l.price, l.pickup_date, l.return_date])]
       );
     }
 
-    // 3. Clear user's cart
-    await db.query("DELETE FROM user_cart WHERE user_id = ?", [userId]);
+    await conn.query("DELETE FROM user_cart WHERE user_id = ?", [userId]);
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    if (err instanceof OrderError) return res.status(err.status).json({ error: err.message });
+    console.error("Error creating order:", err);
+    return res.status(500).json({ error: "Failed to place order" });
+  } finally {
+    conn.release();
+  }
 
-    // Send Welcome/Receipt Email to Customer
-    const customerEmailData = getPurchaseUserTemplate({
-      orderId,
-      customerName: customer_name,
-      totalAmount: total_amount,
-      eventDate: event_date,
-      rentalDate: rental_date,
-      fulfillmentType: fulfillment_type || 'pickup',
-      venueAddress: venue_address || 'Customer Pickup',
-      items
-    });
-    await sendNotificationEmail({
-      to: customer_email,
-      subject: customerEmailData.subject,
-      text: customerEmailData.text,
-      html: customerEmailData.html
-    });
-
-    // Send Admin Notification Email
-    const adminEmailData = getPurchaseAdminTemplate({
+  // Emails go out after the commit so a slow SMTP server never holds row locks.
+  await sendOrderEmails(
+    {
       orderId,
       customerName: customer_name,
       customerEmail: customer_email,
@@ -412,68 +390,64 @@ router.post("/orders", optionalAuth, async (req, res) => {
       totalAmount: total_amount,
       eventDate: event_date,
       rentalDate: rental_date,
-      fulfillmentType: fulfillment_type || 'pickup',
-      deliveryFee: delivery_fee || 0.00,
-      venueAddress: venue_address || 'Customer Pickup',
+      fulfillmentType: fulfillment_type || "pickup",
+      deliveryFee: delivery_fee || 0.0,
+      venueAddress: venue_address || "Customer Pickup",
       specialNotes: special_notes || null,
-      items
-    });
-    await sendNotificationEmail({
-      subject: adminEmailData.subject,
-      text: adminEmailData.text,
-      html: adminEmailData.html
-    });
+    },
+    items
+  );
 
-    res.status(201).json({ success: true, orderId, message: "Order placed successfully" });
-  } catch (err) {
-    console.error("Error creating order:", err);
-    res.status(500).json({ error: "Failed to place order" });
-  }
+  res.status(201).json({ success: true, orderId, message: "Order placed successfully" });
 });
 
-// GET - User gets their own orders
+/**
+ * GET — the signed-in customer's orders, newest first.
+ * `?include=items` embeds each order's lines (one extra IN query in total),
+ * so clients no longer need a request per order.
+ */
 router.get("/orders", auth, async (req, res) => {
   try {
     const [orders] = await db.query(
-      "SELECT * FROM orders WHERE user_id = ? OR customer_email = ? ORDER BY created_at DESC",
+      `SELECT ${ORDER_COLUMNS} FROM orders WHERE user_id = ? OR customer_email = ? ORDER BY created_at DESC, id DESC`,
       [req.user.id, req.user.email]
     );
-    res.json(orders);
+
+    if (req.query.include !== "items" || orders.length === 0) return res.json(orders);
+
+    const [itemRows] = await db.query(`${ORDER_ITEM_SELECT} WHERE oi.order_id IN (?)`, [orders.map((o) => o.id)]);
+    const itemsByOrder = new Map(orders.map((o) => [o.id, []]));
+    for (const { order_id, ...item } of itemRows) itemsByOrder.get(order_id)?.push(item);
+
+    res.json(orders.map((order) => ({ ...order, items: itemsByOrder.get(order.id) })));
   } catch (err) {
     console.error("Error fetching orders:", err);
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
 
-// GET - User gets single order details
+// GET — one of the customer's orders with its lines
 router.get("/orders/:id", auth, async (req, res) => {
   try {
     const [orders] = await db.query(
-      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR customer_email = ?)",
+      `SELECT ${ORDER_COLUMNS} FROM orders WHERE id = ? AND (user_id = ? OR customer_email = ?)`,
       [req.params.id, req.user.id, req.user.email]
     );
     if (orders.length === 0) return res.status(404).json({ error: "Order not found" });
 
-    const order = orders[0];
-    const [items] = await db.query(
-      `SELECT oi.id, oi.quantity, oi.price_at_rent, oi.item_id, oi.package_id,
-              i.name AS item_name, i.image AS item_image,
-              p.name AS package_name
-       FROM order_items oi
-       LEFT JOIN items i ON oi.item_id = i.id
-       LEFT JOIN packages p ON oi.package_id = p.id
-       WHERE oi.order_id = ?`,
-      [order.id]
-    );
-
-    res.json({ ...order, items });
+    const [itemRows] = await db.query(`${ORDER_ITEM_SELECT} WHERE oi.order_id = ?`, [orders[0].id]);
+    res.json({ ...orders[0], items: itemRows.map(({ order_id, ...item }) => item) });
   } catch (err) {
     console.error("Error fetching order details:", err);
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 });
 
-// GET - Fetch 3 recent real reviews (public)
+// ==========================================
+// 4. REVIEWS
+// ==========================================
+
+// GET — the three most recent verified reviews (public)
 router.get("/reviews", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -486,7 +460,7 @@ router.get("/reviews", async (req, res) => {
   }
 });
 
-// POST - Submit review for a returned order (authenticated)
+// POST — review a returned order (authenticated)
 router.post("/reviews", auth, async (req, res) => {
   const userId = req.user.id;
   const { order_id, rating, comment, role } = req.body;
@@ -501,9 +475,13 @@ router.post("/reviews", auth, async (req, res) => {
   }
 
   try {
-    // 1. Verify that the order exists, has status 'returned', and belongs to this user (by user_id or email)
+    // The order must belong to this customer; the LEFT JOIN tells us in the
+    // same query whether it has already been reviewed.
     const [orders] = await db.query(
-      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR customer_email = ?)",
+      `SELECT o.status, o.customer_name, r.id AS review_id
+         FROM orders o
+         LEFT JOIN reviews r ON r.order_id = o.id
+        WHERE o.id = ? AND (o.user_id = ? OR o.customer_email = ?)`,
       [order_id, userId, req.user.email]
     );
 
@@ -515,26 +493,19 @@ router.post("/reviews", auth, async (req, res) => {
     if (order.status !== "returned") {
       return res.status(400).json({ error: "You can only write a review after the order is returned" });
     }
-
-    // 2. Check if a review already exists for this order
-    const [existing] = await db.query("SELECT id FROM reviews WHERE order_id = ?", [order_id]);
-    if (existing.length > 0) {
+    if (order.review_id) {
       return res.status(400).json({ error: "You have already submitted a review for this order" });
     }
 
-    // 3. Insert review
-    const customerName = order.customer_name || req.user.name || "Verified Client";
-    const clientRole = role || "Client";
-
     const [result] = await db.query(
       "INSERT INTO reviews (order_id, user_id, customer_name, role, rating, comment) VALUES (?, ?, ?, ?, ?, ?)",
-      [order_id, userId, customerName, clientRole, rate, comment]
+      [order_id, userId, order.customer_name || req.user.name || "Verified Client", role || "Client", rate, comment]
     );
 
     res.status(201).json({ success: true, reviewId: result.insertId, message: "Review submitted successfully" });
   } catch (err) {
     console.error("Error creating review:", err);
-    res.status(500).json({ error: "Failed to submit review", message: err.message, stack: err.stack });
+    res.status(500).json({ error: "Failed to submit review" });
   }
 });
 

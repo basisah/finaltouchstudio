@@ -12,6 +12,13 @@ function toDateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
+/** Normalises a DATE column (JS Date or string) to a YYYY-MM-DD key. */
+function formatDateRow(value) {
+  if (!value) return null;
+  if (value instanceof Date) return toDateKey(value);
+  return String(value).slice(0, 10);
+}
+
 function normalizeRange(pickupDate, returnDate) {
   const start = parseDateKey(pickupDate);
   const end = parseDateKey(returnDate);
@@ -85,6 +92,7 @@ function canRentQuantity(bookings, pickupDate, returnDate, quantity, totalStock)
 
 module.exports = {
   toDateKey,
+  formatDateRow,
   parseDateKey,
   eachDayInRange,
   rangesOverlap,

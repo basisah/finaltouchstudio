@@ -1,56 +1,64 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const { toDateKey } = require("../utils/rentalAvailability");
+const { formatDateRow } = require("../utils/rentalAvailability");
+const { ACTIVE_ORDER_STATUSES } = require("../constants/orderStatus");
 
-function formatDateRow(value) {
-  if (!value) return null;
-  if (value instanceof Date) return toDateKey(value);
-  return String(value).slice(0, 10);
+/** Columns a catalogue card needs — the heavy TEXT blobs stay out of list responses. */
+const LIST_COLUMNS =
+  "id, name, title, categoryId, subCategoryId, description, isAvailable, unit_count, image, price, is_demo";
+
+const MAX_PAGE_SIZE = 200;
+
+/**
+ * One query for an item's stock plus every active booking against it.
+ * LEFT JOINs keep the item row even when nothing is booked, so "item not
+ * found" and "no bookings" stay distinguishable without a second round trip.
+ */
+async function loadItemBookings(itemId) {
+  const [rows] = await db.query(
+    `SELECT i.unit_count, i.isAvailable,
+            oi.quantity,
+            COALESCE(oi.pickup_date, o.rental_date) AS pickup_date,
+            COALESCE(oi.return_date, o.event_date)  AS return_date,
+            o.id AS order_id
+       FROM items i
+       LEFT JOIN order_items oi ON oi.item_id = i.id AND oi.quantity > 0
+       LEFT JOIN orders o ON o.id = oi.order_id AND o.status IN (?)
+      WHERE i.id = ?`,
+    [ACTIVE_ORDER_STATUSES, itemId]
+  );
+  if (rows.length === 0) return null;
+
+  return {
+    unitCount: rows[0].unit_count,
+    isAvailable: Boolean(rows[0].isAvailable),
+    // A row with no matching active order is either "no bookings" or a
+    // booking on a returned/cancelled order — neither holds stock.
+    bookings: rows
+      .filter((row) => row.order_id != null)
+      .map((row) => ({
+        orderId: row.order_id,
+        pickupDate: formatDateRow(row.pickup_date),
+        returnDate: formatDateRow(row.return_date),
+        quantity: parseInt(row.quantity, 10) || 0,
+      }))
+      .filter((b) => b.pickupDate && b.returnDate),
+  };
 }
 
-// Get item availability (bookings + stock)
+// Item availability (stock + active bookings)
 router.get("/:id/availability", async (req, res) => {
   try {
-    const itemId = req.params.id;
-    const [items] = await db.query("SELECT id, unit_count, isAvailable FROM items WHERE id = ?", [itemId]);
-    if (items.length === 0) return res.status(404).json({ error: "Item not found" });
+    const data = await loadItemBookings(req.params.id);
+    if (!data) return res.status(404).json({ error: "Item not found" });
 
-    const item = items[0];
-    const totalStock = Math.max(0, parseInt(item.unit_count, 10) || 0);
-
-    const [rows] = await db.query(
-      `SELECT oi.quantity,
-              oi.pickup_date AS item_pickup,
-              oi.return_date AS item_return,
-              o.rental_date AS order_pickup,
-              o.event_date AS order_return
-       FROM order_items oi
-       INNER JOIN orders o ON o.id = oi.order_id
-       WHERE oi.item_id = ?
-         AND o.status IN ('pending', 'confirmed')
-         AND oi.quantity > 0`,
-      [itemId]
-    );
-
-    const bookings = rows
-      .map((row) => {
-        const pickupDate = formatDateRow(row.item_pickup || row.order_pickup);
-        const returnDate = formatDateRow(row.item_return || row.order_return);
-        if (!pickupDate || !returnDate) return null;
-        return {
-          pickupDate,
-          returnDate,
-          quantity: parseInt(row.quantity, 10) || 0,
-        };
-      })
-      .filter(Boolean);
-
+    const totalStock = Math.max(0, parseInt(data.unitCount, 10) || 0);
     res.json({
-      itemId,
+      itemId: req.params.id,
       totalStock,
-      isRentable: totalStock > 0 && Boolean(item.isAvailable),
-      bookings,
+      isRentable: totalStock > 0 && data.isAvailable,
+      bookings: data.bookings.map(({ pickupDate, returnDate, quantity }) => ({ pickupDate, returnDate, quantity })),
     });
   } catch (err) {
     console.error("Error fetching item availability:", err);
@@ -58,31 +66,51 @@ router.get("/:id/availability", async (req, res) => {
   }
 });
 
-// Get all items (public, supports categoryId filtering)
+/**
+ * List items.
+ *   ?categoryId=…&subCategoryId=…   filter
+ *   ?q=…                            title / description search
+ *   ?all=true                       include unavailable items + full columns (admin)
+ *   ?limit=…&offset=…               optional pagination; adds an X-Total-Count header
+ */
 router.get("/", async (req, res) => {
-  const { categoryId, subCategoryId, all } = req.query;
+  const { categoryId, subCategoryId, q, all } = req.query;
   try {
-    let query = "SELECT * FROM items";
-    const params = [];
     const conditions = [];
+    const params = [];
 
-    // Filter out unavailable items for public users unless all=true is specified
-    if (all !== "true") {
-      conditions.push("isAvailable = 1");
-    }
-
+    if (all !== "true") conditions.push("isAvailable = 1");
     if (categoryId) {
       conditions.push("categoryId = ?");
       params.push(categoryId);
     }
-
-    if (conditions.length > 0) {
-      query += " WHERE " + conditions.join(" AND ");
+    if (subCategoryId) {
+      conditions.push("subCategoryId = ?");
+      params.push(subCategoryId);
+    }
+    if (q && String(q).trim()) {
+      const term = `%${String(q).trim()}%`;
+      conditions.push("(title LIKE ? OR description LIKE ?)");
+      params.push(term, term);
     }
 
-    query += " ORDER BY categoryId ASC, id ASC";
+    const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+    const columns = all === "true" ? "*" : LIST_COLUMNS;
+    let sql = `SELECT ${columns} FROM items${where} ORDER BY categoryId ASC, id ASC`;
+    const queryParams = [...params];
 
-    const [rows] = await db.query(query, params);
+    const limit = parseInt(req.query.limit, 10);
+    if (Number.isInteger(limit) && limit > 0) {
+      const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+      sql += " LIMIT ? OFFSET ?";
+      queryParams.push(Math.min(limit, MAX_PAGE_SIZE), offset);
+
+      const [[{ total }]] = await db.query(`SELECT COUNT(*) AS total FROM items${where}`, params);
+      res.set("X-Total-Count", String(total));
+      res.set("Access-Control-Expose-Headers", "X-Total-Count");
+    }
+
+    const [rows] = await db.query(sql, queryParams);
     res.json(rows);
   } catch (err) {
     console.error("Error fetching items:", err);
@@ -90,67 +118,46 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get booked date ranges for a specific item (public) — must come BEFORE /:id
+// Booked date ranges for an item, grouped per order — must come BEFORE /:id
 router.get("/:id/booked-dates", async (req, res) => {
-  const { id } = req.params;
   try {
-    // Fetch the item's total inventory count
-    const [itemRows] = await db.query(
-      "SELECT unit_count FROM items WHERE id = ?",
-      [id]
-    );
-    const unitCount = itemRows.length > 0 ? (Number(itemRows[0].unit_count) || 1) : 1;
+    const data = await loadItemBookings(req.params.id);
+    const unitCount = data ? Number(data.unitCount) || 1 : 1;
 
-    // Fetch each order's date range + quantity booked for this item
-    // Group by order so overlapping orders with different ranges are separate entries
-    const [rows] = await db.query(
-      `SELECT o.rental_date, o.event_date, SUM(oi.quantity) AS quantity_booked
-       FROM orders o
-       INNER JOIN order_items oi ON oi.order_id = o.id
-       WHERE oi.item_id = ?
-         AND o.status IN ('pending', 'confirmed')
-       GROUP BY o.id, o.rental_date, o.event_date`,
-      [id]
-    );
+    const byRange = new Map();
+    for (const b of data ? data.bookings : []) {
+      const key = `${b.orderId}|${b.pickupDate}|${b.returnDate}`;
+      const entry = byRange.get(key) || { rentalDate: b.pickupDate, eventDate: b.returnDate, quantityBooked: 0 };
+      entry.quantityBooked += b.quantity;
+      byRange.set(key, entry);
+    }
 
-    const bookedRanges = rows.map((r) => ({
-      rentalDate: r.rental_date instanceof Date
-        ? r.rental_date.toISOString().split("T")[0]
-        : String(r.rental_date).split("T")[0],
-      eventDate: r.event_date instanceof Date
-        ? r.event_date.toISOString().split("T")[0]
-        : String(r.event_date).split("T")[0],
-      quantityBooked: Number(r.quantity_booked) || 1,
-    }));
-
-    res.json({ bookedRanges, unitCount });
+    res.json({ bookedRanges: [...byRange.values()], unitCount });
   } catch (err) {
     console.error("Error fetching booked dates:", err);
     res.status(500).json({ error: "Failed to fetch booked dates" });
   }
 });
 
-// Get single item (public)
+// Single item, with how often it was rented in the last 30 days
 router.get("/:id", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM items WHERE id = ?", [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT i.*,
+              (SELECT COALESCE(SUM(oi.quantity), 0)
+                 FROM order_items oi
+                 INNER JOIN orders o ON o.id = oi.order_id
+                WHERE oi.item_id = i.id
+                  AND o.status <> 'cancelled'
+                  AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS rental_count
+         FROM items i
+        WHERE i.id = ?`,
+      [req.params.id]
+    );
     if (rows.length === 0) return res.status(404).json({ error: "Item not found" });
 
     const item = rows[0];
-
-    // Fetch rental count in the past month (30 days)
-    const [rentalRows] = await db.query(
-      `SELECT COALESCE(SUM(oi.quantity), 0) AS rental_count
-       FROM order_items oi
-       INNER JOIN orders o ON oi.order_id = o.id
-       WHERE oi.item_id = ?
-         AND o.status IN ('pending', 'confirmed')
-         AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
-      [req.params.id]
-    );
-
-    item.rental_count = Number(rentalRows[0]?.rental_count) || 0;
-
+    item.rental_count = Number(item.rental_count) || 0;
     res.json(item);
   } catch (err) {
     console.error("Error fetching item:", err);

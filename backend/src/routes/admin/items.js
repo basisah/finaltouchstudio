@@ -1,46 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
 const db = require("../../db");
 const auth = require("../../middleware/auth");
+const isAdmin = require("../../middleware/isAdmin");
 const { getItemUploadDir } = require("../../utils/uploadsPath");
+const { createImageUpload, singleImage } = require("../../utils/imageUpload");
 
-// Helper middleware to verify admin role
-const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
-    next();
-  } else {
-    res.status(403).json({ error: "Access denied. Admin role required." });
-  }
-};
+const upload = createImageUpload(
+  getItemUploadDir,
+  (file) => `${file.fieldname}-${Date.now()}-${Math.round(Math.random() * 1e9)}`
+);
 
-// Configure Multer storage
-const uploadDir = path.join(__dirname, "../../../uploads/items");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, getItemUploadDir());
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  }
-});
-const upload = multer({ storage });
-
-// Image Upload Endpoint
-router.post("/upload", auth, isAdmin, upload.single("image"), (req, res) => {
+// Image upload — returns the public path to store on the item
+router.post("/upload", auth, isAdmin, singleImage(upload), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
-  const fileUrl = `/uploads/items/${req.file.filename}`;
-  res.status(201).json({ path: fileUrl });
+  res.status(201).json({ path: `/uploads/items/${req.file.filename}` });
 });
 
 // Create item

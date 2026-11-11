@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    const [existing] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const [existing] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) {
       return res.status(400).json({ error: "Email is already registered" });
     }
@@ -69,7 +69,10 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [targetEmail]);
+    const [users] = await db.query(
+      "SELECT id, email, name, avatar_url, role, password_hash FROM users WHERE email = ?",
+      [targetEmail]
+    );
     if (users.length === 0) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
@@ -123,7 +126,10 @@ router.post("/google", async (req, res) => {
     const name = decoded.name || email.split("@")[0];
     const avatar_url = decoded.picture || null;
 
-    const [users] = await db.query("SELECT * FROM users WHERE google_id = ? OR email = ?", [google_id, email]);
+    const [users] = await db.query(
+      "SELECT id, email, name, avatar_url, role, google_id FROM users WHERE google_id = ? OR email = ?",
+      [google_id, email]
+    );
 
     let user;
     let isNewUser = false;
@@ -229,52 +235,57 @@ router.get("/profile", auth, async (req, res) => {
       [userId, user.email]
     );
 
-    const bookings = await Promise.all(orders.map(async (order) => {
-      // Find package name or item names
-      const [items] = await db.query(
-        `SELECT oi.id, oi.quantity, oi.returned_quantity, oi.price_at_rent, i.name AS item_name, i.title AS item_title, i.image AS item_image, p.name AS package_name
-         FROM order_items oi
-         LEFT JOIN items i ON oi.item_id = i.id
-         LEFT JOIN packages p ON oi.package_id = p.id
-         WHERE oi.order_id = ?`,
-        [order.id]
+    // All order lines in one IN query (previously one query per order).
+    const itemsByOrder = new Map(orders.map((order) => [order.id, []]));
+    if (orders.length > 0) {
+      const [itemRows] = await db.query(
+        `SELECT oi.order_id, oi.id, oi.quantity, oi.returned_quantity, oi.price_at_rent,
+                i.name AS item_name, i.title AS item_title, i.image AS item_image, p.name AS package_name
+           FROM order_items oi
+           LEFT JOIN items i ON oi.item_id = i.id
+           LEFT JOIN packages p ON oi.package_id = p.id
+          WHERE oi.order_id IN (?)
+          ORDER BY oi.id ASC`,
+        [orders.map((order) => order.id)]
       );
+      for (const row of itemRows) itemsByOrder.get(row.order_id)?.push(row);
+    }
 
-      // Construct a single summary line for package_name
+    const bookings = orders.map((order) => {
+      const items = itemsByOrder.get(order.id);
+
+      // One-line summary shown as the booking title
       let description = "";
-      const packageItem = items.find(it => it.package_name);
+      const packageItem = items.find((it) => it.package_name);
       if (packageItem) {
         description = packageItem.package_name;
-        const otherItemsCount = items.filter(it => it.item_name).length;
-        if (otherItemsCount > 0) {
-          description += ` + ${otherItemsCount} custom item(s)`;
-        }
+        const otherItemsCount = items.filter((it) => it.item_name).length;
+        if (otherItemsCount > 0) description += ` + ${otherItemsCount} custom item(s)`;
       } else {
-        description = items.map(it => `${it.quantity}x ${it.item_title || it.item_name || 'Item'}`).join(", ");
-        if (!description) {
-          description = "Custom Rental Package";
-        }
+        description =
+          items.map((it) => `${it.quantity}x ${it.item_title || it.item_name || "Item"}`).join(", ") ||
+          "Custom Rental Package";
       }
 
       return {
         ...order,
         package_name: description,
-        items: items.map(it => ({
+        items: items.map((it) => ({
           order_item_id: it.id,
           name: it.item_title || it.item_name || it.package_name || "Item",
           quantity: it.quantity,
           returned_quantity: it.returned_quantity || 0,
           price: it.price_at_rent,
-          image: it.item_image || null
+          image: it.item_image || null,
         })),
-        payment_method: order.fulfillment_type === "delivery" ? "Delivery/Fulfillment" : "Customer Pickup"
+        payment_method: order.fulfillment_type === "delivery" ? "Delivery/Fulfillment" : "Customer Pickup",
       };
-    }));
+    });
 
     res.json({ user, bookings });
   } catch (err) {
     console.error("Profile fetch error:", err);
-    res.status(500).json({ error: "Failed to fetch profile", message: err.message, stack: err.stack });
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 });
 

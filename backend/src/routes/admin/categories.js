@@ -1,60 +1,27 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
 const db = require("../../db");
 const auth = require("../../middleware/auth");
-const { getCategoryUploadDir } = require("../../utils/uploadsPath");
+const isAdmin = require("../../middleware/isAdmin");
+const { getCategoryUploadDir, getSubcategoryUploadDir } = require("../../utils/uploadsPath");
+const { createImageUpload, singleImage } = require("../../utils/imageUpload");
 
-// Helper middleware to verify admin role
-const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
-    next();
-  } else {
-    res.status(403).json({ error: "Access denied. Admin role required." });
-  }
-};
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, getCategoryUploadDir()),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `category-${Date.now()}${ext}`);
-  },
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
-
-// Multer setup for subcategory image uploads
-const subcatUploadDir = path.join(__dirname, "../../../uploads/subcategories");
-if (!fs.existsSync(subcatUploadDir)) {
-  fs.mkdirSync(subcatUploadDir, { recursive: true });
-}
-
-const subcatStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, subcatUploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `subcategory-${Date.now()}${ext}`);
-  },
-});
-const subcatUpload = multer({ storage: subcatStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = createImageUpload(getCategoryUploadDir, () => `category-${Date.now()}`);
+const subcatUpload = createImageUpload(getSubcategoryUploadDir, () => `subcategory-${Date.now()}`);
 
 // All routes here are admin-only
 router.use(auth, isAdmin);
 
 // POST - Upload category image
-router.post("/upload-image", upload.single("image"), (req, res) => {
+router.post("/upload-image", singleImage(upload), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const fileUrl = `/uploads/categories/${req.file.filename}`;
-  res.status(201).json({ url: fileUrl });
+  res.status(201).json({ url: `/uploads/categories/${req.file.filename}` });
 });
 
 // POST - Upload subcategory image
-router.post("/upload-subcategory-image", subcatUpload.single("image"), (req, res) => {
+router.post("/upload-subcategory-image", singleImage(subcatUpload), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const fileUrl = `/uploads/subcategories/${req.file.filename}`;
-  res.status(201).json({ url: fileUrl });
+  res.status(201).json({ url: `/uploads/subcategories/${req.file.filename}` });
 });
 
 // POST - Create category
@@ -101,8 +68,11 @@ router.put("/:id", async (req, res) => {
           const oldSubList = typeof oldCatRows[0].subcategories === "string" ? JSON.parse(oldCatRows[0].subcategories) : oldCatRows[0].subcategories;
           if (Array.isArray(oldSubList) && Array.isArray(newSubList)) {
             const deletedSubs = oldSubList.filter(oldSub => !newSubList.some(newSub => newSub.id === oldSub.id));
-            for (const delSub of deletedSubs) {
-              await db.query("UPDATE items SET subCategoryId = NULL WHERE categoryId = ? AND subCategoryId = ?", [req.params.id, delSub.id]);
+            if (deletedSubs.length > 0) {
+              await db.query("UPDATE items SET subCategoryId = NULL WHERE categoryId = ? AND subCategoryId IN (?)", [
+                req.params.id,
+                deletedSubs.map((sub) => sub.id),
+              ]);
             }
           }
         }
