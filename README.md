@@ -35,25 +35,76 @@ That's it. All three services start together.
 
 ```
 finaltouchstudio/
-├── docker-compose.yml          # Orchestrates all services
-├── db/
-│   └── init.sql                # Runs once on first DB start
+├── docker-compose.yml            # Orchestrates db, backend and frontend
+├── db/init.sql                   # Runs once on first DB start
+├── api/index.js                  # Vercel serverless entry (wraps the backend)
 ├── backend/
-│   ├── Dockerfile
-│   ├── package.json
+│   ├── scripts/resetDb.js        # npm run db:reset
 │   └── src/
-│       ├── index.js            # Express server + routes
-│       └── db.js               # MySQL2 connection pool
+│       ├── index.js              # Express app: middleware, static files, routes
+│       ├── db.js                 # Shared MySQL connection pool
+│       ├── constants/            # Order statuses
+│       ├── database/             # Schema definition, indexes, start-up bootstrap
+│       ├── seed/                 # Demo catalogue (data + seed/remove script)
+│       ├── middleware/           # auth, optionalAuth, isAdmin
+│       ├── routes/               # Public + customer API (routes/admin = admin API)
+│       ├── emailservices/        # Email templates
+│       └── utils/                # Mailer, uploads, rental availability
 └── frontend/
-    ├── Dockerfile
-    ├── package.json
-    ├── vite.config.js          # HMR + proxy config
+    ├── vite.config.js            # Dev server, API proxy, chunking
     └── src/
-        ├── main.jsx
-        ├── App.jsx             # Full CRUD React app
-        ├── App.module.css
-        └── index.css
+        ├── App.jsx               # Lazy-loaded routes
+        ├── index.css             # Design tokens + base styles
+        ├── api/                  # API client and endpoint modules
+        ├── components/
+        │   ├── ui/               # Button, Field, Card, Modal, PageHeader, ...
+        │   ├── layout/           # Navbar, Footer, PageLayout, AuthShell
+        │   └── catalog/          # ItemImage, ProductCard, SearchBar
+        ├── constants/            # Site details, landing content, pricing
+        ├── context/              # Cart state
+        ├── hooks/                # useCatalog, useToast, useClickOutside
+        ├── pages/                # One folder per route
+        └── utils/                # Formatting, images, session, cart totals
 ```
+
+---
+
+## 🎨 Design System
+
+All colours, type sizes, spacing, radii, shadows and motion are CSS custom
+properties in `frontend/src/index.css`. Build pages from the primitives in
+`frontend/src/components/ui` and reference tokens (`var(--accent)`,
+`var(--space-4)`, ...) instead of hard-coding values.
+
+---
+
+## 🌱 Demo Catalogue
+
+Placeholder products (41 items, 7 packages) for use until the real inventory
+is entered. Every demo row is flagged `is_demo = 1`.
+
+```bash
+cd backend
+npm run seed:demo           # insert / refresh the demo catalogue (safe to re-run)
+npm run seed:demo:remove    # delete all demo rows again
+```
+
+Inside Docker: `docker compose exec backend npm run seed:demo`.
+Setting `SEED_DEMO_DATA=true` on the backend seeds automatically on start-up
+while the items table is empty. Real products are never modified by either
+command. Edit the catalogue in `backend/src/seed/demoCatalog.js`.
+
+---
+
+## ✅ Tests
+
+```bash
+cd backend && npm test      # needs a MySQL database (DB_HOST, DB_PORT, ...)
+cd frontend && npm run build
+```
+
+> The backend tests write to whatever database the environment points at —
+> run them against a local or CI database, never production.
 
 ---
 
