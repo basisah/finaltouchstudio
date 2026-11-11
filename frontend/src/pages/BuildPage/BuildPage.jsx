@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
+import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer";
 import styles from "./BuildPage.module.css";
 import { get } from "../../api/client";
+import { isImageSrc } from "../../utils/images";
 
 // Toggle preview mode: if true, anyone can view all items. If false, it locks for users without purchases.
 const ENABLE_PREVIEW_MODE = true;
@@ -474,7 +475,7 @@ export default function BuildPage() {
                     onClick={() => handleStartBuild(item)}
                   >
                     <div className={styles.itemImageContainer}>
-                      {item.image && item.image.startsWith("/uploads") ? (
+                      {isImageSrc(item.image) ? (
                         <img src={item.image} alt={item.title} className={styles.itemImage} />
                       ) : (
                         <div className={styles.itemOrb} style={{ fontSize: "2.8rem" }}>

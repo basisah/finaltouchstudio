@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { isImageSrc } from "../../../utils/images";
 import styles from "../AdminPage.module.css";
 import { INVENTORY_CATEGORIES } from "../../../constants/inventory";
 import { post, put, del } from "../../../api/client";
@@ -182,7 +183,7 @@ export default function InventoryTab({
     setItemUnitCount(item.unit_count || 1);
     setItemPrice(item.price || 0);
     setItemSubCategory(item.subCategoryId || "");
-    setItemImage(item.image && item.image.startsWith("/uploads") ? item.image : "");
+    setItemImage(isImageSrc(item.image) ? item.image : "");
     setTutorialSteps(parseJSON(item.tutorial_steps, []));
     setGalleryImages(parseJSON(item.gallery_images, []));
   };
@@ -230,7 +231,7 @@ export default function InventoryTab({
   const handleSaveItem = async (e) => {
     e.preventDefault();
     if (!itemName.trim()) return alert("Item name is required");
-    if (!itemImage || !itemImage.startsWith("/uploads")) {
+    if (!isImageSrc(itemImage)) {
       return alert("Primary product photo is required. Please upload an image first.");
     }
 
@@ -1154,16 +1155,16 @@ export default function InventoryTab({
 
                   {/* Primary Image Uploader (Required) */}
                   <div style={{ 
-                    border: itemImage && itemImage.startsWith("/uploads") ? "1px solid var(--border-shadow)" : "1.5px dashed #dc2626",
+                    border: isImageSrc(itemImage) ? "1px solid var(--border-shadow)" : "1.5px dashed #dc2626",
                     background: "rgba(0,0,0,0.01)",
                     borderRadius: "8px", 
                     padding: "12px" 
                   }}>
-                    <span style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: itemImage && itemImage.startsWith("/uploads") ? "var(--text-main)" : "#dc2626", marginBottom: "8px" }}>
+                    <span style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: isImageSrc(itemImage) ? "var(--text-main)" : "#dc2626", marginBottom: "8px" }}>
                       Primary Product Photo (Required) *
                     </span>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      {itemImage && itemImage.startsWith("/uploads") ? (
+                      {isImageSrc(itemImage) ? (
                         <img 
                           src={itemImage} 
                           alt="Primary preview" 
@@ -1199,7 +1200,7 @@ export default function InventoryTab({
                           onClick={() => primaryFileRef.current.click()}
                           style={{ padding: "6px 12px", fontSize: "0.78rem" }}
                         >
-                          {itemImage && itemImage.startsWith("/uploads") ? "Change Photo" : "Upload Photo *"}
+                          {isImageSrc(itemImage) ? "Change Photo" : "Upload Photo *"}
                         </button>
                         <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "4px" }}>Recommended: 400x400px</p>
                       </div>
@@ -1409,7 +1410,7 @@ export default function InventoryTab({
                     >
                       {/* Left: Square Photo Thumbnail */}
                       <div className={styles.itemCardThumbCol}>
-                        {item.image && item.image.startsWith("/uploads") ? (
+                        {isImageSrc(item.image) ? (
                           <img src={item.image} alt={item.name} className={styles.itemCardThumbImg} />
                         ) : (
                           <span className={styles.itemCardThumbPlaceholder}>{item.image || "✨"}</span>

@@ -1,47 +1,56 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import AboutPage from "./pages/AboutPage/AboutPage";
-import AdminPage from "./pages/AdminPage/AdminPage";
-import LoginPage from "./pages/AdminPage/LoginPage";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { CartProvider } from "./context/CartContext";
-import ItemsPage from "./pages/ItemsPage/ItemsPage";
-import ItemDetailPage from "./pages/ItemDetailPage/ItemDetailPage";
-import PackageDetail from "./pages/PackageDetail/PackageDetail";
-import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
-import CartPage from "./pages/CartPage/CartPage";
-import CustomerLoginPage from "./pages/CustomerLoginPage/CustomerLoginPage";
-import ProfilePage from "./pages/ProfilePage/ProfilePage";
-import BuildPage from "./pages/BuildPage/BuildPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 import SessionTimeoutHandler from "./components/SessionTimeoutHandler";
+import ScrollToTop from "./components/layout/ScrollToTop";
+import { PageLoader } from "./components/ui";
 
+// Each page is its own chunk, so visitors only download the code they open.
+const LandingPage = lazy(() => import("./pages/LandingPage/LandingPage"));
+const ItemsPage = lazy(() => import("./pages/ItemsPage/ItemsPage"));
+const ItemDetailPage = lazy(() => import("./pages/ItemDetailPage/ItemDetailPage"));
+const PackageDetailPage = lazy(() => import("./pages/PackageDetailPage/PackageDetailPage"));
+const CartPage = lazy(() => import("./pages/CartPage/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage/CheckoutPage"));
+const BuildPage = lazy(() => import("./pages/BuildPage/BuildPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage/AboutPage"));
+const CustomerLoginPage = lazy(() => import("./pages/CustomerLoginPage/CustomerLoginPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage/ProfilePage"));
+const AdminLoginPage = lazy(() => import("./pages/AdminPage/LoginPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage/AdminPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
 
 export default function App() {
   return (
     <CartProvider>
       <Router>
+        <ScrollToTop />
         <SessionTimeoutHandler />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/items" element={<ItemsPage />} />
-          <Route path="/item/:id" element={<ItemDetailPage />} />
-          <Route path="/package/:id" element={<PackageDetail />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/login" element={<CustomerLoginPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/build" element={<BuildPage />} />
-          <Route path="/khaledadmin" element={<LoginPage />} />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <AdminPage />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/items" element={<ItemsPage />} />
+            <Route path="/item/:id" element={<ItemDetailPage />} />
+            <Route path="/package/:id" element={<PackageDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/build" element={<BuildPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/login" element={<CustomerLoginPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/khaledadmin" element={<AdminLoginPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </Router>
     </CartProvider>
   );

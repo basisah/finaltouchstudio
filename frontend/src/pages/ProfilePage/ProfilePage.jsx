@@ -1,261 +1,200 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { get } from "../../api/client";
+import ItemImage from "../../components/catalog/ItemImage";
+import PageLayout from "../../components/layout/PageLayout";
+import { Badge, BoxIcon, Button, Card, Container, EmptyState, LogoutIcon, PageLoader } from "../../components/ui";
+import { formatDate, formatMoney, titleCase } from "../../utils/format";
+import { clearSession, isLoggedIn } from "../../utils/session";
 import styles from "./ProfilePage.module.css";
 
-const BASE_URL = (import.meta.env.VITE_API_URL || "/api").replace(/\/api$/, "");
+const STATUS_TONES = {
+  ordered: "accent",
+  pending: "warning",
+  confirmed: "success",
+  on_hand: "gold",
+  returned: "success",
+  cancelled: "danger",
+};
+
+const STATUS_LABELS = { ordered: "Booked", on_hand: "With you", returned: "Returned" };
+
+const initials = (name = "") =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "?";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState("loading"); // loading | ready | error
 
   useEffect(() => {
-    const token = localStorage.getItem("user_token") || localStorage.getItem("admin_token");
-    const userInfo = localStorage.getItem("user_info");
-
-    if (!token || !userInfo) {
-      navigate("/login");
-      return;
+    if (!isLoggedIn()) {
+      navigate("/login", { replace: true, state: { from: "/profile" } });
+      return undefined;
     }
 
-    fetchProfile(token);
-  }, [navigate]);
-
-  const fetchProfile = async (token) => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
+    let active = true;
+    get("/auth/profile")
+      .then((data) => {
+        if (!active) return;
+        setProfile(data.user);
+        setBookings(data.bookings || []);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        if (!active) return;
+        // An expired or unknown session sends the customer back to sign in.
+        if (err.status === 401 || err.status === 404) {
+          clearSession();
+          navigate("/login", { replace: true });
+        } else {
+          setStatus("error");
+        }
       });
 
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 404) {
-          localStorage.removeItem("user_token");
-          localStorage.removeItem("user_login_time");
-          localStorage.removeItem("admin_token");
-          localStorage.removeItem("admin_login_time");
-          localStorage.removeItem("user_info");
-          navigate("/login");
-          return;
-        }
-        throw new Error("Failed to load profile");
-      }
-
-      const data = await res.json();
-      setProfile(data.user);
-      setBookings(data.bookings || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   const handleSignOut = () => {
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("user_login_time");
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_login_time");
-    localStorage.removeItem("user_info");
+    clearSession();
     navigate("/");
   };
 
-  const getInitials = (name) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    if (amount == null) return "—";
-    return `CAD $${parseFloat(amount).toFixed(2)}`;
-  };
-
-  const getStatusClass = (status) => {
-    switch ((status || "pending").toLowerCase()) {
-      case "confirmed": return styles.statusConfirmed;
-      case "completed":  return styles.statusCompleted;
-      case "cancelled":  return styles.statusCancelled;
-      default:           return styles.statusPending;
-    }
-  };
-
-  if (loading) {
+  if (status === "loading") {
     return (
-      <>
-        <Navbar />
-        <div className={styles.loadingWrapper}>
-          <div className={styles.spinner} />
-          <p>Loading your profile…</p>
-        </div>
-      </>
+      <PageLayout>
+        <PageLoader label="Loading your profile…" />
+      </PageLayout>
     );
   }
 
-  if (error) {
+  if (status === "error") {
     return (
-      <>
-        <Navbar />
-        <div className={styles.errorWrapper}>
-          <p className={styles.errorMsg}>{error}</p>
-          <Link to="/" className={styles.backBtn}>← Back to Home</Link>
-        </div>
-      </>
+      <PageLayout>
+        <Container narrow className={styles.state}>
+          <EmptyState title="We could not load your profile" actions={<Button onClick={() => window.location.reload()}>Try again</Button>}>
+            Please check your connection and try again in a moment.
+          </EmptyState>
+        </Container>
+      </PageLayout>
     );
   }
+
+  const active = bookings.filter((b) => !["returned", "cancelled"].includes(b.status)).length;
+  const spent = bookings.filter((b) => b.status !== "cancelled").reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-      <main className={styles.container}>
-
-          {/* ── Profile Header Card ── */}
-          <div className={styles.profileCard}>
-            <div className={styles.avatarWrap}>
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.name}
-                  className={styles.avatar}
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className={styles.avatarFallback}>
-                  {getInitials(profile?.name)}
-                </div>
-              )}
-            </div>
-
+    <PageLayout>
+      <Container className={styles.page}>
+        <Card padded className={styles.profile}>
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="" className={styles.avatar} referrerPolicy="no-referrer" width="88" height="88" />
+          ) : (
+            <span className={styles.avatar} aria-hidden="true">
+              {initials(profile?.name)}
+            </span>
+          )}
+          <div className={styles.profileText}>
+            <h1>{profile?.name}</h1>
+            <p>{profile?.email}</p>
             <div className={styles.profileMeta}>
-              <h1 className={styles.profileName}>{profile?.name}</h1>
-              <p className={styles.profileEmail}>{profile?.email}</p>
-              <span className={styles.roleBadge}>
-                {profile?.role === "admin" ? "⚙️ Admin" : "✨ Member"}
-              </span>
-              <p className={styles.memberSince}>
-                Member since {formatDate(profile?.created_at)}
-              </p>
-            </div>
-
-            <button onClick={handleSignOut} className={styles.signOutBtn} id="profile-sign-out">
-              Sign Out
-            </button>
-          </div>
-
-          {/* ── Stats Row ── */}
-          <div className={styles.statsRow}>
-            <div className={styles.statCard}>
-              <span className={styles.statNumber}>{bookings.length}</span>
-              <span className={styles.statLabel}>Total Bookings</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statNumber}>
-                {bookings.filter((b) => (b.status || "pending").toLowerCase() === "confirmed").length}
-              </span>
-              <span className={styles.statLabel}>Confirmed</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statNumber}>
-                {formatCurrency(bookings.reduce((sum, b) => sum + parseFloat(b.price || 0), 0))}
-              </span>
-              <span className={styles.statLabel}>Total Spent</span>
+              <Badge tone={profile?.role === "admin" ? "gold" : "accent"}>{profile?.role === "admin" ? "Admin" : "Member"}</Badge>
+              {profile?.created_at && <span>Member since {formatDate(profile.created_at)}</span>}
             </div>
           </div>
-
-          {/* ── Booking History ── */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>📋 Booking History</h2>
-
-            {bookings.length === 0 ? (
-              <div className={styles.emptyState}>
-                <span className={styles.emptyIcon}>🎪</span>
-                <p className={styles.emptyTitle}>No bookings yet</p>
-                <p className={styles.emptyMsg}>
-                  Browse our packages and book your first event setup!
-                </p>
-                <Link to="/items" className={styles.browseBtn}>Browse Packages</Link>
-              </div>
-            ) : (
-              <div className={styles.bookingList}>
-                {bookings.map((booking) => (
-                  <div key={booking.id} className={styles.bookingCard}>
-                    <div className={styles.bookingHeader}>
-                      <div>
-                        <h3 className={styles.bookingPackage}>{booking.package_name}</h3>
-                        <p className={styles.bookingId}>Booking #{booking.id}</p>
-                      </div>
-                      <span className={`${styles.statusBadge} ${getStatusClass(booking.status)}`}>
-                        {booking.status || "Pending"}
-                      </span>
-                    </div>
-
-                    <div className={styles.bookingDetails}>
-                      <div className={styles.detailItem}>
-                        <span className={styles.detailLabel}>📅 Pickup</span>
-                        <span className={styles.detailValue}>{formatDate(booking.pickup_date)}</span>
-                      </div>
-                      <div className={styles.detailItem}>
-                        <span className={styles.detailLabel}>📅 Return</span>
-                        <span className={styles.detailValue}>{formatDate(booking.return_date)}</span>
-                      </div>
-                      <div className={styles.detailItem}>
-                        <span className={styles.detailLabel}>💳 Payment</span>
-                        <span className={styles.detailValue}>{booking.payment_method || "—"}</span>
-                      </div>
-                      <div className={styles.detailItem}>
-                        <span className={styles.detailLabel}>💰 Total</span>
-                        <span className={`${styles.detailValue} ${styles.priceValue}`}>
-                          {formatCurrency(booking.price)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.bookingFooter}>
-                      <span className={styles.bookingDate}>Booked on {formatDate(booking.created_at)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className={styles.profileActions}>
+            {profile?.role === "admin" && (
+              <Button to="/admin" variant="secondary">
+                Admin dashboard
+              </Button>
             )}
-          </section>
+            <Button variant="ghost" onClick={handleSignOut} id="profile-sign-out">
+              <LogoutIcon /> Sign out
+            </Button>
+          </div>
+        </Card>
 
-          {/* ── Quick Actions ── */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>🚀 Quick Actions</h2>
-            <div className={styles.actionsRow}>
-              <Link to="/items" className={styles.actionCard}>
-                <span className={styles.actionIcon}>🎀</span>
-                <span className={styles.actionLabel}>Browse Packages</span>
-              </Link>
-              <Link to="/cart" className={styles.actionCard}>
-                <span className={styles.actionIcon}>🛒</span>
-                <span className={styles.actionLabel}>View Cart</span>
-              </Link>
-              <Link to="/" className={styles.actionCard}>
-                <span className={styles.actionIcon}>🏠</span>
-                <span className={styles.actionLabel}>Home</span>
-              </Link>
-            </div>
-          </section>
+        <dl className={styles.stats}>
+          <Card padded as="div">
+            <dt>Total bookings</dt>
+            <dd>{bookings.length}</dd>
+          </Card>
+          <Card padded as="div">
+            <dt>Active</dt>
+            <dd>{active}</dd>
+          </Card>
+          <Card padded as="div">
+            <dt>Total booked</dt>
+            <dd>{formatMoney(spent)}</dd>
+          </Card>
+        </dl>
 
-      </main>
-      <Footer />
-    </div>
+        <section aria-label="Booking history">
+          <h2 className={styles.sectionTitle}>Booking history</h2>
+
+          {bookings.length === 0 ? (
+            <EmptyState icon={<BoxIcon />} title="No bookings yet" actions={<Button to="/items">Browse rentals</Button>}>
+              When you book a rental or a package it will appear here with its dates and status.
+            </EmptyState>
+          ) : (
+            <ul className={styles.bookings}>
+              {bookings.map((booking) => (
+                <Card as="li" key={booking.id} className={styles.booking}>
+                  <header className={styles.bookingHeader}>
+                    <div>
+                      <span className={styles.bookingRef}>Booking FT-{booking.id}</span>
+                      <h3>{booking.package_name}</h3>
+                    </div>
+                    <Badge tone={STATUS_TONES[booking.status] || "neutral"} dot>
+                      {STATUS_LABELS[booking.status] || titleCase(booking.status || "pending")}
+                    </Badge>
+                  </header>
+
+                  {booking.items?.length > 0 && (
+                    <ul className={styles.thumbs} aria-label="Items in this booking">
+                      {booking.items.slice(0, 6).map((item) => (
+                        <li key={item.order_item_id} title={`${item.quantity} × ${item.name}`}>
+                          <ItemImage src={item.image} alt={item.name} width={120} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <dl className={styles.details}>
+                    <div>
+                      <dt>Pickup</dt>
+                      <dd>{formatDate(booking.pickup_date) || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>Return</dt>
+                      <dd>{formatDate(booking.return_date) || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>Fulfilment</dt>
+                      <dd>{booking.fulfillment_type === "delivery" ? "Delivery" : "Studio pickup"}</dd>
+                    </div>
+                    <div>
+                      <dt>Total</dt>
+                      <dd className={styles.price}>{formatMoney(booking.price)}</dd>
+                    </div>
+                  </dl>
+
+                  <footer className={styles.bookingFooter}>Booked on {formatDate(booking.created_at)}</footer>
+                </Card>
+              ))}
+            </ul>
+          )}
+        </section>
+      </Container>
+    </PageLayout>
   );
 }

@@ -1,0 +1,30 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn var(--duration-slow) var(--ease);
+}
+
+.skipLink {
+  position: absolute;
+  top: -100px;
+  left: var(--space-4);
+  z-index: calc(var(--z-nav) + 1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+
+.skipLink:focus {
+  top: var(--space-3);
+}

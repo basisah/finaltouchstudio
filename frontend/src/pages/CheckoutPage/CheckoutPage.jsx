@@ -1,357 +1,206 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { submitBooking } from "../../api/bookings.api";
+import PageLayout from "../../components/layout/PageLayout";
+import { Alert, Button, Card, CheckIcon, Container, EmptyState, Field, PageHeader } from "../../components/ui";
+import { PAYMENT_METHODS } from "../../constants/pricing";
+import { formatDate, formatMoney, titleCase } from "../../utils/format";
+import { getStoredUser } from "../../utils/session";
 import styles from "./CheckoutPage.module.css";
 
+const today = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Checkout for a styled package. The package page passes the customised
+ * selection through router state; opening this URL directly shows a prompt
+ * to pick a package first.
+ */
 export default function CheckoutPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  // Retrieve checkout state from router location
-  const checkoutData = location.state || {
-    pkgName: "Custom Celebration Package",
-    pkgCategory: "general",
-    itemsCount: 0,
-    itemsList: [],
-    finalPrice: 0,
-  };
+  const { state: order } = useLocation();
+  const user = getStoredUser();
 
-  // Form Fields
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [pickupDate, setPickupDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("eTransfer");
-  
-  // Checkout flow state
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [bookingRef, setBookingRef] = useState("");
+  const [form, setForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    pickupDate: "",
+    returnDate: "",
+  });
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].id);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [reference, setReference] = useState("");
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    if (!name || !phone || !email || !pickupDate || !returnDate) {
-      alert("Please fill in all requested scheduling and billing fields.");
+  const setField = (name) => (event) => setForm((current) => ({ ...current, [name]: event.target.value }));
+
+  if (!order?.pkgName) {
+    return (
+      <PageLayout>
+        <Container narrow className={styles.state}>
+          <EmptyState
+            title="Choose a package first"
+            actions={
+              <>
+                <Button to="/#packages">View packages</Button>
+                <Button to="/items" variant="secondary">
+                  Browse rentals
+                </Button>
+              </>
+            }
+          >
+            Pick a styled package, customise it, and you will be brought back here to book it.
+          </EmptyState>
+        </Container>
+      </PageLayout>
+    );
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (form.returnDate < form.pickupDate) {
+      setError("The return date must be on or after the pickup date.");
       return;
     }
 
+    setSubmitting(true);
     try {
       const result = await submitBooking({
-        name,
-        phone,
-        email,
-        pickupDate,
-        returnDate,
-        packageName: checkoutData.pkgName,
-        price: checkoutData.finalPrice,
-        paymentMethod
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        pickupDate: form.pickupDate,
+        returnDate: form.returnDate,
+        packageName: order.pkgName,
+        price: Number(Number(order.finalPrice).toFixed(2)),
+        paymentMethod,
       });
-
-      if (result && result.bookingId) {
-        setBookingRef("FT-" + result.bookingId);
-      } else {
-        setBookingRef("FT-" + Math.floor(100000 + Math.random() * 900000));
-      }
-      setIsCompleted(true);
+      setReference(`FT-${result.bookingId}`);
     } catch (err) {
-      console.error("Booking API error:", err);
-      alert("Failed to confirm reservation. Please check your internet connection and try again.");
+      setError(err.message || "We could not confirm your booking. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (isCompleted) {
+  if (reference) {
     return (
-      <div className={styles.page}>
-        <Navbar />
-        <div className={styles.successWrapper}>
-          <div className={styles.successCard}>
-            <div className={styles.successIcon}>🎉</div>
-            <h2>Booking Confirmed!</h2>
-            <p className={styles.refNumber}>Booking Reference: <strong>{bookingRef}</strong></p>
-            <div className={styles.divider}></div>
-            <p className={styles.successMessage}>
-              Thank you, <strong>{name}</strong>! Your order for <strong>{checkoutData.pkgName}</strong> has been successfully placed. 
-              We will call you on <strong>{phone}</strong> to coordinate the delivery and setup for your occasion.
+      <PageLayout>
+        <Container narrow className={styles.state}>
+          <Card padded className={styles.confirmation}>
+            <span className={styles.confirmationIcon}>
+              <CheckIcon width={30} height={30} />
+            </span>
+            <h1>Booking received</h1>
+            <p className={styles.reference}>
+              Reference <strong>{reference}</strong>
             </p>
-            <div className={styles.successSummary}>
-              <h4>Order Breakdown</h4>
-              <p>Occasion: <span>{checkoutData.pkgCategory.toUpperCase()}</span></p>
-              <p>Customized Elements: <span>{checkoutData.itemsCount} items selected</span></p>
-              <p>Scheduled: <span>{pickupDate} to {returnDate}</span></p>
-              <p>Total Paid via {paymentMethod}: <strong>CAD ${checkoutData.finalPrice.toLocaleString()}</strong></p>
+            <p>
+              Thank you, {form.name}. Your <strong>{order.pkgName}</strong> is reserved for {formatDate(form.pickupDate)} –{" "}
+              {formatDate(form.returnDate)}. We will call you on {form.phone} to arrange delivery and setup.
+            </p>
+            <p className={styles.confirmationTotal}>Total {formatMoney(order.finalPrice)}</p>
+            <div className={styles.confirmationActions}>
+              <Button to="/">Back to home</Button>
+              <Button to="/items" variant="secondary">
+                Browse rentals
+              </Button>
             </div>
-            <button onClick={() => navigate("/")} className={styles.homeBtn}>Return to Home</button>
-          </div>
-        </div>
-        <Footer />
-      </div>
+          </Card>
+        </Container>
+      </PageLayout>
     );
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
+    <PageLayout>
+      <PageHeader
+        eyebrow="Checkout"
+        title="Complete your booking"
+        lead="Tell us when you need your package and how you would like to pay."
+        crumbs={[{ label: "Home", to: "/" }, { label: "Packages", to: "/#packages" }, { label: "Checkout" }]}
+      />
 
-      <header className={styles.hero}>
-        <div className={styles.heroInner}>
-          <h1 className={styles.title}>Complete Your Reservation</h1>
-          <p className={styles.subtitle}>Provide your event schedules and complete the secure payment.</p>
-        </div>
-      </header>
-
-      <main className={styles.container}>
-        <div className={styles.layoutGrid}>
-          {/* Checkout Scheduling & Payment Form */}
-          <form onSubmit={handlePlaceOrder} className={styles.checkoutForm}>
-            <div className={styles.sectionHeader}>
-              <h2>1. Contact & Scheduling</h2>
+      <Container className={styles.layout}>
+        <form id="package-checkout" className={styles.form} onSubmit={handleSubmit}>
+          <Card padded className={styles.panel}>
+            <h2 className={styles.panelTitle}>1. Contact &amp; dates</h2>
+            <div className={styles.fieldRow}>
+              <Field label="Full name" autoComplete="name" required value={form.name} onChange={setField("name")} />
+              <Field label="Phone" type="tel" autoComplete="tel" required value={form.phone} onChange={setField("phone")} />
             </div>
-            
-            <div className={styles.formGrid}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="fullName">Full Name</label>
-                <input
-                  id="fullName"
-                  type="text"
-                  placeholder="e.g. Sarah Jenkins"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="phoneNum">Phone Number</label>
-                <input
-                  id="phoneNum"
-                  type="tel"
-                  placeholder="e.g. +1 (306) 555-0199"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup} style={{ gridColumn: "span 2" }}>
-                <label htmlFor="emailAddress">Email Address</label>
-                <input
-                  id="emailAddress"
-                  type="email"
-                  placeholder="e.g. sarah@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="pickDate">Pickup Date</label>
-                <input
-                  id="pickDate"
-                  type="date"
-                  value={pickupDate}
-                  onChange={(e) => setPickupDate(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="retDate">Return Date</label>
-                <input
-                  id="retDate"
-                  type="date"
-                  value={returnDate}
-                  onChange={(e) => setReturnDate(e.target.value)}
-                  required
-                />
-              </div>
+            <Field label="Email" type="email" autoComplete="email" required value={form.email} onChange={setField("email")} />
+            <div className={styles.fieldRow}>
+              <Field label="Pickup date" type="date" min={today()} required value={form.pickupDate} onChange={setField("pickupDate")} />
+              <Field
+                label="Return date"
+                type="date"
+                min={form.pickupDate || today()}
+                required
+                value={form.returnDate}
+                onChange={setField("returnDate")}
+              />
             </div>
+          </Card>
 
-            <div className={styles.sectionHeader} style={{ marginTop: "40px" }}>
-              <h2>2. Choose Payment Method</h2>
+          <Card padded className={styles.panel}>
+            <h2 className={styles.panelTitle}>2. Payment preference</h2>
+            <div className={styles.options}>
+              {PAYMENT_METHODS.map((method) => (
+                <label key={method.id} className={`${styles.option} ${paymentMethod === method.id ? styles.optionActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value={method.id}
+                    checked={paymentMethod === method.id}
+                    onChange={() => setPaymentMethod(method.id)}
+                  />
+                  <span>
+                    <strong>{method.label}</strong>
+                    <small>{method.note}</small>
+                  </span>
+                </label>
+              ))}
             </div>
+            <p className={styles.fine}>No payment is taken now. We confirm availability first, then send payment details.</p>
+          </Card>
+        </form>
 
-            <div className={styles.paymentGrid}>
-              <label className={`${styles.paymentCard} ${paymentMethod === "eTransfer" ? styles.selectedPayment : ""}`}>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="eTransfer"
-                  checked={paymentMethod === "eTransfer"}
-                  onChange={() => setPaymentMethod("eTransfer")}
-                />
-                <span className={styles.paymentLogo}>🍁</span>
-                <span className={styles.paymentLabel}>Interac e-Transfer</span>
-              </label>
+        <aside className={styles.sidebar}>
+          <Card padded className={styles.summary}>
+            <span className={styles.summaryEyebrow}>{titleCase(order.pkgCategory)} package</span>
+            <h2 className={styles.panelTitle}>{order.pkgName}</h2>
 
-              <label className={`${styles.paymentCard} ${paymentMethod === "PayPal" ? styles.selectedPayment : ""}`}>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="PayPal"
-                  checked={paymentMethod === "PayPal"}
-                  onChange={() => setPaymentMethod("PayPal")}
-                />
-                <span className={styles.paymentLogo}>🅿️</span>
-                <span className={styles.paymentLabel}>PayPal Checkout</span>
-              </label>
-
-              <label className={`${styles.paymentCard} ${paymentMethod === "Card" ? styles.selectedPayment : ""}`}>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Card"
-                  checked={paymentMethod === "Card"}
-                  onChange={() => setPaymentMethod("Card")}
-                />
-                <span className={styles.paymentLogo}>💳</span>
-                <span className={styles.paymentLabel}>Credit/Debit Card</span>
-              </label>
-            </div>
-
-            {paymentMethod === "eTransfer" && (
-              <div className={styles.paymentAlert}>
-                <p>💡 Please send your Interac e-Transfer payment to <strong>finaltouchstudiosask@gmail.com</strong>. Instructions will be sent to your email.</p>
-              </div>
-            )}
-
-            {paymentMethod === "PayPal" && (
-              <div className={styles.paymentAlert}>
-                <p>💡 You will be redirected to the secure PayPal portal to complete checkout.</p>
-              </div>
-            )}
-
-            {paymentMethod === "Card" && (
-              <div className={styles.stripeWrapper}>
-                {/* 
-                  ======================================================================
-                  STRIPE API INTEGRATION GUIDE (FRONTEND):
-                  
-                  To activate real Stripe payments:
-                  1. Install packages:
-                     $ npm install @stripe/stripe-js @stripe/react-stripe-js
-                  
-                  2. Import Stripe components:
-                     import { loadStripe } from '@stripe/stripe-js';
-                     import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-                  
-                  3. Initialize Stripe outside component:
-                     const stripePromise = loadStripe('YOUR_PUBLISHABLE_KEY');
-                  
-                  4. Wrap your form (or CheckoutPage component) inside App.jsx or parent with:
-                     <Elements stripe={stripePromise}>
-                       <CheckoutPage />
-                     </Elements>
-                  
-                  5. In handlePlaceOrder:
-                     const stripe = useStripe();
-                     const elements = useElements();
-                     
-                     // a. Request backend to create a PaymentIntent:
-                     const res = await fetch('/api/payment/create-payment-intent', {
-                       method: 'POST',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({ amount: checkoutData.finalPrice * 100 }) // Stripe expects amounts in cents
-                     });
-                     const { clientSecret } = await res.json();
-                     
-                     // b. Confirm card payment using Stripe SDK:
-                     const result = await stripe.confirmCardPayment(clientSecret, {
-                       payment_method: {
-                         card: elements.getElement(CardElement),
-                         billing_details: { name: name, email: email, phone: phone },
-                       }
-                     });
-                     
-                     if (result.error) {
-                       alert(result.error.message);
-                     } else if (result.paymentIntent.status === 'succeeded') {
-                       setIsCompleted(true); // Payment successful!
-                     }
-                  ======================================================================
-                */}
-                <div className={styles.stripeHeader}>
-                  <span>💳 Secure Card Payment via Stripe</span>
-                </div>
-                
-                <div className={styles.stripeContainer}>
-                  <div className={styles.stripeRow}>
-                    <div className={styles.stripeField} style={{ flex: 2 }}>
-                      <label>Card Number</label>
-                      <div className={styles.stripeInputMock}>
-                        <span className={styles.cardIconSmall}>💳</span>
-                        <input type="text" placeholder="4242 4242 4242 4242" disabled />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={styles.stripeRow}>
-                    <div className={styles.stripeField}>
-                      <label>Expiration</label>
-                      <input type="text" className={styles.stripeInput} placeholder="MM / YY" disabled />
-                    </div>
-                    <div className={styles.stripeField}>
-                      <label>CVC</label>
-                      <input type="text" className={styles.stripeInput} placeholder="CVC" disabled />
-                    </div>
-                    <div className={styles.stripeField}>
-                      <label>Postal Code</label>
-                      <input type="text" className={styles.stripeInput} placeholder="S7K 3Y5" disabled />
-                    </div>
-                  </div>
-                </div>
-                
-                <p className={styles.stripeDisclaimer}>
-                  🔒 Payments are encrypted and processed securely by Stripe. We do not store your card details.
+            {order.itemsList?.length > 0 && (
+              <>
+                <p className={styles.summaryCount}>
+                  {order.itemsCount} {order.itemsCount === 1 ? "piece" : "pieces"} included
                 </p>
-              </div>
-            )}
-          </form>
-
-          {/* Booking Summary Card */}
-          <aside className={styles.summarySidebar}>
-            <div className={styles.summaryCard}>
-              <h3>Reservation Summary</h3>
-              <div className={styles.divider}></div>
-              
-              <div className={styles.packageDetail}>
-                <h4>{checkoutData.pkgName}</h4>
-                <p className={styles.categoryLabel}>{checkoutData.pkgCategory.toUpperCase()} PACKAGE</p>
-              </div>
-
-              <div className={styles.divider}></div>
-
-              <div className={styles.itemsSummary}>
-                <h5>Included Elements ({checkoutData.itemsCount})</h5>
-                <ul className={styles.itemsList}>
-                  {checkoutData.itemsList.map((title, index) => (
-                    <li key={index}>✦ {title}</li>
+                <ul className={styles.summaryList}>
+                  {order.itemsList.map((title) => (
+                    <li key={title}>
+                      <CheckIcon width={16} height={16} />
+                      {title}
+                    </li>
                   ))}
                 </ul>
-              </div>
+              </>
+            )}
 
-              <div className={styles.divider}></div>
-
-              <div className={styles.totalRow}>
-                <span>Total Amount:</span>
-                <span className={styles.totalPrice}>CAD ${checkoutData.finalPrice.toLocaleString()}</span>
-              </div>
-
-              <button 
-                type="submit" 
-                onClick={handlePlaceOrder}
-                className={styles.placeOrderBtn}
-              >
-                ✦ Pay & Confirm Reservation
-              </button>
+            <div className={styles.total}>
+              <span>Total</span>
+              <strong>{formatMoney(order.finalPrice)}</strong>
             </div>
-          </aside>
-        </div>
-      </main>
 
-      <Footer />
-    </div>
+            {error && <Alert tone="error">{error}</Alert>}
+
+            <Button type="submit" form="package-checkout" size="lg" block loading={submitting}>
+              Confirm booking
+            </Button>
+          </Card>
+        </aside>
+      </Container>
+    </PageLayout>
   );
 }

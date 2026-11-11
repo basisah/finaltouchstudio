@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { isImageSrc } from "../../../utils/images";
 import { get, put } from "../../../api/client";
 import styles from "./RentsTab.module.css";
 
@@ -333,7 +334,7 @@ export default function RentsTab() {
                   {selectedOrder.items.map((item, idx) => (
                     <div key={idx} className={styles.itemRow}>
                       <div className={styles.itemImageWrap}>
-                        {item.image && item.image.startsWith("/uploads") ? (
+                        {isImageSrc(item.image) ? (
                           <img src={item.image} alt={item.name} className={styles.itemImage} />
                         ) : (
                           <div className={styles.itemImagePlaceholder}>📦</div>

@@ -1,402 +1,334 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { submitOrder } from "../../api/bookings.api";
+import ItemImage from "../../components/catalog/ItemImage";
+import PageLayout from "../../components/layout/PageLayout";
+import {
+  Alert,
+  ArrowLeftIcon,
+  Button,
+  Card,
+  CartIcon,
+  CheckIcon,
+  Container,
+  EmptyState,
+  Field,
+  MinusIcon,
+  PageHeader,
+  PlusIcon,
+  StoreIcon,
+  TrashIcon,
+  TruckIcon,
+} from "../../components/ui";
+import { PAYMENT_METHODS } from "../../constants/pricing";
 import { useCart } from "../../context/CartContext";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
+import { cartTotals, lineTotal, rentalDays, toDateKey } from "../../utils/cartTotals";
+import { formatDate, formatMoney, formatPrice } from "../../utils/format";
+import { formatPostalCodeInput, getDeliveryStatus } from "../../utils/saskatoonDelivery";
+import { getStoredUser, isLoggedIn } from "../../utils/session";
 import styles from "./CartPage.module.css";
 
-// SVG Icons
-const TrashIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6"></polyline>
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-  </svg>
-);
-
-const CheckCircleIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-  </svg>
-);
-
-const ShieldIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-  </svg>
-);
+const FULFILMENT = [
+  { id: "pickup", Icon: StoreIcon, label: "Studio pickup", note: "Free · collect from our Saskatoon studio" },
+  { id: "delivery", Icon: TruckIcon, label: "Venue delivery", note: "Delivered and collected within Saskatoon" },
+];
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const navigate = useNavigate();
-  
-  // Shipping Information
-  const [showShippingForm, setShowShippingForm] = useState(false);
-  const [hasShippingInfo, setHasShippingInfo] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [stateRegion, setStateRegion] = useState("");
-  const [country, setCountry] = useState("Canada");
-  const [phone, setPhone] = useState("");
-  
-  // Payment Method
-  const [paymentMethod, setPaymentMethod] = useState("Card");
-  
-  // Checkout flow state
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [bookingRef, setBookingRef] = useState("");
+  const user = getStoredUser();
 
-  // Totals Calculation
-  const MOCK_PRICE_PER_ITEM = 25; 
-  const SHIPPING_FEE = 15.00;
-  
-  const totalItemsCount = cart.reduce((count, c) => count + (c.quantity || 1), 0);
-  const subtotal = cart.reduce((total, c) => total + (c.quantity || 1) * MOCK_PRICE_PER_ITEM, 0);
-  const tax = subtotal * 0.08; 
-  const totalAmount = subtotal + SHIPPING_FEE + tax;
+  const [form, setForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+    postalCode: "",
+    notes: "",
+  });
+  const [fulfilment, setFulfilment] = useState("pickup");
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].id);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmation, setConfirmation] = useState(null);
 
-  const handleSaveShipping = (e) => {
-    e.preventDefault();
-    if (!firstName || !lastName || !address || !city || !postalCode || !phone) {
-      alert("Please fill in all requested shipping information fields.");
-      return;
-    }
-    setHasShippingInfo(true);
-    setShowShippingForm(false);
+  const totals = useMemo(() => cartTotals(cart, fulfilment), [cart, fulfilment]);
+  const unitCount = cart.reduce((count, line) => count + (line.quantity || 1), 0);
+  const delivery = getDeliveryStatus(form.postalCode);
+  const signedIn = isLoggedIn();
+
+  const setField = (name) => (event) => {
+    const value = name === "postalCode" ? formatPostalCodeInput(event.target.value) : event.target.value;
+    setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    if (!hasShippingInfo) {
-      alert("Please add your shipping information before placing the order.");
-      setShowShippingForm(true);
+  const handlePlaceOrder = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (!signedIn) {
+      navigate("/login", { state: { from: "/cart" } });
+      return;
+    }
+    if (fulfilment === "delivery" && delivery.status !== "available") {
+      setError(delivery.message || "We only deliver within Saskatoon. Please choose studio pickup instead.");
       return;
     }
 
-    const token = localStorage.getItem("user_token") || localStorage.getItem("admin_token");
-    if (!token) {
-      alert("Please sign in or register to place your reservation order.");
-      navigate("/login?redirect=/cart");
-      return;
-    }
+    // The order window spans the earliest pickup and the latest return in the cart.
+    const pickups = cart.map((line) => toDateKey(line.pickupDate)).sort();
+    const returns = cart.map((line) => toDateKey(line.returnDate || line.pickupDate)).sort();
 
+    setSubmitting(true);
     try {
-      // Get items in the format the backend expects
-      const itemsPayload = cart.map(cartItem => ({
-        item_id: cartItem.item.categoryId ? cartItem.item.id : null,
-        package_id: !cartItem.item.categoryId ? cartItem.item.id : null,
-        quantity: cartItem.quantity || 1,
-        price: MOCK_PRICE_PER_ITEM
-      }));
-
-      // Extract rental dates from the cart items
-      const firstCartItem = cart[0];
-      const rental_date = firstCartItem?.pickupDate ? new Date(firstCartItem.pickupDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
-      const event_date = firstCartItem?.returnDate ? new Date(firstCartItem.returnDate).toISOString().split("T")[0] : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      let customerEmail = `${firstName.toLowerCase()}@example.com`;
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-        if (userInfo.email) customerEmail = userInfo.email;
-      } catch (_) {}
-
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          customer_name: `${firstName} ${lastName}`,
-          customer_email: customerEmail,
-          customer_phone: phone,
-          event_date: event_date,
-          rental_date: rental_date,
-          fulfillment_type: "delivery",
-          delivery_fee: SHIPPING_FEE,
-          venue_address: `${address}, ${city}, ${postalCode}`,
-          special_notes: `Payment method: ${paymentMethod}`,
-          total_amount: totalAmount,
-          items: itemsPayload
-        })
+      const result = await submitOrder({
+        customer_name: form.name.trim(),
+        customer_email: form.email.trim(),
+        customer_phone: form.phone.trim(),
+        rental_date: pickups[0],
+        event_date: returns[returns.length - 1],
+        fulfillment_type: fulfilment,
+        delivery_fee: totals.delivery,
+        venue_address: fulfilment === "delivery" ? `${form.address.trim()}, Saskatoon, SK ${form.postalCode}` : "Customer Pickup",
+        special_notes: [`Payment method: ${paymentMethod}`, form.notes.trim()].filter(Boolean).join(" — "),
+        total_amount: Number(totals.total.toFixed(2)),
+        items: cart.map((line) => {
+          // Catalogue items carry a categoryId; packages do not.
+          const isItem = Boolean(line.item.categoryId);
+          return {
+            item_id: isItem ? line.item.id : null,
+            package_id: isItem ? null : line.item.id,
+            item_name: line.item.title,
+            quantity: line.quantity || 1,
+            // Stored per unit for the whole rental, so price × quantity is the line total.
+            price: Number((lineTotal(line) / (line.quantity || 1)).toFixed(2)),
+            pickup_date: toDateKey(line.pickupDate),
+            return_date: toDateKey(line.returnDate || line.pickupDate),
+          };
+        }),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Checkout failed");
-      }
-
-      const data = await res.json();
-      setBookingRef(`FT-${data.orderId}`);
-      setIsCompleted(true);
+      setConfirmation({ reference: `FT-${result.orderId}`, name: form.name.trim(), email: form.email.trim(), total: totals.total, fulfilment });
       clearCart();
     } catch (err) {
-      alert("Failed to place order: " + err.message);
+      setError(err.message || "We could not place your order. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "TBD";
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } catch (e) {
-      return "Invalid";
-    }
-  };
-
-  if (isCompleted) {
+  if (confirmation) {
     return (
-      <div className={styles.page}>
-        <Navbar />
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-          <div className={styles.card} style={{ textAlign: 'center', padding: '40px', maxWidth: '500px', width: '100%' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🎉</div>
-            <h2 style={{ fontSize: '1.8rem', color: '#2D1A29', marginBottom: '8px' }}>Order Confirmed!</h2>
-            <p style={{ color: '#6B4E66', marginBottom: '24px' }}>Ref: <strong>{bookingRef}</strong></p>
-            <p style={{ color: '#4A3345', marginBottom: '24px', fontSize: '0.95rem' }}>
-              Thank you, {firstName}! We will call you at {phone} to confirm delivery to {city}.
+      <PageLayout>
+        <Container narrow className={styles.state}>
+          <Card padded className={styles.confirmation}>
+            <span className={styles.confirmationIcon}>
+              <CheckIcon width={30} height={30} />
+            </span>
+            <h1>Booking received</h1>
+            <p className={styles.reference}>
+              Reference <strong>{confirmation.reference}</strong>
             </p>
-            <button onClick={() => navigate("/")} className={styles.placeOrderBtn}>Return to Home</button>
-          </div>
-        </div>
-        <Footer />
-      </div>
+            <p>
+              Thank you, {confirmation.name}. A confirmation is on its way to <strong>{confirmation.email}</strong>, and we will
+              be in touch to arrange your {confirmation.fulfilment === "delivery" ? "delivery" : "pickup"}.
+            </p>
+            <p className={styles.confirmationTotal}>Order total {formatMoney(confirmation.total)}</p>
+            <div className={styles.confirmationActions}>
+              <Button to="/profile">View my bookings</Button>
+              <Button to="/items" variant="secondary">
+                Continue browsing
+              </Button>
+            </div>
+          </Card>
+        </Container>
+      </PageLayout>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <PageLayout>
+        <PageHeader title="Your cart" crumbs={[{ label: "Home", to: "/" }, { label: "Cart" }]} />
+        <Container narrow className={styles.state}>
+          <EmptyState icon={<CartIcon />} title="Your cart is empty" actions={<Button to="/items">Browse rentals</Button>}>
+            Pick your pieces and dates from the catalogue and they will appear here.
+          </EmptyState>
+        </Container>
+      </PageLayout>
     );
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
+    <PageLayout>
+      <PageHeader
+        title="Your cart"
+        lead={`${unitCount} ${unitCount === 1 ? "piece" : "pieces"} ready to book`}
+        crumbs={[{ label: "Home", to: "/" }, { label: "Rentals", to: "/items" }, { label: "Cart" }]}
+      />
 
-      <div className={styles.checkoutProgress}>
-        <div className={styles.progressContainer}>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}><CheckCircleIcon /></span>
-            <span>Cart</span>
-          </div>
-          <div className={styles.stepDivider}></div>
-          <div className={`${styles.step} ${styles.stepActive}`}>
-            <span className={styles.stepNumber}>2</span>
-            <span>Checkout</span>
-          </div>
-          <div className={styles.stepDivider}></div>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>3</span>
-            <span>Order Complete</span>
-          </div>
-        </div>
-        <div className={styles.secureCheckout}>
-          <ShieldIcon /> Secure
-        </div>
-      </div>
+      <Container className={styles.layout}>
+        {/* Cart lines */}
+        <section aria-label="Items in your cart">
+          <ul className={styles.lines}>
+            {cart.map((line) => {
+              const days = rentalDays(line.pickupDate, line.returnDate);
+              const title = line.item.title || line.item.name;
+              return (
+                <li key={line.id} className={styles.line}>
+                  <Link to={`/item/${line.item.id}`} className={styles.lineMedia} aria-label={`View ${title}`}>
+                    <ItemImage src={line.item.image} alt="" width={300} />
+                  </Link>
 
-      <main className={styles.container}>
-        <div className={styles.layoutGrid}>
-          
-          {/* LEFT COLUMN: Items Summary */}
-          <div>
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle} style={{ marginBottom: '16px' }}>Order Summary ({totalItemsCount} items)</h2>
-              
-              <div className={styles.cartItemList}>
-                {cart.length === 0 ? (
-                  <p style={{ color: '#6B4E66', fontSize: '0.85rem' }}>Your cart is empty.</p>
-                ) : (
-                  cart.map((cartItem) => (
-                    <div key={cartItem.id} className={styles.cartItemCompact}>
-                      <div className={styles.itemImageCompact}>✨</div>
-                      <div className={styles.itemDetailsCompact}>
-                        
-                        <div className={styles.itemHeaderRow}>
-                          <span className={styles.itemTitleCompact}>{cartItem.item.title}</span>
-                          <span className={styles.itemPriceCompact}>${(MOCK_PRICE_PER_ITEM * (cartItem.quantity || 1)).toFixed(2)}</span>
-                        </div>
-                        
-                        <div className={styles.itemDatesCompact}>
-                          Dates: {formatDate(cartItem.pickupDate)} - {formatDate(cartItem.returnDate)}
-                        </div>
-                        
-                        <div className={styles.itemControlsRow}>
-                          <div className={styles.quantityControlCompact}>
-                            <button type="button" className={styles.quantityBtnCompact} onClick={() => updateQuantity(cartItem.id, -1)}>−</button>
-                            <span className={styles.quantityValueCompact}>{cartItem.quantity || 1}</span>
-                            <button type="button" className={styles.quantityBtnCompact} onClick={() => updateQuantity(cartItem.id, 1)}>+</button>
-                          </div>
-                          
-                          <button type="button" className={styles.removeBtnCompact} onClick={() => removeFromCart(cartItem.id)} title="Remove item">
-                            <TrashIcon />
-                          </button>
-                        </div>
-                        
+                  <div className={styles.lineBody}>
+                    <h2 className={styles.lineTitle}>
+                      <Link to={`/item/${line.item.id}`}>{title}</Link>
+                    </h2>
+                    <p className={styles.lineMeta}>
+                      {line.pickupDate
+                        ? `${formatDate(line.pickupDate)} – ${formatDate(line.returnDate || line.pickupDate)} · ${days} ${days === 1 ? "day" : "days"}`
+                        : "Dates to be confirmed"}
+                    </p>
+                    <p className={styles.lineMeta}>{formatPrice(line.item.price)} per day</p>
+
+                    <div className={styles.lineControls}>
+                      <div className={styles.stepper} role="group" aria-label={`Quantity of ${title}`}>
+                        <button type="button" onClick={() => updateQuantity(line.id, -1)} aria-label="Decrease quantity">
+                          <MinusIcon width={14} height={14} />
+                        </button>
+                        <span aria-live="polite">{line.quantity || 1}</span>
+                        <button type="button" onClick={() => updateQuantity(line.id, 1)} aria-label="Increase quantity">
+                          <PlusIcon width={14} height={14} />
+                        </button>
                       </div>
+                      <button type="button" className={styles.remove} onClick={() => removeFromCart(line.id)}>
+                        <TrashIcon width={16} height={16} /> Remove
+                      </button>
                     </div>
-                  ))
-                )}
-              </div>
-              
-              <button type="button" className={styles.continueShoppingBtn} onClick={() => navigate('/items')}>
-                ← Continue Shopping
-              </button>
-            </div>
-          </div>
+                  </div>
 
-          {/* RIGHT COLUMN: Shipping, Payment, Totals */}
-          <div>
-            
-            {/* Shipping Information Card */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2 className={styles.cardTitle}>Shipping Information</h2>
-                {hasShippingInfo && !showShippingForm && (
-                  <button type="button" className={styles.editBtn} onClick={() => setShowShippingForm(true)}>Edit</button>
-                )}
-                {hasShippingInfo && showShippingForm && (
-                  <button type="button" className={styles.editBtn} onClick={() => setShowShippingForm(false)}>Cancel</button>
-                )}
-              </div>
+                  <strong className={styles.lineTotal}>{formatMoney(lineTotal(line))}</strong>
+                </li>
+              );
+            })}
+          </ul>
 
-              {!hasShippingInfo && !showShippingForm && (
-                <button type="button" className={styles.addShippingBtn} onClick={() => setShowShippingForm(true)}>
-                  + Add Shipping Info
-                </button>
-              )}
+          <Button to="/items" variant="ghost" className={styles.back}>
+            <ArrowLeftIcon /> Continue browsing
+          </Button>
+        </section>
 
-              {showShippingForm && (
-                <form onSubmit={handleSaveShipping} className={styles.formGrid}>
-                  <div className={styles.inputGroup}>
-                    <label>First Name</label>
-                    <input type="text" placeholder="John" value={firstName} onChange={e => setFirstName(e.target.value)} required />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label>Last Name</label>
-                    <input type="text" placeholder="Doe" value={lastName} onChange={e => setLastName(e.target.value)} required />
-                  </div>
-                  <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                    <label>Address</label>
-                    <input type="text" placeholder="123 Main Street" value={address} onChange={e => setAddress(e.target.value)} required />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label>City</label>
-                    <input type="text" placeholder="New York" value={city} onChange={e => setCity(e.target.value)} required />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label>ZIP / Postal Code</label>
-                    <input type="text" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} required />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label>State / Province</label>
-                    <input type="text" placeholder="NY" value={stateRegion} onChange={e => setStateRegion(e.target.value)} />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label>Country</label>
-                    <input type="text" placeholder="United States" value={country} onChange={e => setCountry(e.target.value)} />
-                  </div>
-                  <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                    <label>Phone Number</label>
-                    <input type="tel" placeholder="+1 (555) 123-4567" value={phone} onChange={e => setPhone(e.target.value)} required />
-                  </div>
-                  <div className={styles.fullWidth}>
-                    <button type="submit" className={styles.saveShippingBtn}>Save Shipping Info</button>
-                  </div>
-                </form>
-              )}
-
-              {hasShippingInfo && !showShippingForm && (
-                <div className={styles.shippingSummary}>
-                  <p style={{ fontWeight: '600', marginBottom: '4px' }}>{firstName} {lastName}</p>
-                  <p>{address}</p>
-                  <p>{city}, {stateRegion} {postalCode}</p>
-                  <p>{country}</p>
-                  <p style={{ marginTop: '4px' }}>Phone: {phone}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Method */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h2 className={styles.cardTitle}>Payment Method</h2>
-              </div>
-              
-              <div className={styles.paymentOptions}>
-                <label className={`${styles.paymentOption} ${paymentMethod === "Card" ? styles.paymentOptionActive : ""}`}>
-                  <input type="radio" name="payment" value="Card" checked={paymentMethod === "Card"} onChange={() => setPaymentMethod("Card")} />
-                  <span className={styles.paymentLabel}>💳 Credit/Debit Card</span>
+        {/* Checkout */}
+        <form className={styles.checkout} onSubmit={handlePlaceOrder}>
+          <Card padded className={styles.panel}>
+            <h2 className={styles.panelTitle}>1. Pickup or delivery</h2>
+            <div className={styles.options}>
+              {FULFILMENT.map(({ id, Icon, label, note }) => (
+                <label key={id} className={`${styles.option} ${fulfilment === id ? styles.optionActive : ""}`}>
+                  <input type="radio" name="fulfilment" value={id} checked={fulfilment === id} onChange={() => setFulfilment(id)} />
+                  <Icon />
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{note}</small>
+                  </span>
                 </label>
-                
-                {paymentMethod === "Card" && (
-                  <div className={styles.formGrid} style={{ padding: '0 8px 8px 30px' }}>
-                    <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-                      <label>Card Number</label>
-                      <input type="text" placeholder="1234 5678 9012 3456" />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Expiry Date</label>
-                      <input type="text" placeholder="MM/YY" />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>CVC</label>
-                      <input type="text" placeholder="123" />
-                    </div>
-                  </div>
-                )}
-
-                <label className={`${styles.paymentOption} ${paymentMethod === "PayPal" ? styles.paymentOptionActive : ""}`}>
-                  <input type="radio" name="payment" value="PayPal" checked={paymentMethod === "PayPal"} onChange={() => setPaymentMethod("PayPal")} />
-                  <span className={styles.paymentLabel} style={{ color: '#003087' }}>🅿️ PayPal</span>
-                </label>
-
-                <label className={`${styles.paymentOption} ${paymentMethod === "ApplePay" ? styles.paymentOptionActive : ""}`}>
-                  <input type="radio" name="payment" value="ApplePay" checked={paymentMethod === "ApplePay"} onChange={() => setPaymentMethod("ApplePay")} />
-                  <span className={styles.paymentLabel}> Apple Pay</span>
-                </label>
-              </div>
+              ))}
             </div>
 
-            {/* Totals & Place Order Card */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Order Total</h2>
-              
-              <div className={styles.totalsBox}>
-                <div className={styles.totalsRow}>
-                  <span>Subtotal</span>
-                  <strong>${subtotal.toFixed(2)}</strong>
-                </div>
-                <div className={styles.totalsRow}>
-                  <span>Shipping</span>
-                  <strong>${SHIPPING_FEE.toFixed(2)}</strong>
-                </div>
-                <div className={styles.totalsRow}>
-                  <span>Tax</span>
-                  <strong>${tax.toFixed(2)}</strong>
-                </div>
-
-                <div className={styles.divider}></div>
-
-                <div className={styles.grandTotalRow}>
-                  <span>Total</span>
-                  <span>${totalAmount.toFixed(2)}</span>
-                </div>
+            {fulfilment === "delivery" && (
+              <div className={styles.fields}>
+                <Field
+                  label="Venue or street address"
+                  autoComplete="street-address"
+                  required
+                  value={form.address}
+                  onChange={setField("address")}
+                />
+                <Field
+                  label="Postal code"
+                  placeholder="S7K 3Y5"
+                  autoComplete="postal-code"
+                  required
+                  value={form.postalCode}
+                  onChange={setField("postalCode")}
+                  hint={delivery.status === "available" ? "Great — we deliver to this area." : "Delivery is available within Saskatoon."}
+                  error={["invalid", "unavailable"].includes(delivery.status) ? delivery.message || "We do not deliver to this postal code yet." : undefined}
+                />
               </div>
+            )}
+          </Card>
 
-              <button 
-                type="button" 
-                className={styles.placeOrderBtn}
-                onClick={handlePlaceOrder}
-                disabled={cart.length === 0}
-              >
-                Place Order
-              </button>
+          <Card padded className={styles.panel}>
+            <h2 className={styles.panelTitle}>2. Your details</h2>
+            <div className={styles.fields}>
+              <Field label="Full name" autoComplete="name" required value={form.name} onChange={setField("name")} />
+              <div className={styles.fieldRow}>
+                <Field label="Email" type="email" autoComplete="email" required value={form.email} onChange={setField("email")} />
+                <Field label="Phone" type="tel" autoComplete="tel" required value={form.phone} onChange={setField("phone")} />
+              </div>
+              <Field
+                as="textarea"
+                label="Notes for our team (optional)"
+                rows={3}
+                placeholder="Venue access times, colour preferences, setup requests"
+                value={form.notes}
+                onChange={setField("notes")}
+              />
             </div>
+          </Card>
 
-          </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+          <Card padded className={styles.panel}>
+            <h2 className={styles.panelTitle}>3. Payment preference</h2>
+            <div className={styles.options}>
+              {PAYMENT_METHODS.map((method) => (
+                <label key={method.id} className={`${styles.option} ${paymentMethod === method.id ? styles.optionActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value={method.id}
+                    checked={paymentMethod === method.id}
+                    onChange={() => setPaymentMethod(method.id)}
+                  />
+                  <span>
+                    <strong>{method.label}</strong>
+                    <small>{method.note}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className={styles.fine}>No payment is taken now. We confirm availability first, then send payment details.</p>
+          </Card>
+
+          <Card padded className={`${styles.panel} ${styles.summary}`}>
+            <h2 className={styles.panelTitle}>Order summary</h2>
+            <dl className={styles.totals}>
+              <div>
+                <dt>Rental subtotal</dt>
+                <dd>{formatMoney(totals.subtotal)}</dd>
+              </div>
+              <div>
+                <dt>{fulfilment === "delivery" ? "Delivery" : "Studio pickup"}</dt>
+                <dd>{totals.delivery ? formatMoney(totals.delivery) : "Free"}</dd>
+              </div>
+              <div>
+                <dt>Tax</dt>
+                <dd>{formatMoney(totals.tax)}</dd>
+              </div>
+              <div className={styles.grand}>
+                <dt>Total</dt>
+                <dd>{formatMoney(totals.total)}</dd>
+              </div>
+            </dl>
+
+            {error && <Alert tone="error">{error}</Alert>}
+            {!signedIn && <Alert tone="info">Please sign in to place your booking — your cart will be kept.</Alert>}
+
+            <Button type="submit" size="lg" block loading={submitting}>
+              {signedIn ? "Place booking" : "Sign in to book"}
+            </Button>
+          </Card>
+        </form>
+      </Container>
+    </PageLayout>
   );
 }

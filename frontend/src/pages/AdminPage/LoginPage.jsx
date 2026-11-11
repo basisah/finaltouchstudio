@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import styles from "./LoginPage.module.css";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/client";
+import AuthShell from "../../components/layout/AuthShell";
+import { Alert, Button, Field } from "../../components/ui";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -9,91 +11,64 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      // Hit backend auth API
-      const response = await fetch("/api/admin/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/admin/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await response.json();
 
       if (response.ok && data.token) {
         localStorage.setItem("admin_token", data.token);
         localStorage.setItem("admin_login_time", Date.now().toString());
-        if (data.user) {
-          localStorage.setItem("user_info", JSON.stringify(data.user));
-        }
+        if (data.user) localStorage.setItem("user_info", JSON.stringify(data.user));
         navigate("/admin");
       } else {
         setError(data.error || "Invalid username or password");
       }
-    } catch (err) {
-      setError("Failed to connect to authentication server. Please check your connection.");
+    } catch {
+      setError("We could not reach the sign-in service. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.glowBg1}></div>
-      <div className={styles.glowBg2}></div>
-      
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.logoSection}>
-            <span className={styles.logoEmoji}>✨</span>
-            <p className={styles.brandSubtitle}>FinalTouch Studio</p>
-            <h1 className={styles.brandTitle}>Admin Portal</h1>
-          </div>
-
-          <form onSubmit={handleLogin} className={styles.form}>
-            {error && <div className={styles.errorAlert}>{error}</div>}
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin username"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className={styles.loginBtn}
-              disabled={isLoading}
-            >
-              {isLoading ? "Verifying..." : "Access Dashboard"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <AuthShell
+      eyebrow="FinalTouch Studio"
+      title="Admin portal"
+      lead="Sign in to manage inventory, packages and bookings."
+      footer={<Link to="/">← Back to the website</Link>}
+    >
+      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        {error && <Alert tone="error">{error}</Alert>}
+        <Field
+          label="Username"
+          autoComplete="username"
+          required
+          disabled={isLoading}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <Field
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          required
+          disabled={isLoading}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button type="submit" size="lg" block loading={isLoading}>
+          Open dashboard
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

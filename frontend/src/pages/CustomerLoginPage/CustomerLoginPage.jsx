@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import Footer from "../../components/Footer/Footer";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/client";
+import AuthShell from "../../components/layout/AuthShell";
+import { Alert, Button, Field } from "../../components/ui";
 import styles from "./CustomerLoginPage.module.css";
+
+/** Stores the customer session exactly as the rest of the app expects it. */
+function storeSession(data) {
+  localStorage.setItem("user_token", data.token);
+  localStorage.setItem("user_login_time", Date.now().toString());
+  if (data.user) localStorage.setItem("user_info", JSON.stringify(data.user));
+}
 
 export default function CustomerLoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -10,198 +19,123 @@ export default function CustomerLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const googleButtonRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If redirected from checkout, we should return the customer back to checkout
+  // Return the customer to where they came from (for example the cart).
   const redirectPath = location.state?.from || "/";
 
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
+  const authenticate = async (path, payload, fallbackMessage) => {
     setError("");
     setIsLoading(true);
-
     try {
-      const payload = isSignUp ? { name, email, password } : { email, password };
-      const endpoint = isSignUp ? "/api/auth/register" : "/api/auth/login";
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await response.json();
-
       if (response.ok && data.token) {
-        localStorage.setItem("user_token", data.token);
-        localStorage.setItem("user_login_time", Date.now().toString());
-        if (data.user) {
-          localStorage.setItem("user_info", JSON.stringify(data.user));
-        }
+        storeSession(data);
         navigate(redirectPath);
       } else {
-        setError(data.error || "Authentication failed. Please check your credentials.");
+        setError(data.error || fallbackMessage);
       }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to connect to authentication server. Please check your connection.");
+    } catch {
+      setError("We could not reach the sign-in service. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleCallback = async (response) => {
-    setError("");
-    setIsLoading(true);
-
-    try {
-      const apiRes = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-
-      const data = await apiRes.json();
-
-      if (apiRes.ok && data.token) {
-        localStorage.setItem("user_token", data.token);
-        localStorage.setItem("user_login_time", Date.now().toString());
-        if (data.user) {
-          localStorage.setItem("user_info", JSON.stringify(data.user));
-        }
-        navigate(redirectPath);
-      } else {
-        setError(data.error || "Google Sign-In failed.");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to verify Google token with backend server.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (isSignUp) authenticate("/auth/register", { name, email, password }, "We could not create your account.");
+    else authenticate("/auth/login", { email, password }, "Sign-in failed. Please check your email and password.");
   };
+
+  // Keep the latest handler without re-initialising the Google button.
+  const googleHandler = useRef(null);
+  googleHandler.current = (response) =>
+    authenticate("/auth/google", { credential: response.credential }, "Google sign-in failed.");
 
   useEffect(() => {
-    let initialized = false;
-
-    const initGoogleButton = () => {
-      if (window.google && !initialized) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1000000000000-dummyid.apps.googleusercontent.com",
-          callback: handleGoogleCallback,
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById("customerGoogleSignInBtn"),
-          { theme: "outline", size: "large", width: "356" }
-        );
-        initialized = true;
-        return true;
-      }
-      return false;
+    let initialised = false;
+    const init = () => {
+      if (!window.google || initialised || !googleButtonRef.current) return false;
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1000000000000-dummyid.apps.googleusercontent.com",
+        callback: (response) => googleHandler.current(response),
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        width: Math.min(360, googleButtonRef.current.offsetWidth || 360),
+      });
+      initialised = true;
+      return true;
     };
 
-    const success = initGoogleButton();
-    if (success) return;
-
-    const timer = setInterval(() => {
-      if (initGoogleButton()) {
-        clearInterval(timer);
-      }
-    }, 500);
-
+    if (init()) return undefined;
+    // The Google script loads asynchronously; retry until it is ready.
+    const timer = setInterval(() => init() && clearInterval(timer), 500);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className={styles.page}>
-      <div className={styles.wrapper}>
-      <div className={styles.glowBg1}></div>
-      <div className={styles.glowBg2}></div>
-      
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.logoSection}>
-            <span className={styles.logoEmoji}>✨</span>
-            <p className={styles.brandSubtitle}>FinalTouch Studio</p>
-            <h1 className={styles.brandTitle}>{isSignUp ? "Create Account" : "Customer Login"}</h1>
-          </div>
+    <AuthShell
+      eyebrow="FinalTouch Studio"
+      title={isSignUp ? "Create your account" : "Welcome back"}
+      lead={isSignUp ? "Save your details and keep track of your bookings." : "Sign in to manage your bookings and check out faster."}
+      footer={<Link to="/">← Back to the website</Link>}
+    >
+      <form className={styles.form} onSubmit={handleSubmit}>
+        {error && <Alert tone="error">{error}</Alert>}
 
-          <form onSubmit={handleAuthSubmit} className={styles.form}>
-            {error && <div className={styles.errorAlert}>{error}</div>}
-            
-            {isSignUp && (
-              <div className={styles.inputGroup}>
-                <label htmlFor="name">Full Name</label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Fatima Akter"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            )}
+        {isSignUp && (
+          <Field label="Full name" autoComplete="name" required disabled={isLoading} value={name} onChange={(e) => setName(e.target.value)} />
+        )}
+        <Field
+          label="Email address"
+          type="email"
+          autoComplete="email"
+          required
+          disabled={isLoading}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Field
+          label="Password"
+          type="password"
+          autoComplete={isSignUp ? "new-password" : "current-password"}
+          required
+          disabled={isLoading}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="email">Email Address</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                disabled={isLoading}
-              />
-            </div>
+        <Button type="submit" size="lg" block loading={isLoading}>
+          {isSignUp ? "Create account" : "Sign in"}
+        </Button>
+      </form>
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-              />
-            </div>
+      <div className={styles.divider}>or</div>
+      <div ref={googleButtonRef} className={styles.google} />
 
-            <button 
-              type="submit" 
-              className={styles.loginBtn}
-              disabled={isLoading}
-            >
-              {isLoading ? "Verifying..." : isSignUp ? "Sign Up & Get Started" : "Sign In"}
-            </button>
-          </form>
-
-          <div className={styles.divider}>or</div>
-
-          <div id="customerGoogleSignInBtn" className={styles.googleBtnWrapper}></div>
-
-          <div className={styles.toggleText}>
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}
-            <button 
-              type="button" 
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError("");
-              }} 
-              className={styles.toggleLink}
-            >
-              {isSignUp ? "Sign In" : "Sign Up"}
-            </button>
-          </div>
-        </div>
-      </div>
-      </div>
-      <Footer />
-    </div>
+      <p className={styles.toggle}>
+        {isSignUp ? "Already have an account?" : "New to FinalTouch Studio?"}{" "}
+        <button
+          type="button"
+          onClick={() => {
+            setIsSignUp((value) => !value);
+            setError("");
+          }}
+        >
+          {isSignUp ? "Sign in" : "Create an account"}
+        </button>
+      </p>
+    </AuthShell>
   );
 }
