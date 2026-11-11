@@ -4,12 +4,14 @@
  * 1. ensureSchema      creates missing tables / columns / indexes (idempotent)
  * 2. migrateLegacyData normalises rows written by older versions
  * 3. seedDefaults      permanent categories + starter testimonials
+ *    (+ the demo catalogue when SEED_DEMO_DATA=true and no items exist yet)
  * 4. organizeUploads   moves flat upload files into typed folders
  */
 const db = require("../db");
 const { ensureSchema } = require("./schema");
 const { seedDefaults } = require("./seedDefaults");
 const { organizeUploads } = require("./organizeUploads");
+const { seedDemoDataIfEmpty } = require("../seed/demoData");
 
 async function migrateLegacyData() {
   // "pending" / "confirmed" were replaced by a single "ordered" state.
@@ -21,6 +23,7 @@ async function runInitialization() {
     await ensureSchema(db);
     await migrateLegacyData();
     await seedDefaults(db);
+    await seedDemoDataIfEmpty(db);
     await organizeUploads(db);
     console.log("Database schema verified.");
   } catch (error) {

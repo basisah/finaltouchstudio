@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon --legacy-watch src/index.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "seed:demo": "node src/seed/demoData.js",
+    "seed:demo:remove": "node src/seed/demoData.js --remove",
+    "db:reset": "node scripts/resetDb.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
